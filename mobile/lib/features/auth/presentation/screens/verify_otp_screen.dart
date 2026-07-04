@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/auth_background.dart';
 import '../../providers/auth_provider.dart';
 
@@ -63,7 +62,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: AppColors.error,
+        backgroundColor: const Color(0xFFEF4444),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -77,204 +76,157 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
 
     return Scaffold(
       body: AuthBackground(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 20),
 
-              // Back button
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: () => context.go('/auth/forgot-password'),
-                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                ),
-              ),
-
-              // Icon
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    width: 2,
+                // Back button
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: () => context.go('/auth/forgot-password'),
+                    icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
                   ),
                 ),
-                child: const Icon(
-                  Icons.sms_rounded,
-                  size: 40,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Verify OTP',
-                style: GoogleFonts.nunito(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _phone.isNotEmpty
-                    ? 'Enter the 6-digit code sent to\n+$_phone'
-                    : 'Enter the 6-digit code sent to your phone',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.7),
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 32),
 
-              // Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 25,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+                // Icon
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 2),
+                  ),
+                  child: const Icon(Icons.sms_rounded, size: 36, color: Colors.white),
                 ),
-                child: Column(
-                  children: [
-                    // OTP boxes
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: List.generate(6, (index) {
-                        return SizedBox(
-                          width: 44,
-                          height: 56,
-                          child: TextField(
-                            controller: _controllers[index],
-                            focusNode: _focusNodes[index],
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            maxLength: 1,
-                            autofocus: index == 0,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textDark,
-                            ),
-                            decoration: InputDecoration(
-                              counterText: '',
-                              filled: true,
-                              fillColor: AppColors.lightInput,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade200),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                    color: AppColors.primary, width: 1.5),
-                              ),
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                            onChanged: (value) => _onOtpChanged(index, value),
+                const SizedBox(height: 16),
+                Text(
+                  'Verify OTP',
+                  style: GoogleFonts.nunito(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    shadows: [Shadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 8)],
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _phone.isNotEmpty
+                      ? 'Enter the 6-digit code sent to\n+$_phone'
+                      : 'Enter the 6-digit code sent to your phone',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.8),
+                    height: 1.5,
+                    shadows: [Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6)],
+                  ),
+                ),
+                const SizedBox(height: 28),
+
+                // Card
+                AuthCard(
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: AuthBackground.isDarkMode,
+                    builder: (context, isDark, _) {
+                      return Column(
+                        children: [
+                          // OTP boxes
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: List.generate(6, (index) {
+                              return SizedBox(
+                                width: 44,
+                                height: 56,
+                                child: TextField(
+                                  controller: _controllers[index],
+                                  focusNode: _focusNodes[index],
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                  maxLength: 1,
+                                  autofocus: index == 0,
+                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AuthColors.text),
+                                  decoration: InputDecoration(
+                                    counterText: '',
+                                    filled: true,
+                                    fillColor: AuthColors.input,
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AuthColors.inputBorder)),
+                                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5)),
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  onChanged: (value) => _onOtpChanged(index, value),
+                                ),
+                              );
+                            }),
                           ),
-                        );
-                      }),
-                    ),
-                    if (authState.error != null) ...[
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                              color: AppColors.error.withValues(alpha: 0.2)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.error_outline,
-                                color: AppColors.error, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                authState.error!,
-                                style: const TextStyle(
-                                    color: AppColors.error, fontSize: 13),
+                          if (authState.error != null) ...[
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AuthColors.errorBg,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AuthColors.errorBorder),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: Text(authState.error!, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13))),
+                                ],
                               ),
                             ),
                           ],
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: authState.isLoading ? null : _verify,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: authState.isLoading
-                            ? const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
-                                ),
-                              )
-                            : const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.check_circle_rounded, size: 20),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Verify',
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700),
-                                  ),
-                                ],
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: ElevatedButton(
+                              onPressed: authState.isLoading ? null : _verify,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2563EB),
+                                foregroundColor: Colors.white,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                               ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    GestureDetector(
-                      onTap: () => context.go('/auth/forgot-password'),
-                      child: Text(
-                        'Didn\'t receive code? Resend',
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
+                              child: authState.isLoading
+                                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
+                                  : const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.check_circle_rounded, size: 20),
+                                        SizedBox(width: 8),
+                                        Text('Verify', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                                      ],
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          GestureDetector(
+                            onTap: () => context.go('/auth/forgot-password'),
+                            child: Text(
+                              'Didn\'t receive code? Resend',
+                              style: TextStyle(
+                                color: AuthColors.textSecondary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(height: 40),
-            ],
+                const SizedBox(height: 40),
+              ],
+            ),
           ),
         ),
       ),

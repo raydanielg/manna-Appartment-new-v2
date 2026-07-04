@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/auth_background.dart';
 import '../../providers/auth_provider.dart';
 
@@ -61,79 +60,55 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
 
     return Scaffold(
       body: AuthBackground(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 20),
 
-                // Back button
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    onPressed: () => context.go('/auth/login'),
-                    icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                  // Back button
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      onPressed: () => context.go('/auth/login'),
+                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                    ),
                   ),
-                ),
 
-                // Logo
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+                  const SizedBox(height: 24),
+                  Text(
+                    'Create Account',
+                    style: GoogleFonts.nunito(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 8),
+                      ],
+                    ),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.asset('assets/images/app_logo.png', fit: BoxFit.cover),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Register as a landlord to get started',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withValues(alpha: 0.8),
+                      shadows: [
+                        Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Create Account',
-                  style: GoogleFonts.nunito(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Register as a landlord to get started',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                ),
-                const SizedBox(height: 28),
+                  const SizedBox(height: 28),
 
-                // Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 25,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                  // Card
+                  AuthCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                       _buildLabel('Full Name'),
                       _buildField(
                         controller: _nameController,
@@ -197,21 +172,18 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.error.withValues(alpha: 0.08),
+                            color: AuthColors.errorBg,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color: AppColors.error.withValues(alpha: 0.2)),
+                            border: Border.all(color: AuthColors.errorBorder),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.error_outline,
-                                  color: AppColors.error, size: 20),
+                              const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   authState.error!,
-                                  style: const TextStyle(
-                                      color: AppColors.error, fontSize: 13),
+                                  style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13),
                                 ),
                               ),
                             ],
@@ -225,7 +197,7 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                         child: ElevatedButton(
                           onPressed: authState.isLoading ? null : _register,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: const Color(0xFF2563EB),
                             foregroundColor: Colors.white,
                             elevation: 2,
                             shape: RoundedRectangleBorder(
@@ -260,32 +232,37 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Already have an account? ',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 14,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.go('/auth/login'),
-                      child: const Text(
-                        'Sign In',
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Already have an account? ',
                         style: TextStyle(
-                          color: AppColors.gold,
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                          shadows: [
+                            Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 40),
-              ],
+                      GestureDetector(
+                        onTap: () => context.go('/auth/login'),
+                        child: const Text(
+                          'Sign In',
+                          style: TextStyle(
+                            color: Color(0xFF60A5FA),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            shadows: [Shadow(color: Colors.black54, blurRadius: 6)],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
             ),
           ),
         ),
@@ -296,13 +273,18 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
   Widget _buildLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textDark,
-        ),
+      child: ValueListenableBuilder<bool>(
+        valueListenable: AuthBackground.isDarkMode,
+        builder: (context, isDark, _) {
+          return Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AuthColors.label,
+            ),
+          );
+        },
       ),
     );
   }
@@ -314,79 +296,66 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      validator: validator,
-      style: const TextStyle(fontSize: 15),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey.shade400),
-        prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
-        filled: true,
-        fillColor: AppColors.lightInput,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 14),
-      ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: AuthBackground.isDarkMode,
+      builder: (context, isDark, _) {
+        return TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          validator: validator,
+          style: TextStyle(fontSize: 15, color: AuthColors.text),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: AuthColors.hintText),
+            prefixIcon: Icon(icon, color: const Color(0xFF2563EB), size: 20),
+            filled: true,
+            fillColor: AuthColors.input,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AuthColors.inputBorder)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5)),
+            contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildPhoneField() {
-    return TextFormField(
-      controller: _phoneController,
-      keyboardType: TextInputType.phone,
-      validator: (v) {
-        if (v == null || v.trim().isEmpty) return 'Phone number is required';
-        if (!RegExp(r'^[0-9]{9}$').hasMatch(v.trim())) {
-          return 'Enter a valid 9-digit number';
-        }
-        return null;
-      },
-      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-      decoration: InputDecoration(
-        hintText: '7XX XXX XXX',
-        hintStyle: TextStyle(
-          color: Colors.grey.shade400,
-          letterSpacing: 1.5,
-        ),
-        prefixIcon: Container(
-          margin: const EdgeInsets.only(right: 6, left: 10, top: 12, bottom: 12),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('+255', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textDark)),
-              const SizedBox(width: 4),
-              Container(width: 1, height: 22, color: Colors.grey.shade300),
-            ],
+    return ValueListenableBuilder<bool>(
+      valueListenable: AuthBackground.isDarkMode,
+      builder: (context, isDark, _) {
+        return TextFormField(
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) return 'Phone number is required';
+            if (!RegExp(r'^[0-9]{9}$').hasMatch(v.trim())) return 'Enter a valid 9-digit number';
+            return null;
+          },
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AuthColors.text),
+          decoration: InputDecoration(
+            hintText: '7XX XXX XXX',
+            hintStyle: TextStyle(color: AuthColors.hintText, letterSpacing: 1.5),
+            prefixIcon: Container(
+              margin: const EdgeInsets.only(right: 6, left: 10, top: 12, bottom: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('+255', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AuthColors.text)),
+                  const SizedBox(width: 4),
+                  Container(width: 1, height: 22, color: AuthColors.inputBorder),
+                ],
+              ),
+            ),
+            filled: true,
+            fillColor: AuthColors.input,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AuthColors.inputBorder)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5)),
+            contentPadding: const EdgeInsets.symmetric(vertical: 14),
           ),
-        ),
-        filled: true,
-        fillColor: AppColors.lightInput,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 14),
-      ),
+        );
+      },
     );
   }
 
@@ -396,38 +365,31 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
     required VoidCallback toggle,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscure,
-      validator: validator,
-      style: const TextStyle(fontSize: 15),
-      decoration: InputDecoration(
-        hintText: '••••••••',
-        hintStyle: TextStyle(color: Colors.grey.shade400),
-        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary, size: 20),
-        suffixIcon: IconButton(
-          icon: Icon(
-            obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-            color: Colors.grey.shade500,
+    return ValueListenableBuilder<bool>(
+      valueListenable: AuthBackground.isDarkMode,
+      builder: (context, isDark, _) {
+        return TextFormField(
+          controller: controller,
+          obscureText: obscure,
+          validator: validator,
+          style: TextStyle(fontSize: 15, color: AuthColors.text),
+          decoration: InputDecoration(
+            hintText: '••••••••',
+            hintStyle: TextStyle(color: AuthColors.hintText),
+            prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF2563EB), size: 20),
+            suffixIcon: IconButton(
+              icon: Icon(obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: AuthColors.suffixIcon),
+              onPressed: toggle,
+            ),
+            filled: true,
+            fillColor: AuthColors.input,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AuthColors.inputBorder)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5)),
+            contentPadding: const EdgeInsets.symmetric(vertical: 14),
           ),
-          onPressed: toggle,
-        ),
-        filled: true,
-        fillColor: AppColors.lightInput,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 14),
-      ),
+        );
+      },
     );
   }
 }

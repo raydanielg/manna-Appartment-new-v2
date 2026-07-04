@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\RegisterLandlordController;
 use App\Http\Controllers\Api\Landlord\ContractController;
 use App\Http\Controllers\Api\Landlord\FinanceController;
+use App\Http\Controllers\Api\Landlord\LandlordDashboardController;
 use App\Http\Controllers\Api\Landlord\OrganizationController as LandlordOrganizationController;
 use App\Http\Controllers\Api\Landlord\PaymentController;
 use App\Http\Controllers\Api\Landlord\PropertyController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Api\SuperAdmin\RevenueController;
 use App\Http\Controllers\Api\SuperAdmin\SubscriptionPlanController;
 use App\Http\Controllers\Api\Tenant\MaintenanceRequestController as TenantMaintenanceRequestController;
 use App\Http\Controllers\Api\Tenant\MyContractController;
+use App\Http\Controllers\Api\Tenant\TenantDashboardController;
 use App\Http\Controllers\Api\Tenant\MyPaymentController;
 use App\Http\Controllers\Api\Tenant\MyUnitController;
 use App\Http\Controllers\Api\Tenant\ProfileController as TenantProfileController;
@@ -120,6 +122,7 @@ Route::prefix('v1')->group(function () {
 
         // Landlord (mobile only)
         Route::middleware(['ensure.platform:mobile', 'role:landlord'])->prefix('landlord')->group(function () {
+            Route::get('/dashboard', [LandlordDashboardController::class, 'index']);
             Route::get('/organization', [LandlordOrganizationController::class, 'show']);
             Route::patch('/organization', [LandlordOrganizationController::class, 'update']);
             Route::get('/organization/usage', [LandlordOrganizationController::class, 'usage']);
@@ -180,6 +183,7 @@ Route::prefix('v1')->group(function () {
 
         // Tenant (mobile only)
         Route::middleware(['ensure.platform:mobile', 'role:tenant'])->prefix('tenant')->group(function () {
+            Route::get('/dashboard', [TenantDashboardController::class, 'index']);
             Route::get('/profile', [TenantProfileController::class, 'show']);
             Route::patch('/profile', [TenantProfileController::class, 'update']);
             Route::post('/profile/change-password', [TenantProfileController::class, 'changePassword']);
