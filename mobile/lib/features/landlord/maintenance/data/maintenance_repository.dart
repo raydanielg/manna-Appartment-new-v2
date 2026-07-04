@@ -10,7 +10,7 @@ class MaintenanceRepository {
   }
 
   Future<Map<String, dynamic>> updateStatus(String id, String status) async {
-    final response = await _client.put('/maintenance-requests/', data: {'status': status});
+    final response = await _client.patch('/maintenance-requests/$id/status', data: {'status': status});
     return response.data['data'] ?? {};
   }
 }

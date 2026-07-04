@@ -132,21 +132,81 @@ class LandlordScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currentIndex = _getIndex(context);
+    final items = [
+      _NavItem('Home', Icons.home_outlined, Icons.home_rounded),
+      _NavItem('Properties', Icons.apartment_outlined, Icons.apartment_rounded),
+      _NavItem('Tenants', Icons.people_outline, Icons.people_alt_rounded),
+      _NavItem('Payments', Icons.payments_outlined, Icons.payments_rounded),
+      _NavItem('More', Icons.more_horiz, Icons.more_horiz_rounded),
+    ];
+    final routes = ['/landlord/home', '/landlord/properties', '/landlord/tenants', '/landlord/payments', '/landlord/more'];
+
     return Scaffold(
       body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _getIndex(context),
-        onTap: (index) {
-          final routes = ['/landlord/home', '/landlord/properties', '/landlord/tenants', '/landlord/payments', '/landlord/more'];
-          context.go(routes[index]);
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.apartment_outlined), activeIcon: Icon(Icons.apartment), label: 'Properties'),
-          BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'Tenants'),
-          BottomNavigationBarItem(icon: Icon(Icons.payments_outlined), activeIcon: Icon(Icons.payments), label: 'Payments'),
-          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), activeIcon: Icon(Icons.more_horiz), label: 'More'),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          border: Border(
+            top: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE5E7EB), width: 1),
+          ),
+          boxShadow: isDark
+              ? null
+              : [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, -2))],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: items.asMap().entries.map((entry) {
+                final i = entry.key;
+                final item = entry.value;
+                final isActive = i == currentIndex;
+                return Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => context.go(routes[i]),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? const Color(0xFF059669).withValues(alpha: 0.1)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Icon(
+                            isActive ? item.activeIcon : item.icon,
+                            size: 22,
+                            color: isActive
+                                ? const Color(0xFF059669)
+                                : (isDark ? Colors.white38 : Colors.grey.shade400),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          item.label,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                            color: isActive
+                                ? const Color(0xFF059669)
+                                : (isDark ? Colors.white38 : Colors.grey.shade400),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -162,26 +222,93 @@ class LandlordScaffold extends StatelessWidget {
   }
 }
 
+class _NavItem {
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+  _NavItem(this.label, this.icon, this.activeIcon);
+}
+
 class TenantScaffold extends StatelessWidget {
   final Widget child;
   const TenantScaffold({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currentIndex = _getIndex(context);
+    final items = [
+      _NavItem('Home', Icons.home_outlined, Icons.home_rounded),
+      _NavItem('My Unit', Icons.door_front_door_outlined, Icons.door_front_door_rounded),
+      _NavItem('Payments', Icons.payments_outlined, Icons.payments_rounded),
+      _NavItem('More', Icons.more_horiz, Icons.more_horiz_rounded),
+    ];
+    final routes = ['/tenant/home', '/tenant/my-unit', '/tenant/payments', '/tenant/more'];
+
     return Scaffold(
       body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _getIndex(context),
-        onTap: (index) {
-          final routes = ['/tenant/home', '/tenant/my-unit', '/tenant/payments', '/tenant/more'];
-          context.go(routes[index]);
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.door_front_door_outlined), activeIcon: Icon(Icons.door_front_door), label: 'My Unit'),
-          BottomNavigationBarItem(icon: Icon(Icons.payments_outlined), activeIcon: Icon(Icons.payments), label: 'Payments'),
-          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), activeIcon: Icon(Icons.more_horiz), label: 'More'),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          border: Border(
+            top: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE5E7EB), width: 1),
+          ),
+          boxShadow: isDark
+              ? null
+              : [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, -2))],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: items.asMap().entries.map((entry) {
+                final i = entry.key;
+                final item = entry.value;
+                final isActive = i == currentIndex;
+                return Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => context.go(routes[i]),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? const Color(0xFF059669).withValues(alpha: 0.1)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Icon(
+                            isActive ? item.activeIcon : item.icon,
+                            size: 22,
+                            color: isActive
+                                ? const Color(0xFF059669)
+                                : (isDark ? Colors.white38 : Colors.grey.shade400),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          item.label,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                            color: isActive
+                                ? const Color(0xFF059669)
+                                : (isDark ? Colors.white38 : Colors.grey.shade400),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
       ),
     );
   }

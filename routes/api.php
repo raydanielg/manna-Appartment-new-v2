@@ -177,8 +177,8 @@ Route::prefix('v1')->group(function () {
             Route::patch('/staff/{id}/permissions', [StaffManagementController::class, 'updatePermissions']);
             Route::delete('/staff/{id}', [StaffManagementController::class, 'destroy']);
 
-            Route::get('/maintenance', [\App\Http\Controllers\Api\Landlord\MaintenanceRequestController::class, 'index']);
-            Route::patch('/maintenance/{id}/status', [\App\Http\Controllers\Api\Landlord\MaintenanceRequestController::class, 'updateStatus']);
+            Route::get('/maintenance-requests', [\App\Http\Controllers\Api\Landlord\MaintenanceRequestController::class, 'index']);
+            Route::patch('/maintenance-requests/{id}/status', [\App\Http\Controllers\Api\Landlord\MaintenanceRequestController::class, 'updateStatus']);
         });
 
         // Tenant (mobile only)
@@ -187,12 +187,13 @@ Route::prefix('v1')->group(function () {
             Route::get('/profile', [TenantProfileController::class, 'show']);
             Route::patch('/profile', [TenantProfileController::class, 'update']);
             Route::post('/profile/change-password', [TenantProfileController::class, 'changePassword']);
-            Route::get('/unit', [MyUnitController::class, 'show']);
-            Route::get('/contract', [MyContractController::class, 'show']);
-            Route::get('/contract/pdf', [MyContractController::class, 'pdf']);
-            Route::get('/payments', [MyPaymentController::class, 'index']);
-            Route::post('/maintenance', [TenantMaintenanceRequestController::class, 'store']);
-            Route::get('/maintenance', [TenantMaintenanceRequestController::class, 'index']);
+            Route::get('/my-unit', [MyUnitController::class, 'show']);
+            Route::get('/my-contract', [MyContractController::class, 'show']);
+            Route::get('/my-contract/pdf', [MyContractController::class, 'pdf']);
+            Route::get('/my-payments', [MyPaymentController::class, 'index']);
+            Route::post('/maintenance-requests', [TenantMaintenanceRequestController::class, 'store']);
+            Route::get('/maintenance-requests', [TenantMaintenanceRequestController::class, 'index']);
+            Route::get('/my-maintenance-requests', [TenantMaintenanceRequestController::class, 'index']);
             Route::get('/notifications', [TenantProfileController::class, 'notifications']);
         });
     });

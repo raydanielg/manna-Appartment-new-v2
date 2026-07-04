@@ -47,22 +47,69 @@ class TenantHomeScreen extends ConsumerWidget {
 
   Widget _buildHeader(BuildContext context, String name) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final initials = name.trim().split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join().toUpperCase();
     return Row(
       children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF059669), Color(0xFF047857)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              initials,
+              style: GoogleFonts.nunito(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Hello, ', style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-              const SizedBox(height: 4),
-              Text('Welcome to your tenant portal', style: TextStyle(fontSize: 13, color: isDark ? Colors.white60 : AppColors.textLight)),
+              Text(
+                'Hello, $name',
+                style: GoogleFonts.nunito(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : AppColors.textDark,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Welcome to your tenant portal',
+                style: GoogleFonts.nunito(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white54 : AppColors.textLight,
+                ),
+              ),
             ],
           ),
         ),
-        IconButton(
-          onPressed: () => context.push('/settings'),
-          icon: const Icon(Icons.settings_outlined),
-          color: isDark ? Colors.white : AppColors.textDark,
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            onPressed: () => context.push('/notifications'),
+            icon: const Icon(Icons.notifications_none_rounded, size: 20),
+            color: isDark ? Colors.white70 : AppColors.textLight,
+            padding: EdgeInsets.zero,
+          ),
         ),
       ],
     );
