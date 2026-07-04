@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/config/app_config.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -105,7 +106,8 @@ class LandlordHomeScreen extends ConsumerWidget {
             child: ClipOval(
               child: avatarUrl != null && avatarUrl.isNotEmpty
                   ? Image.network(
-                      avatarUrl,
+                      _avatarUrl(avatarUrl),
+                      key: ValueKey(avatarUrl),
                       width: 48,
                       height: 48,
                       fit: BoxFit.cover,
@@ -186,5 +188,13 @@ class LandlordHomeScreen extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  String _avatarUrl(String avatar) {
+    if (avatar.isEmpty) return avatar;
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar;
+    final base = AppConfig.apiBaseUrl.replaceAll(RegExp(r'/api/?$'), '');
+    final separator = avatar.startsWith('/') ? '' : '/';
+    return '$base$separator$avatar';
   }
 }

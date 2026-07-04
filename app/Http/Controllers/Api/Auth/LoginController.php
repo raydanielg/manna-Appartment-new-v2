@@ -55,6 +55,7 @@ class LoginController extends Controller
             'business_name' => $user->organization->business_name,
             'kyc_status' => $user->organization->kyc_status,
             'status' => $user->organization->status,
+            'suspension_reason' => $user->organization->suspension_reason,
         ] : null;
 
         return $this->success('Login successful.', [

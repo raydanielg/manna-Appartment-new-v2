@@ -28,6 +28,7 @@ class PropertiesRepository {
     required String name,
     required String address,
     required String type,
+    String? location,
     String? description,
     List<String> imagePaths = const [],
   }) async {
@@ -40,6 +41,7 @@ class PropertiesRepository {
       'name': name,
       'address': address,
       'type': type,
+      if (location != null && location.isNotEmpty) 'location': location,
       if (description != null && description.isNotEmpty) 'description': description,
       if (files.isNotEmpty) 'images': files,
     });

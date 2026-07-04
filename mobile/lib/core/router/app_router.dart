@@ -170,88 +170,73 @@ class LandlordScaffold extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentIndex = _getIndex(context);
     final items = [
-      _NavItem('Home', Icons.home_outlined, Icons.home),
-      _NavItem('Properties', Icons.apartment_outlined, Icons.apartment),
-      _NavItem('Tenants', Icons.people_outline, Icons.people),
-      _NavItem('Payments', Icons.payments_outlined, Icons.payments),
-      _NavItem('More', Icons.apps_outlined, Icons.apps),
+      _NavItem('Home', Icons.home_rounded, Icons.home_rounded),
+      _NavItem('Properties', Icons.apartment_rounded, Icons.apartment_rounded),
+      _NavItem('Tenants', Icons.people_rounded, Icons.people_rounded),
+      _NavItem('Payments', Icons.account_balance_wallet_rounded, Icons.account_balance_wallet_rounded),
+      _NavItem('More', Icons.grid_view_rounded, Icons.grid_view_rounded),
     ];
     final routes = ['/landlord/home', '/landlord/properties', '/landlord/tenants', '/landlord/payments', '/landlord/more'];
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          border: Border(
-            top: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE5E7EB), width: 1),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
+            boxShadow: [
+              BoxShadow(
+                color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          boxShadow: isDark
-              ? null
-              : [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, -4))],
-        ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: items.asMap().entries.map((entry) {
-                final i = entry.key;
-                final item = entry.value;
-                final isActive = i == currentIndex;
-                return Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => context.go(routes[i]),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isActive
-                            ? AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: isActive ? AppColors.primary : Colors.transparent,
-                              shape: BoxShape.circle,
-                              boxShadow: isActive
-                                  ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.4), blurRadius: 10, offset: const Offset(0, 3))]
-                                  : null,
-                            ),
-                            child: Icon(
-                              isActive ? item.activeIcon : item.icon,
-                              size: isActive ? 24 : 22,
-                              color: isActive
-                                  ? Colors.white
-                                  : (isDark ? Colors.white54 : Colors.grey.shade500),
-                            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: items.asMap().entries.map((entry) {
+              final i = entry.key;
+              final item = entry.value;
+              final isActive = i == currentIndex;
+              return Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.go(routes[i]),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isActive ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isActive ? item.activeIcon : item.icon,
+                          size: isActive ? 22 : 20,
+                          color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          item.label,
+                          style: GoogleFonts.nunito(
+                            fontSize: 10,
+                            fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                            color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            item.label,
-                            style: TextStyle(
-                              fontSize: isActive ? 11 : 10,
-                              fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-                              color: isActive
-                                  ? AppColors.primary
-                                  : (isDark ? Colors.white54 : Colors.grey.shade500),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                );
-              }).toList(),
-            ),
+                ),
+              );
+            }).toList(),
           ),
         ),
       ),
@@ -285,87 +270,72 @@ class TenantScaffold extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentIndex = _getIndex(context);
     final items = [
-      _NavItem('Home', Icons.home_outlined, Icons.home),
-      _NavItem('My Unit', Icons.door_front_door_outlined, Icons.door_front_door),
-      _NavItem('Payments', Icons.payments_outlined, Icons.payments),
-      _NavItem('More', Icons.apps_outlined, Icons.apps),
+      _NavItem('Home', Icons.home_rounded, Icons.home_rounded),
+      _NavItem('My Unit', Icons.door_front_door_rounded, Icons.door_front_door_rounded),
+      _NavItem('Payments', Icons.account_balance_wallet_rounded, Icons.account_balance_wallet_rounded),
+      _NavItem('More', Icons.grid_view_rounded, Icons.grid_view_rounded),
     ];
     final routes = ['/tenant/home', '/tenant/my-unit', '/tenant/payments', '/tenant/more'];
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          border: Border(
-            top: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE5E7EB), width: 1),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
+            boxShadow: [
+              BoxShadow(
+                color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-          boxShadow: isDark
-              ? null
-              : [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, -4))],
-        ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: items.asMap().entries.map((entry) {
-                final i = entry.key;
-                final item = entry.value;
-                final isActive = i == currentIndex;
-                return Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => context.go(routes[i]),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isActive
-                            ? AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: isActive ? AppColors.primary : Colors.transparent,
-                              shape: BoxShape.circle,
-                              boxShadow: isActive
-                                  ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.4), blurRadius: 10, offset: const Offset(0, 3))]
-                                  : null,
-                            ),
-                            child: Icon(
-                              isActive ? item.activeIcon : item.icon,
-                              size: isActive ? 24 : 22,
-                              color: isActive
-                                  ? Colors.white
-                                  : (isDark ? Colors.white54 : Colors.grey.shade500),
-                            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: items.asMap().entries.map((entry) {
+              final i = entry.key;
+              final item = entry.value;
+              final isActive = i == currentIndex;
+              return Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.go(routes[i]),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isActive ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isActive ? item.activeIcon : item.icon,
+                          size: isActive ? 22 : 20,
+                          color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          item.label,
+                          style: GoogleFonts.nunito(
+                            fontSize: 10,
+                            fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                            color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            item.label,
-                            style: TextStyle(
-                              fontSize: isActive ? 11 : 10,
-                              fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-                              color: isActive
-                                  ? AppColors.primary
-                                  : (isDark ? Colors.white54 : Colors.grey.shade500),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                );
-              }).toList(),
-            ),
+                ),
+              );
+            }).toList(),
           ),
         ),
       ),

@@ -29,7 +29,7 @@ class AuthState {
   bool get isAuthenticated => user != null;
   String? get role => user?.role;
   bool get isKycApproved => user == null || user!.role != 'landlord' || user!.kycStatus == 'approved';
-  bool get isOrganizationActive => user == null || user!.role != 'landlord' || user!.organizationStatus == 'active';
+  bool get isOrganizationActive => user == null || user!.role != 'landlord' || user!.organizationStatus == null || user!.organizationStatus == 'active';
 
   AuthState copyWith({
     UserModel? user,

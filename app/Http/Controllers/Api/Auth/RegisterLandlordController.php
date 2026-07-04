@@ -23,7 +23,7 @@ class RegisterLandlordController extends Controller
             'phone' => 'required|string|unique:users,phone',
             'password' => 'required|string|min:6',
             'email' => 'nullable|email|max:255',
-            'business_name' => 'nullable|string|max:255',
+            'business_name' => 'required|string|max:255',
         ]);
 
         $organization = Organization::create([

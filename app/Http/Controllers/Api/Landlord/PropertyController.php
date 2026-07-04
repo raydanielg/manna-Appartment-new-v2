@@ -36,15 +36,23 @@ class PropertyController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'address' => 'required|string|max:255',
-            'location' => 'nullable|string|max:255',
-            'type' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'address' => 'required|string|max:255',
+                'location' => 'nullable|string|max:255',
+                'type' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'images' => 'nullable|array',
+                'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Property validation failed', [
+                'errors' => $e->errors(),
+                'input' => $request->except('images'),
+            ]);
+            throw $e;
+        }
 
         $organization = Auth::user()->organization;
 

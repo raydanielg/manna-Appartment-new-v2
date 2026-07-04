@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../../core/config/app_config.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
@@ -40,8 +41,39 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
   }
 
   Future<void> _pickAvatar() async {
-    final picked = await _picker.pickImage(source: ImageSource.gallery, maxWidth: 800, maxHeight: 800, imageQuality: 80);
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Update Profile Photo', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+                title: Text('Camera', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: AppColors.primary),
+                title: Text('Gallery', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (source == null) return;
+
+    final picked = await _picker.pickImage(source: source, maxWidth: 800, maxHeight: 800, imageQuality: 80);
     if (picked == null) return;
+
     setState(() => _isLoading = true);
     final success = await ref.read(authProvider.notifier).updateAvatar(picked.path);
     setState(() => _isLoading = false);
@@ -130,10 +162,14 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
                   child: ClipOval(
                     child: user.avatar != null && user.avatar!.isNotEmpty
                         ? Image.network(
-                            user.avatar!,
+                            _avatarUrl(user.avatar!),
+                            key: ValueKey(user.avatar!),
                             width: 120,
                             height: 120,
                             fit: BoxFit.cover,
+                            loadingBuilder: (context, child, progress) => progress == null
+                                ? child
+                                : Center(child: CircularProgressIndicator(color: Colors.white, value: progress.expectedTotalBytes != null ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes! : null)),
                             errorBuilder: (_, __, ___) => Center(
                               child: Text(initials, style: GoogleFonts.nunito(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white)),
                             ),
@@ -255,5 +291,21 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
         ],
       ),
     );
+  }
+
+  String _avatarUrl(String avatar) {
+    if (avatar.isEmpty) return avatar;
+    if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar;
+    final base = AppConfig.apiBaseUrl.replaceAll(RegExp(r'/api/?$'), '');
+    final separator = avatar.startsWith('/') ? '' : '/';
+    return '$base$separator$avatar';
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
   }
 }

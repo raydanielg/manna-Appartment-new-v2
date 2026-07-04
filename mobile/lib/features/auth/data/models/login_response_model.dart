@@ -28,6 +28,7 @@ class UserModel {
   final String? email;
   final String? kycStatus;
   final String? organizationStatus;
+  final String? suspensionReason;
   final String? businessName;
   final String? avatar;
 
@@ -41,6 +42,7 @@ class UserModel {
     this.email,
     this.kycStatus,
     this.organizationStatus,
+    this.suspensionReason,
     this.businessName,
     this.avatar,
   });
@@ -57,6 +59,7 @@ class UserModel {
       email: json['email'],
       kycStatus: org is Map ? org['kyc_status'] : null,
       organizationStatus: org is Map ? org['status'] : null,
+      suspensionReason: org is Map ? org['suspension_reason'] : null,
       businessName: org is Map ? org['business_name'] : null,
       avatar: json['avatar']?.toString(),
     );
@@ -72,6 +75,7 @@ class UserModel {
     String? email,
     String? kycStatus,
     String? organizationStatus,
+    String? suspensionReason,
     String? businessName,
     String? avatar,
   }) {
@@ -85,6 +89,7 @@ class UserModel {
       email: email ?? this.email,
       kycStatus: kycStatus ?? this.kycStatus,
       organizationStatus: organizationStatus ?? this.organizationStatus,
+      suspensionReason: suspensionReason ?? this.suspensionReason,
       businessName: businessName ?? this.businessName,
       avatar: avatar ?? this.avatar,
     );
@@ -100,6 +105,7 @@ class UserModel {
         'email': email,
         'kyc_status': kycStatus,
         'organization_status': organizationStatus,
+        'suspension_reason': suspensionReason,
         'business_name': businessName,
         'avatar': avatar,
       };

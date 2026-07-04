@@ -109,7 +109,9 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                      _buildLabel('Full Name'),
+                      _buildSectionTitle('Personal Information'),
+                      const SizedBox(height: 12),
+                      _buildLabel('Full Name *'),
                       _buildField(
                         controller: _nameController,
                         hint: 'John Doe',
@@ -118,7 +120,7 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                             v == null || v.trim().isEmpty ? 'Name is required' : null,
                       ),
                       const SizedBox(height: 16),
-                      _buildLabel('Phone Number'),
+                      _buildLabel('Phone Number *'),
                       _buildPhoneField(),
                       const SizedBox(height: 16),
                       _buildLabel('Email (optional)'),
@@ -135,15 +137,18 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
-                      _buildLabel('Business Name (optional)'),
+                      const SizedBox(height: 20),
+                      _buildSectionTitle('Business Information'),
+                      const SizedBox(height: 12),
+                      _buildLabel('Business Name *'),
                       _buildField(
                         controller: _businessController,
                         hint: 'Manna Properties Ltd',
                         icon: Icons.business_outlined,
+                        validator: (v) => v == null || v.trim().isEmpty ? 'Business name is required' : null,
                       ),
                       const SizedBox(height: 16),
-                      _buildLabel('Password'),
+                      _buildLabel('Password *'),
                       _buildPasswordField(
                         controller: _passwordController,
                         obscure: _obscure,
@@ -155,7 +160,7 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                         },
                       ),
                       const SizedBox(height: 16),
-                      _buildLabel('Confirm Password'),
+                      _buildLabel('Confirm Password *'),
                       _buildPasswordField(
                         controller: _confirmController,
                         obscure: _obscureConfirm,
@@ -356,6 +361,19 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSectionTitle(String text) {
+    return Row(
+      children: [
+        Container(width: 4, height: 18, decoration: const BoxDecoration(color: Color(0xFF2563EB), borderRadius: BorderRadius.all(Radius.circular(2)))),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1E293B)),
+        ),
+      ],
     );
   }
 

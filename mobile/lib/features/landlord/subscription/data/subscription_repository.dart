@@ -37,11 +37,20 @@ class SubscriptionRepository {
     return response.data['data'] ?? {};
   }
 
-  Future<Map<String, dynamic>> initiatePayment(String planId, String phone) async {
+  Future<Map<String, dynamic>> initiatePayment(
+    String planId,
+    String phone, {
+    String paymentMethod = 'mobile_money',
+    String? bank,
+    String? accountNumber,
+  }) async {
     final response = await _client.post('/payments-gateway/initiate', data: {
       'type': 'subscription',
       'id': planId,
       'phone': phone,
+      'payment_method': paymentMethod,
+      'bank': bank,
+      'account_number': accountNumber,
     });
     return response.data['data'] ?? {};
   }
