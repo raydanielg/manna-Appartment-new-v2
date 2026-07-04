@@ -32,7 +32,10 @@ Route::get('/', function () {
     if (auth()->check() && auth()->user()->role === 'super_admin') {
         return redirect('/admin/dashboard');
     }
-    return view('welcome');
+    if (auth()->check()) {
+        return redirect('/home');
+    }
+    return redirect()->route('login');
 });
 
 // Custom SMS OTP password reset
