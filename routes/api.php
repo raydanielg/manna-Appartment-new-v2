@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\RegisterLandlordController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\Landlord\ContractController;
 use App\Http\Controllers\Api\Landlord\FinanceController;
 use App\Http\Controllers\Api\Landlord\LandlordDashboardController;
@@ -203,8 +204,14 @@ Route::prefix('v1')->group(function () {
             Route::post('/maintenance-requests', [TenantMaintenanceRequestController::class, 'store']);
             Route::get('/maintenance-requests', [TenantMaintenanceRequestController::class, 'index']);
             Route::get('/my-maintenance-requests', [TenantMaintenanceRequestController::class, 'index']);
-            Route::get('/notifications', [TenantProfileController::class, 'notifications']);
         });
+
+        // Notifications (all authenticated users)
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/device-tokens', [NotificationController::class, 'registerToken']);
     });
 
     // Payment gateway (public initiate/verify)

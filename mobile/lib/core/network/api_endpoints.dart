@@ -35,5 +35,5 @@ class ApiEndpoints {
   static const String notifications = '/notifications';
   static const String profile = '/profile';
   static const String changePassword = '/profile/change-password';
-  static const String registerFcmToken = '/fcm/register';
+  static const String registerFcmToken = '/device-tokens';
 }

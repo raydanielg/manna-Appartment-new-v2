@@ -18,9 +18,11 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\KycController;
 use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Admin\PlanController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\RevenueController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SmsLogController;
+use App\Http\Controllers\Admin\TenantController;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -66,4 +68,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::post('/settings', [SettingsController::class, 'store'])->name('settings.store');
     Route::delete('/settings/{id}', [SettingsController::class, 'destroy'])->name('settings.destroy');
+
+    Route::get('/tenants', [TenantController::class, 'index'])->name('tenants.index');
+    Route::get('/tenants/{id}', [TenantController::class, 'show'])->name('tenants.show');
+    Route::delete('/tenants/{id}', [TenantController::class, 'destroy'])->name('tenants.destroy');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications', [NotificationController::class, 'store'])->name('notifications.store');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
