@@ -236,7 +236,7 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
         decoration: InputDecoration(
           labelText: label,
           labelStyle: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight),
-          prefixIcon: Icon(icon, size: 18, color: enabled ? AppColors.primary : (isDark ? Colors.white50 : Colors.grey)),
+          prefixIcon: Icon(icon, size: 18, color: enabled ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey)),
           border: InputBorder.none,
         ),
       ),

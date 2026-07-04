@@ -7,7 +7,7 @@ import '../../../../../features/auth/providers/auth_provider.dart';
 import '../../../../../features/landlord/subscription/providers/subscription_provider.dart';
 
 class LandlordMoreScreen extends ConsumerWidget {
-  const LandlordMoreScreen({super.key});
+  LandlordMoreScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

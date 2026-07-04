@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/constants/app_colors.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_landlord_screen.dart';
@@ -128,7 +129,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/landlord/staff', builder: (context, state) => const StaffListScreen()),
           GoRoute(path: '/landlord/staff/add', builder: (context, state) => const AddStaffScreen()),
           GoRoute(path: '/landlord/staff/:id/permissions', builder: (context, state) => const StaffPermissionsScreen()),
-          GoRoute(path: '/landlord/more', builder: (context, state) => const LandlordMoreScreen()),
+          GoRoute(path: '/landlord/more', builder: (context, state) => LandlordMoreScreen()),
         ],
       ),
 
@@ -224,7 +225,7 @@ class LandlordScaffold extends StatelessWidget {
                               size: isActive ? 24 : 22,
                               color: isActive
                                   ? Colors.white
-                                  : (isDark ? Colors.white50 : Colors.grey.shade500),
+                                  : (isDark ? Colors.white54 : Colors.grey.shade500),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -235,7 +236,7 @@ class LandlordScaffold extends StatelessWidget {
                               fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
                               color: isActive
                                   ? AppColors.primary
-                                  : (isDark ? Colors.white50 : Colors.grey.shade500),
+                                  : (isDark ? Colors.white54 : Colors.grey.shade500),
                             ),
                           ),
                         ],
@@ -338,7 +339,7 @@ class TenantScaffold extends StatelessWidget {
                               size: isActive ? 24 : 22,
                               color: isActive
                                   ? Colors.white
-                                  : (isDark ? Colors.white50 : Colors.grey.shade500),
+                                  : (isDark ? Colors.white54 : Colors.grey.shade500),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -349,7 +350,7 @@ class TenantScaffold extends StatelessWidget {
                               fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
                               color: isActive
                                   ? AppColors.primary
-                                  : (isDark ? Colors.white50 : Colors.grey.shade500),
+                                  : (isDark ? Colors.white54 : Colors.grey.shade500),
                             ),
                           ),
                         ],

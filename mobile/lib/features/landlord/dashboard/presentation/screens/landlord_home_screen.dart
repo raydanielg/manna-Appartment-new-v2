@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
+import '../../../../../features/auth/data/models/login_response_model.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
 import '../../../../../shared/notifications/providers/notifications_provider.dart';
 import '../../providers/dashboard_provider.dart';
@@ -34,7 +35,7 @@ class LandlordHomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context, user?.fullName ?? 'Landlord', unreadCount),
+                _buildHeader(context, user, unreadCount),
                 const SizedBox(height: 24),
                 dashboardAsync.when(
                   loading: () => const LoadingIndicator(),
@@ -73,9 +74,9 @@ class LandlordHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, String name, int unreadCount) {
+  Widget _buildHeader(BuildContext context, UserModel? user, int unreadCount) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final user = ref.read(authProvider).user;
+    final name = user?.fullName ?? 'Landlord';
     final avatarUrl = user?.avatar;
     final initials = name.trim().split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join().toUpperCase();
     return Row(
