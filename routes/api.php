@@ -132,6 +132,7 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/subscriptions/plans', [SubscriptionController::class, 'plans']);
             Route::get('/subscriptions/current', [SubscriptionController::class, 'current']);
+            Route::post('/subscriptions/free-trial', [SubscriptionController::class, 'freeTrial']);
             Route::post('/subscriptions/subscribe', [SubscriptionController::class, 'subscribe']);
             Route::get('/subscriptions/invoices', [SubscriptionController::class, 'invoices']);
 

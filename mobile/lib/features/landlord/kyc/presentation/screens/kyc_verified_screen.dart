@@ -35,9 +35,9 @@ class _KycVerifiedScreenState extends ConsumerState<KycVerifiedScreen>
     super.dispose();
   }
 
-  void _goToDashboard() {
+  void _goToSubscription() {
     ref.invalidate(landlordDashboardProvider);
-    context.go('/landlord/home');
+    context.go('/landlord/subscription');
   }
 
   @override
@@ -93,9 +93,9 @@ class _KycVerifiedScreenState extends ConsumerState<KycVerifiedScreen>
                 ),
                 const SizedBox(height: 40),
                 ElevatedButton.icon(
-                  onPressed: _goToDashboard,
-                  icon: const Icon(Icons.dashboard),
-                  label: const Text('Go to Dashboard'),
+                  onPressed: _goToSubscription,
+                  icon: const Icon(Icons.card_membership),
+                  label: const Text('Continue to Subscription'),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                     backgroundColor: AppColors.primary,

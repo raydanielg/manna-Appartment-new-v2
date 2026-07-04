@@ -15,7 +15,7 @@ class OrganizationController extends Controller
 
     public function index(Request $request)
     {
-        $organizations = Organization::with('owner')->withCount(['properties', 'tenants'])->latest()->paginate(20);
+        $organizations = Organization::with(['owner', 'subscription.plan'])->withCount(['properties', 'tenants'])->latest()->paginate(20);
         return view('admin.organizations.index', compact('organizations'));
     }
 }

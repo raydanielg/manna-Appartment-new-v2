@@ -25,6 +25,43 @@ class SubscriptionController extends Controller
         return $this->success('Current subscription retrieved.', $subscription);
     }
 
+    public function freeTrial()
+    {
+        $organization = Auth::user()->organization;
+
+        $existingTrial = Subscription::where('organization_id', $organization->id)
+            ->whereHas('plan', fn ($q) => $q->where('billing_cycle', 'trial'))
+            ->first();
+
+        if ($existingTrial) {
+            return $this->error('Free trial has already been used on this account.', null, 422);
+        }
+
+        $plan = SubscriptionPlan::where('billing_cycle', 'trial')->where('status', 'active')->first();
+        if (!$plan) {
+            return $this->error('Free trial plan is not available.', null, 422);
+        }
+
+        $startDate = now();
+        $endDate = $startDate->copy()->addDays(3);
+
+        $subscription = Subscription::create([
+            'organization_id' => $organization->id,
+            'plan_id' => $plan->id,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'amount' => 0,
+            'status' => 'active',
+        ]);
+
+        $organization->update([
+            'subscription_id' => $subscription->id,
+            'sms_balance' => $organization->sms_balance + $plan->sms_included,
+        ]);
+
+        return $this->success('Free trial activated for 3 days.', $subscription->load('plan'), 201);
+    }
+
     public function subscribe(Request $request)
     {
         $request->validate([

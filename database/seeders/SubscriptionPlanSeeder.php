@@ -11,6 +11,15 @@ class SubscriptionPlanSeeder extends Seeder
     {
         $plans = [
             [
+                'name' => 'Free Trial',
+                'price' => 0,
+                'billing_cycle' => 'trial',
+                'property_limit' => 1,
+                'unit_limit' => 10,
+                'sms_included' => 10,
+                'features_json' => ['3_day_trial', 'basic_reports'],
+            ],
+            [
                 'name' => 'Basic',
                 'price' => 10000,
                 'billing_cycle' => 'monthly',

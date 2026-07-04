@@ -1,4 +1,5 @@
 import '../../../../core/network/api_client.dart';
+import '../../../../core/network/api_endpoints.dart';
 
 class SubscriptionRepository {
   final ApiClient _client;
@@ -12,6 +13,11 @@ class SubscriptionRepository {
   Future<List<dynamic>> getPlans() async {
     final response = await _client.get('/landlord/subscriptions/plans');
     return response.data['data'] ?? [];
+  }
+
+  Future<Map<String, dynamic>> activateFreeTrial() async {
+    final response = await _client.post(ApiEndpoints.freeTrial);
+    return response.data['data'] ?? {};
   }
 
   Future<Map<String, dynamic>> subscribe(String planId) async {
