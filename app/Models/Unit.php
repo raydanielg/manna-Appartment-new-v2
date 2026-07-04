@@ -20,6 +20,9 @@ class Unit extends Model
         'name',
         'type',
         'rent_amount',
+        'size',
+        'bedrooms',
+        'bathrooms',
         'status',
         'description',
     ];

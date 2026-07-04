@@ -26,13 +26,22 @@ class UnitController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string|max:255',
-            'rent_amount' => 'required|numeric|min:0',
+            'rent_amount' => 'nullable|numeric|min:0',
+            'monthly_rent' => 'nullable|numeric|min:0',
+            'size' => 'nullable|string|max:255',
+            'bedrooms' => 'nullable|integer|min:0',
+            'bathrooms' => 'nullable|integer|min:0',
             'description' => 'nullable|string',
         ]);
 
+        $rent = $request->input('rent_amount', $request->input('monthly_rent', 0));
+
         $unit = Unit::create(array_merge(
-            $request->only(['name', 'type', 'rent_amount', 'description']),
-            ['property_id' => $propertyId]
+            $request->only(['name', 'type', 'size', 'bedrooms', 'bathrooms', 'description']),
+            [
+                'property_id' => $propertyId,
+                'rent_amount' => $rent,
+            ]
         ));
 
         return $this->success('Unit created.', $unit, 201);
@@ -47,7 +56,9 @@ class UnitController extends Controller
     public function update(Request $request, $id)
     {
         $unit = Unit::findOrFail($id);
-        $unit->update($request->only(['name', 'type', 'rent_amount', 'status', 'description']));
+        $unit->update($request->only([
+            'name', 'type', 'rent_amount', 'monthly_rent', 'size', 'bedrooms', 'bathrooms', 'status', 'description'
+        ]));
         return $this->success('Unit updated.', $unit);
     }
 

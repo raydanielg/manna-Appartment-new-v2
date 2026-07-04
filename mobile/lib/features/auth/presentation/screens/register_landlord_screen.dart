@@ -109,7 +109,7 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                      _buildSectionTitle('Personal Information'),
+                      _buildSectionTitle('Personal Information', icon: Icons.person_outline),
                       const SizedBox(height: 12),
                       _buildLabel('Full Name *'),
                       _buildField(
@@ -138,7 +138,12 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                         },
                       ),
                       const SizedBox(height: 20),
-                      _buildSectionTitle('Business Information'),
+                      _buildSectionTitle('Business Information', icon: Icons.business_outlined),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Your organization will be created with this business name.',
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+                      ),
                       const SizedBox(height: 12),
                       _buildLabel('Business Name *'),
                       _buildField(
@@ -364,11 +369,15 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
     );
   }
 
-  Widget _buildSectionTitle(String text) {
+  Widget _buildSectionTitle(String text, {IconData? icon}) {
     return Row(
       children: [
         Container(width: 4, height: 18, decoration: const BoxDecoration(color: Color(0xFF2563EB), borderRadius: BorderRadius.all(Radius.circular(2)))),
         const SizedBox(width: 8),
+        if (icon != null) ...[
+          Icon(icon, size: 16, color: const Color(0xFF2563EB)),
+          const SizedBox(width: 6),
+        ],
         Text(
           text,
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1E293B)),
