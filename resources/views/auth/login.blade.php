@@ -3,25 +3,14 @@
 @section('title', 'Login - Manna Apartment')
 
 @section('content')
-{{-- Animated dots --}}
-<div class="fixed inset-0 pointer-events-none overflow-hidden">
-    <div class="dot dot-lg dot-float" style="top:15%; left:12%; animation-delay:0s;"></div>
-    <div class="dot dot-md dot-float2" style="top:30%; right:18%; animation-delay:1.5s;"></div>
-    <div class="dot dot-sm dot-float" style="bottom:30%; left:20%; animation-delay:2.5s;"></div>
-    <div class="dot dot-md dot-float2" style="bottom:20%; right:12%; animation-delay:0.8s;"></div>
-    <div class="dot dot-lg dot-float" style="top:70%; right:25%; animation-delay:2s;"></div>
-    <div class="dot dot-sm dot-float2" style="top:8%; left:55%; animation-delay:1.2s;"></div>
-</div>
-
-<div class="flex-1 flex items-center justify-center min-h-screen p-4 relative z-10">
-    <div class="w-full max-w-md animate__animated animate__fadeInUp">
-        <div class="glass-card rounded-2xl shadow-2xl border border-white/50 overflow-hidden">
+<div class="w-full max-w-md" style="animation: simpleFadeIn 0.4s ease-out both;">
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
             {{-- Header --}}
             <div class="bg-gradient-to-br from-emerald-600 to-emerald-700 px-8 py-8 text-center relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10"></div>
                 <div class="absolute bottom-0 left-0 w-24 h-24 bg-gold-400/20 rounded-full -ml-10 -mb-10"></div>
-                <div class="w-16 h-16 mx-auto bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 relative z-10">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                <div class="w-20 h-20 mx-auto bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 overflow-hidden">
+                    <img src="{{ asset('file_000000001cdc7230acd3b9659475e375.png') }}" alt="Manna Apartment" class="w-16 h-16 object-cover rounded-2xl">
                 </div>
                 <h2 class="text-2xl font-extrabold text-white relative z-10">Welcome Back</h2>
                 <p class="text-emerald-100 text-sm mt-1 relative z-10">Sign in to Manna Apartment</p>
@@ -106,8 +95,7 @@
             </div>
         </div>
 
-        <p class="mt-6 text-center text-xs text-gray-400">&copy; {{ date('Y') }} Manna Apartment. All rights reserved.</p>
-    </div>
+    <p class="mt-6 text-center text-xs text-gray-400">&copy; {{ date('Y') }} Manna Apartment. All rights reserved.</p>
 </div>
 
 <script>
