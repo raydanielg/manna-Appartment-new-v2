@@ -45,6 +45,54 @@ class AuthRepository {
 
   Future<String?> getToken() => SecureStorageService.getToken();
 
+  Future<void> register({
+    required String name,
+    required String phone,
+    required String password,
+    String? email,
+    String? businessName,
+  }) async {
+    final response = await _client.post(
+      ApiEndpoints.register,
+      data: {
+        'name': name,
+        'phone': phone,
+        'password': password,
+        if (email != null) 'email': email,
+        if (businessName != null) 'business_name': businessName,
+        'platform': 'mobile',
+      },
+    );
+    final data = response.data['data'] ?? response.data;
+    final loginResponse = LoginResponse.fromJson(data);
+    await SecureStorageService.setToken(loginResponse.accessToken);
+    if (loginResponse.refreshToken != null) {
+      await SecureStorageService.setRefreshToken(loginResponse.refreshToken!);
+    }
+    await SecureStorageService.setUserData(jsonEncode(loginResponse.user.toJson()));
+  }
+
+  Future<void> forgotPassword(String phone) async {
+    await _client.post(
+      ApiEndpoints.forgotPassword,
+      data: {'phone': phone, 'platform': 'mobile'},
+    );
+  }
+
+  Future<void> verifyOtp(String phone, String otp) async {
+    await _client.post(
+      ApiEndpoints.verifyOtp,
+      data: {'phone': phone, 'otp': otp, 'platform': 'mobile'},
+    );
+  }
+
+  Future<void> resetPassword(String phone, String password) async {
+    await _client.post(
+      ApiEndpoints.resetPassword,
+      data: {'phone': phone, 'password': password, 'platform': 'mobile'},
+    );
+  }
+
   Future<void> registerFcmToken(String token) async {
     await _client.post(ApiEndpoints.registerFcmToken, data: {'token': token, 'platform': 'android'});
   }

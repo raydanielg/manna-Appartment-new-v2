@@ -126,6 +126,10 @@ flutter:
   assets:
     - .env
     - assets/images/
+    - assets/images/app_logo.png
+    - assets/images/managepropers.jpg
+    - assets/images/trackpayemnts.jpg
+    - assets/images/connectwithtenent.jpg
     - assets/icons/
     - assets/lang/en.json
     - assets/lang/sw.json

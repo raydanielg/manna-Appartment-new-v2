@@ -5,6 +5,7 @@ import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_landlord_screen.dart';
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
+import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/verify_otp_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
@@ -58,6 +59,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) => RouteGuard.redirect(context, state, ref.read(authProvider)),
     routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
+      GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
       GoRoute(path: '/auth/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/auth/register-landlord', builder: (context, state) => const RegisterLandlordScreen()),
       GoRoute(path: '/auth/forgot-password', builder: (context, state) => const ForgotPasswordScreen()),

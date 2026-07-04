@@ -78,6 +78,71 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> register({
+    required String name,
+    required String phone,
+    required String password,
+    String? email,
+    String? businessName,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repository.register(
+        name: name,
+        phone: phone,
+        password: password,
+        email: email,
+        businessName: businessName,
+      );
+      final user = await _repository.getStoredUser();
+      state = state.copyWith(user: user, isLoading: false);
+      return true;
+    } catch (e) {
+      _logger.e('Register error: $e');
+      state = state.copyWith(isLoading: false, error: _parseError(e));
+      return false;
+    }
+  }
+
+  Future<bool> forgotPassword(String phone) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repository.forgotPassword(phone);
+      state = state.copyWith(isLoading: false);
+      return true;
+    } catch (e) {
+      _logger.e('Forgot password error: $e');
+      state = state.copyWith(isLoading: false, error: _parseError(e));
+      return false;
+    }
+  }
+
+  Future<bool> verifyOtp(String phone, String otp) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repository.verifyOtp(phone, otp);
+      state = state.copyWith(isLoading: false);
+      return true;
+    } catch (e) {
+      _logger.e('Verify OTP error: $e');
+      state = state.copyWith(isLoading: false, error: _parseError(e));
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword(String phone, String password) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repository.resetPassword(phone, password);
+      state = state.copyWith(isLoading: false);
+      return true;
+    } catch (e) {
+      _logger.e('Reset password error: $e');
+      state = state.copyWith(isLoading: false, error: _parseError(e));
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     await _repository.logout();
     state = const AuthState();

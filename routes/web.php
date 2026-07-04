@@ -38,6 +38,10 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Static pages
+Route::get('/privacy', [App\Http\Controllers\StaticPageController::class, 'privacy'])->name('privacy');
+Route::get('/terms', [App\Http\Controllers\StaticPageController::class, 'terms'])->name('terms');
+
 // Custom SMS OTP password reset
 Route::get('forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'showForgotForm'])->name('password.request');
 Route::post('forgot-password', [App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendOtp'])->name('password.send.otp');

@@ -50,6 +50,7 @@ class LoginController extends Controller
 
         return $this->success('Login successful.', [
             'user' => $user->only(['id', 'full_name', 'phone', 'role', 'organization_id', 'status']),
+            'access_token' => $token,
             'token' => $token,
         ]);
     }
