@@ -59,8 +59,12 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/organizations', [OrganizationController::class, 'index'])->name('organizations');
+    Route::get('/organizations/create', [OrganizationController::class, 'create'])->name('organizations.create');
+    Route::post('/organizations', [OrganizationController::class, 'store'])->name('organizations.store');
     Route::get('/organizations/{id}', [OrganizationController::class, 'show'])->name('organizations.show');
     Route::post('/organizations/{id}/assign-plan', [OrganizationController::class, 'assignPlan'])->name('organizations.assign-plan');
+    Route::patch('/organizations/{id}/status', [OrganizationController::class, 'updateStatus'])->name('organizations.update-status');
+    Route::patch('/organizations/{id}/kyc', [OrganizationController::class, 'updateKycStatus'])->name('organizations.update-kyc');
     Route::delete('/organizations/{id}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
     Route::get('/properties', [\App\Http\Controllers\Admin\PropertyController::class, 'index'])->name('properties');
     Route::get('/properties/{id}', [\App\Http\Controllers\Admin\PropertyController::class, 'show'])->name('properties.show');
