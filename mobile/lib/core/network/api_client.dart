@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,9 +19,10 @@ class ApiClient {
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         sendTimeout: const Duration(seconds: 30),
+        contentType: 'application/json',
+        responseType: ResponseType.json,
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
           'X-Platform': AppConfig.mobilePlatformHeader,
           'X-Requested-With': 'XMLHttpRequest',
         },
@@ -80,9 +82,9 @@ class ApiClient {
   }) async {
     return _dio.post(
       path,
-      data: data,
+      data: _encodeBody(data),
       queryParameters: queryParameters,
-      options: options,
+      options: _jsonOptions(options),
     );
   }
 
@@ -94,9 +96,9 @@ class ApiClient {
   }) async {
     return _dio.put(
       path,
-      data: data,
+      data: _encodeBody(data),
       queryParameters: queryParameters,
-      options: options,
+      options: _jsonOptions(options),
     );
   }
 
@@ -108,9 +110,9 @@ class ApiClient {
   }) async {
     return _dio.delete(
       path,
-      data: data,
+      data: _encodeBody(data),
       queryParameters: queryParameters,
-      options: options,
+      options: _jsonOptions(options),
     );
   }
 
@@ -122,10 +124,24 @@ class ApiClient {
   }) async {
     return _dio.patch(
       path,
-      data: data,
+      data: _encodeBody(data),
       queryParameters: queryParameters,
-      options: options,
+      options: _jsonOptions(options),
     );
+  }
+
+  dynamic _encodeBody(dynamic data) {
+    if (data == null || data is String || data is FormData || data is List<int>) {
+      return data;
+    }
+    return jsonEncode(data);
+  }
+
+  Options? _jsonOptions(Options? options) {
+    if (options != null) {
+      return options.copyWith(contentType: 'application/json');
+    }
+    return Options(contentType: 'application/json');
   }
 
   Future<Response> uploadFile(
