@@ -95,6 +95,49 @@
     <div class="space-y-6">
         <div class="bg-white rounded-xl border overflow-hidden">
             <div class="px-5 py-4 border-b">
+                <h3 class="text-sm font-semibold text-gray-900">Manage Status</h3>
+            </div>
+            <div class="p-5 space-y-3">
+                <form method="POST" action="{{ route('admin.organizations.update-status', $organization->id) }}" class="space-y-3">
+                    @csrf
+                    @method('PATCH')
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Organization Status</label>
+                        <select name="status" class="w-full px-3 py-2 border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="active" {{ $organization->status === 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="suspended" {{ $organization->status === 'suspended' ? 'selected' : '' }}>Suspended</option>
+                            <option value="deactivated" {{ $organization->status === 'deactivated' ? 'selected' : '' }}>Deactivated</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Reason (if suspending/deactivating)</label>
+                        <textarea name="reason" rows="2" class="w-full px-3 py-2 border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">{{ $organization->suspension_reason }}</textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2 rounded-lg transition">Update Status</button>
+                </form>
+                @if($organization->suspension_reason)
+                <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 text-xs text-amber-800">
+                    <strong>Suspension reason:</strong> {{ $organization->suspension_reason }}
+                </div>
+                @endif
+                <form method="POST" action="{{ route('admin.organizations.update-kyc', $organization->id) }}" class="pt-2 border-t space-y-3">
+                    @csrf
+                    @method('PATCH')
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">KYC Status</label>
+                        <select name="kyc_status" class="w-full px-3 py-2 border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="pending" {{ $organization->kyc_status === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="approved" {{ $organization->kyc_status === 'approved' ? 'selected' : '' }}>Approved</option>
+                            <option value="rejected" {{ $organization->kyc_status === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold py-2 rounded-lg transition">Update KYC</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl border overflow-hidden">
+            <div class="px-5 py-4 border-b">
                 <h3 class="text-sm font-semibold text-gray-900">Subscription</h3>
             </div>
             <div class="p-5">

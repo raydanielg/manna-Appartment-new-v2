@@ -98,7 +98,36 @@
 @push('scripts')
 <script>
 function updateStatus(url, status) {
-    const reason = status !== 'active' ? prompt('Enter reason (optional):') : '';
+    if (status === 'active') {
+        submitStatusForm(url, status, '');
+        return;
+    }
+    const title = status === 'suspended' ? 'Suspend organization?' : 'Deactivate organization?';
+    const text = 'The landlord will lose access to the app. You can add a reason below.';
+    Swal.fire({
+        title: title,
+        text: text,
+        icon: 'warning',
+        input: 'textarea',
+        inputPlaceholder: 'Reason (optional)',
+        inputAttributes: { 'aria-label': 'Reason for this action' },
+        showCancelButton: true,
+        confirmButtonText: 'Yes, ' + status,
+        confirmButtonColor: status === 'suspended' ? '#d97706' : '#4b5563',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            popup: 'rounded-2xl',
+            confirmButton: 'rounded-lg px-4 py-2 text-sm font-semibold',
+            cancelButton: 'rounded-lg px-4 py-2 text-sm font-semibold',
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitStatusForm(url, status, result.value || '');
+        }
+    });
+}
+
+function submitStatusForm(url, status, reason) {
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = url;
@@ -133,12 +162,17 @@ function updateStatus(url, status) {
 function deleteOrganization(url) {
     Swal.fire({
         title: 'Delete organization?',
-        text: 'This action cannot be undone.',
-        icon: 'warning',
+        text: 'This action cannot be undone. The landlord account and all data will be removed.',
+        icon: 'error',
         showCancelButton: true,
         confirmButtonText: 'Delete',
         confirmButtonColor: '#dc2626',
         cancelButtonText: 'Cancel',
+        customClass: {
+            popup: 'rounded-2xl',
+            confirmButton: 'rounded-lg px-4 py-2 text-sm font-semibold',
+            cancelButton: 'rounded-lg px-4 py-2 text-sm font-semibold',
+        }
     }).then((result) => {
         if (result.isConfirmed) {
             const form = document.createElement('form');
