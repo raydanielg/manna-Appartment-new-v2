@@ -28,14 +28,28 @@ class ForgotPasswordController extends Controller
             ]);
         }
 
+        // Rate limit: one OTP request per phone per minute
+        $rateKey = 'otp_request_' . $request->phone;
+        if (Cache::has($rateKey)) {
+            return $this->error('Please wait before requesting a new OTP.', null, 429);
+        }
+
         $otp = app(OtpService::class)->generate($request->phone);
 
-        app(SmsService::class)->send(
+        $sms = app(SmsService::class)->send(
             $request->phone,
             "Your Manna Apartment password reset code is: {$otp}. It expires in 15 minutes.",
             'password_reset',
             $user->organization_id
         );
+
+        if ($sms->status !== 'sent') {
+            // Clear the generated OTP so the user can retry
+            app(OtpService::class)->clear($request->phone);
+            return $this->error('Could not send OTP. Please check your SMS provider configuration and try again.', null, 500);
+        }
+
+        Cache::put($rateKey, true, now()->addSeconds(60));
 
         return $this->success('OTP sent to your phone.');
     }
