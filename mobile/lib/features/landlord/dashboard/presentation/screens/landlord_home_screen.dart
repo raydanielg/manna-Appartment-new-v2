@@ -6,7 +6,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
-import '../providers/dashboard_provider.dart';
+import '../../providers/dashboard_provider.dart';
 import '../widgets/income_chart.dart';
 import '../widgets/recent_activity_list.dart';
 import '../widgets/summary_cards.dart';

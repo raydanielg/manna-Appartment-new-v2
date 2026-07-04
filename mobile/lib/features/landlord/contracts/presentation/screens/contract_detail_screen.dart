@@ -7,7 +7,7 @@ import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../../../../core/widgets/status_badge.dart';
-import '../providers/contracts_provider.dart';
+import '../../providers/contracts_provider.dart';
 
 class ContractDetailScreen extends ConsumerWidget {
   const ContractDetailScreen({super.key});
@@ -61,7 +61,7 @@ class ContractDetailScreen extends ConsumerWidget {
                   Expanded(
                     child: PrimaryButton(
                       text: 'View PDF',
-                      icon: Icons.picture_as_pdf,
+                      icon: const Icon(Icons.picture_as_pdf),
                       onPressed: () {},
                     ),
                   ),
@@ -70,7 +70,7 @@ class ContractDetailScreen extends ConsumerWidget {
                     child: PrimaryButton(
                       text: 'Terminate',
                       color: AppColors.error,
-                      icon: Icons.cancel,
+                      icon: const Icon(Icons.cancel),
                       onPressed: () async {
                         await ref.read(contractsRepositoryProvider).terminateContract(id);
                         if (context.mounted) {

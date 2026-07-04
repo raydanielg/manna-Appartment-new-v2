@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
-import '../providers/tenants_provider.dart';
+import '../../providers/tenants_provider.dart';
 
 class AddTenantScreen extends ConsumerStatefulWidget {
   const AddTenantScreen({super.key});

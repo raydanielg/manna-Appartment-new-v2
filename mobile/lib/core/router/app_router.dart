@@ -8,10 +8,13 @@ import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/verify_otp_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../features/landlord/contracts/presentation/screens/contract_detail_screen.dart';
 import '../../features/landlord/contracts/presentation/screens/contracts_list_screen.dart';
+import '../../features/landlord/contracts/presentation/screens/create_contract_screen.dart';
 import '../../features/landlord/dashboard/presentation/screens/landlord_home_screen.dart';
 import '../../features/landlord/maintenance/presentation/screens/landlord_more_screen.dart';
 import '../../features/landlord/maintenance/presentation/screens/maintenance_requests_screen.dart';
+import '../../features/landlord/payments/presentation/screens/payment_detail_screen.dart';
 import '../../features/landlord/payments/presentation/screens/payments_list_screen.dart';
 import '../../features/landlord/payments/presentation/screens/record_payment_screen.dart';
 import '../../features/landlord/properties/presentation/screens/add_edit_property_screen.dart';
@@ -19,12 +22,26 @@ import '../../features/landlord/properties/presentation/screens/properties_list_
 import '../../features/landlord/properties/presentation/screens/property_detail_screen.dart';
 import '../../features/landlord/sms/presentation/screens/sms_broadcast_screen.dart';
 import '../../features/landlord/sms/presentation/screens/sms_logs_screen.dart';
+import '../../features/landlord/staff_management/presentation/screens/add_staff_screen.dart';
+import '../../features/landlord/staff_management/presentation/screens/staff_list_screen.dart';
+import '../../features/landlord/staff_management/presentation/screens/staff_permissions_screen.dart';
+import '../../features/landlord/subscription/presentation/screens/current_plan_screen.dart';
+import '../../features/landlord/subscription/presentation/screens/payment_checkout_screen.dart';
+import '../../features/landlord/subscription/presentation/screens/subscription_plans_screen.dart';
+import '../../features/landlord/tenants/presentation/screens/add_tenant_screen.dart';
+import '../../features/landlord/tenants/presentation/screens/move_out_screen.dart';
+import '../../features/landlord/tenants/presentation/screens/tenant_detail_screen.dart';
 import '../../features/landlord/tenants/presentation/screens/tenants_list_screen.dart';
+import '../../features/landlord/units/presentation/screens/add_edit_unit_screen.dart';
+import '../../features/landlord/units/presentation/screens/unit_detail_screen.dart';
+import '../../features/landlord/units/presentation/screens/units_list_screen.dart';
 import '../../features/tenant/dashboard/presentation/screens/tenant_home_screen.dart';
 import '../../features/tenant/maintenance/presentation/screens/my_maintenance_requests_screen.dart';
 import '../../features/tenant/maintenance/presentation/screens/submit_maintenance_screen.dart';
+import '../../features/tenant/contract/presentation/screens/contract_pdf_viewer_screen.dart';
 import '../../features/tenant/contract/presentation/screens/my_contract_screen.dart';
 import '../../features/tenant/payments/presentation/screens/my_payments_screen.dart';
+import '../../features/tenant/payments/presentation/screens/payment_receipt_screen.dart';
 import '../../features/tenant/profile/presentation/screens/change_password_screen.dart';
 import '../../features/tenant/profile/presentation/screens/tenant_more_screen.dart';
 import '../../features/tenant/profile/presentation/screens/tenant_profile_screen.dart';
@@ -60,13 +77,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/landlord/properties/add', builder: (context, state) => const AddEditPropertyScreen()),
           GoRoute(path: '/landlord/properties/:id', builder: (context, state) => const PropertyDetailScreen()),
           GoRoute(path: '/landlord/tenants', builder: (context, state) => const TenantsListScreen()),
-          GoRoute(path: '/landlord/tenants/add', builder: (context, state) => const Placeholder()),
+          GoRoute(path: '/landlord/tenants/add', builder: (context, state) => const AddTenantScreen()),
+          GoRoute(path: '/landlord/tenants/:id', builder: (context, state) => const TenantDetailScreen()),
+          GoRoute(path: '/landlord/tenants/:id/move-out', builder: (context, state) => const MoveOutScreen()),
+          GoRoute(path: '/landlord/units', builder: (context, state) => const UnitsListScreen()),
+          GoRoute(path: '/landlord/units/add', builder: (context, state) => const AddEditUnitScreen()),
+          GoRoute(path: '/landlord/units/:id', builder: (context, state) => const UnitDetailScreen()),
           GoRoute(path: '/landlord/payments', builder: (context, state) => const PaymentsListScreen()),
           GoRoute(path: '/landlord/payments/record', builder: (context, state) => const RecordPaymentScreen()),
+          GoRoute(path: '/landlord/payments/:id', builder: (context, state) => const PaymentDetailScreen()),
           GoRoute(path: '/landlord/contracts', builder: (context, state) => const ContractsListScreen()),
+          GoRoute(path: '/landlord/contracts/create', builder: (context, state) => const CreateContractScreen()),
+          GoRoute(path: '/landlord/contracts/:id', builder: (context, state) => const ContractDetailScreen()),
           GoRoute(path: '/landlord/sms', builder: (context, state) => const SmsBroadcastScreen()),
           GoRoute(path: '/landlord/sms/logs', builder: (context, state) => const SmsLogsScreen()),
           GoRoute(path: '/landlord/maintenance', builder: (context, state) => const MaintenanceRequestsScreen()),
+          GoRoute(path: '/landlord/subscription', builder: (context, state) => const CurrentPlanScreen()),
+          GoRoute(path: '/landlord/subscription/plans', builder: (context, state) => const SubscriptionPlansScreen()),
+          GoRoute(path: '/landlord/subscription/checkout', builder: (context, state) => const PaymentCheckoutScreen()),
+          GoRoute(path: '/landlord/staff', builder: (context, state) => const StaffListScreen()),
+          GoRoute(path: '/landlord/staff/add', builder: (context, state) => const AddStaffScreen()),
+          GoRoute(path: '/landlord/staff/:id/permissions', builder: (context, state) => const StaffPermissionsScreen()),
           GoRoute(path: '/landlord/more', builder: (context, state) => const LandlordMoreScreen()),
         ],
       ),
@@ -78,8 +109,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/tenant/home', builder: (context, state) => const TenantHomeScreen()),
           GoRoute(path: '/tenant/my-unit', builder: (context, state) => const MyUnitDetailScreen()),
           GoRoute(path: '/tenant/contract', builder: (context, state) => const MyContractScreen()),
+          GoRoute(path: '/tenant/contract/pdf', builder: (context, state) => const ContractPdfViewerScreen()),
           GoRoute(path: '/tenant/payments', builder: (context, state) => const MyPaymentsScreen()),
+          GoRoute(path: '/tenant/payments/:id/receipt', builder: (context, state) => const PaymentReceiptScreen()),
           GoRoute(path: '/tenant/maintenance', builder: (context, state) => const SubmitMaintenanceScreen()),
+          GoRoute(path: '/tenant/maintenance/submit', builder: (context, state) => const SubmitMaintenanceScreen()),
           GoRoute(path: '/tenant/maintenance/my', builder: (context, state) => const MyMaintenanceRequestsScreen()),
           GoRoute(path: '/tenant/profile', builder: (context, state) => const TenantProfileScreen()),
           GoRoute(path: '/tenant/profile/change-password', builder: (context, state) => const ChangePasswordScreen()),

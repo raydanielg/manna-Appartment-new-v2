@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
-import '../providers/properties_provider.dart';
+import '../../providers/properties_provider.dart';
 
 class PropertyDetailScreen extends ConsumerWidget {
   const PropertyDetailScreen({super.key});

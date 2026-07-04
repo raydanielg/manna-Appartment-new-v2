@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
-import '../providers/units_provider.dart';
+import '../../providers/units_provider.dart';
 
 class AddEditUnitScreen extends ConsumerStatefulWidget {
   const AddEditUnitScreen({super.key});
@@ -82,7 +82,7 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
               Text('Unit Type', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _type,
+                initialValue: _type,
                 decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)), contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
                 items: const [
                   DropdownMenuItem(value: 'bedsitter', child: Text('Bedsitter')),

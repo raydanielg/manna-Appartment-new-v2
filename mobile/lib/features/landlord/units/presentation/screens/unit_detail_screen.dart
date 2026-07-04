@@ -6,7 +6,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/status_badge.dart';
-import '../providers/units_provider.dart';
+import '../../providers/units_provider.dart';
 
 class UnitDetailScreen extends ConsumerWidget {
   const UnitDetailScreen({super.key});

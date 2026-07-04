@@ -5,7 +5,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
-import '../providers/units_provider.dart';
+import '../../providers/units_provider.dart';
 import '../widgets/unit_card.dart';
 
 class UnitsListScreen extends ConsumerWidget {

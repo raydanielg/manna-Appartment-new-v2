@@ -6,7 +6,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/status_badge.dart';
-import '../providers/tenants_provider.dart';
+import '../../providers/tenants_provider.dart';
 
 class TenantDetailScreen extends ConsumerWidget {
   const TenantDetailScreen({super.key});

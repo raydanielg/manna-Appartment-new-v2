@@ -8,6 +8,7 @@ class PrimaryButton extends StatelessWidget {
   final Widget? icon;
   final Color? backgroundColor;
   final Color? foregroundColor;
+  final Color? color;
 
   const PrimaryButton({
     super.key,
@@ -17,6 +18,7 @@ class PrimaryButton extends StatelessWidget {
     this.icon,
     this.backgroundColor,
     this.foregroundColor,
+    this.color,
   });
 
   @override
@@ -24,9 +26,9 @@ class PrimaryButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor ?? AppColors.gold,
+        backgroundColor: backgroundColor ?? color ?? AppColors.gold,
         foregroundColor: foregroundColor ?? Colors.black,
-        disabledBackgroundColor: backgroundColor?.withValues(alpha: 0.6) ?? AppColors.gold.withValues(alpha: 0.6),
+        disabledBackgroundColor: (backgroundColor ?? color)?.withValues(alpha: 0.6) ?? AppColors.gold.withValues(alpha: 0.6),
         minimumSize: const Size(double.infinity, 52),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         elevation: 2,

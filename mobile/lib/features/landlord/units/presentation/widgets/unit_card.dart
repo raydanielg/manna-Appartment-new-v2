@@ -19,7 +19,7 @@ class UnitCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/landlord/units/'),
+        onTap: () => context.push('/landlord/units/${unit['id']}'),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -43,7 +43,7 @@ class UnitCard extends StatelessWidget {
                   children: [
                     Text(name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
                     const SizedBox(height: 2),
-                    Text('TZS /month', style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+                    Text('TZS $rent/month', style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
                   ],
                 ),
               ),

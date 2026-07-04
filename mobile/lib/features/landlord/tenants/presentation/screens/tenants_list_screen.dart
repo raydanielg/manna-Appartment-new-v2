@@ -5,7 +5,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
-import '../providers/tenants_provider.dart';
+import '../../providers/tenants_provider.dart';
 import '../widgets/tenant_card.dart';
 
 class TenantsListScreen extends ConsumerWidget {

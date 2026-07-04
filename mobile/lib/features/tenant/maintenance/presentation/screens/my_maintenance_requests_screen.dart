@@ -1,14 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/widgets/empty_state.dart';
+import '../../../../../core/widgets/error_state.dart';
+import '../../../../../core/widgets/loading_indicator.dart';
+import '../../../../../core/widgets/status_badge.dart';
+import '../../providers/maintenance_provider.dart';
 
-class MyMaintenanceRequestsScreen extends StatelessWidget {
+class MyMaintenanceRequestsScreen extends ConsumerWidget {
   const MyMaintenanceRequestsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final requestsAsync = ref.watch(myMaintenanceRequestsProvider);
+
     return Scaffold(
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(title: const Text('My Requests'), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
-      body: const Center(child: Text('My Maintenance Requests')),
+      body: RefreshIndicator(
+        onRefresh: () async => ref.invalidate(myMaintenanceRequestsProvider),
+        color: AppColors.primary,
+        child: requestsAsync.when(
+          loading: () => const LoadingIndicator(),
+          error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(myMaintenanceRequestsProvider)),
+          data: (requests) => requests.isEmpty
+              ? const EmptyState(message: 'No maintenance requests yet.', icon: Icons.build_outlined)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: requests.length,
+                  itemBuilder: (context, index) {
+                    final req = requests[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.warning.withValues(alpha: isDark ? 0.15 : 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(Icons.build, color: AppColors.warning, size: 22),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(req['title'] ?? 'Request', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                                ),
+                                StatusBadge(status: req['status'] ?? 'pending'),
+                              ],
+                            ),
+                            if (req['description'] != null) ...[
+                              const SizedBox(height: 12),
+                              Text(req['description'], style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : AppColors.textDark)),
+                            ],
+                            if (req['created_at'] != null) ...[
+                              const SizedBox(height: 8),
+                              Text('Submitted: ${req['created_at']}', style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textLight)),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/tenant/maintenance/submit'),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add),
+        label: const Text('New Request'),
+      ),
     );
   }
 }

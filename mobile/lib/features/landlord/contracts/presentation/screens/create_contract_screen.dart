@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
-import '../providers/contracts_provider.dart';
+import '../../providers/contracts_provider.dart';
 
 class CreateContractScreen extends ConsumerStatefulWidget {
   const CreateContractScreen({super.key});

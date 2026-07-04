@@ -11,6 +11,7 @@ class AppTextField extends StatelessWidget {
   final Widget? suffix;
   final void Function(String)? onChanged;
   final int? maxLength;
+  final int maxLines;
 
   const AppTextField({
     super.key,
@@ -24,6 +25,7 @@ class AppTextField extends StatelessWidget {
     this.suffix,
     this.onChanged,
     this.maxLength,
+    this.maxLines = 1,
   });
 
   @override
@@ -35,6 +37,7 @@ class AppTextField extends StatelessWidget {
       validator: validator,
       onChanged: onChanged,
       maxLength: maxLength,
+      maxLines: obscureText ? 1 : maxLines,
       style: const TextStyle(fontSize: 15),
       decoration: InputDecoration(
         labelText: label,
