@@ -14,6 +14,34 @@ class MannaApartmentApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
 
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      return Material(
+        color: AppColors.lightBackground,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                const SizedBox(height: 16),
+                const Text(
+                  'Something went wrong',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  details.exception.toString(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 13, color: AppColors.textLight),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    };
+
     return MaterialApp.router(
       title: 'Manna Apartment',
       debugShowCheckedModeBanner: false,

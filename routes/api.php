@@ -37,7 +37,39 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+// Health check at /api root
+Route::get('/', function () {
+    return response()->json([
+        'status' => 'ok',
+        'service' => 'Manna Apartment API',
+        'version' => 'v1',
+        'endpoints' => [
+            'login' => '/api/v1/auth/login',
+            'register' => '/api/v1/auth/register-landlord',
+            'forgot_password' => '/api/v1/auth/forgot-password',
+            'verify_otp' => '/api/v1/auth/verify-otp',
+            'reset_password' => '/api/v1/auth/reset-password',
+        ],
+    ]);
+});
+
 Route::prefix('v1')->group(function () {
+
+    // Health check at /api/v1 root
+    Route::get('/', function () {
+        return response()->json([
+            'status' => 'ok',
+            'service' => 'Manna Apartment API',
+            'version' => 'v1',
+            'endpoints' => [
+                'login' => '/api/v1/auth/login',
+                'register' => '/api/v1/auth/register-landlord',
+                'forgot_password' => '/api/v1/auth/forgot-password',
+                'verify_otp' => '/api/v1/auth/verify-otp',
+                'reset_password' => '/api/v1/auth/reset-password',
+            ],
+        ]);
+    });
 
     // Public auth
     Route::post('/auth/login', [LoginController::class, 'login']);
