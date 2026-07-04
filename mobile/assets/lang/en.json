@@ -1,0 +1,23 @@
+{
+  "app_name": "Manna Apartment",
+  "login": "Login",
+  "phone": "Phone Number",
+  "password": "Password",
+  "forgot_password": "Forgot Password?",
+  "continue": "Continue",
+  "register_landlord": "Register as Landlord",
+  "home": "Home",
+  "properties": "Properties",
+  "tenants": "Tenants",
+  "finance": "Finance",
+  "more": "More",
+  "my_unit": "My Unit",
+  "payments": "Payments",
+  "settings": "Settings",
+  "sms_logs": "SMS Logs",
+  "maintenance": "Maintenance",
+  "logout": "Logout",
+  "dark_mode": "Dark Mode",
+  "language": "Language",
+  "about": "About"
+}

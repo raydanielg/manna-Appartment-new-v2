@@ -1,0 +1,23 @@
+{
+  "app_name": "Manna Apartment",
+  "login": "Ingia",
+  "phone": "Namba ya Simu",
+  "password": "Nenosiri",
+  "forgot_password": "Umesahau Nenosiri?",
+  "continue": "Endelea",
+  "register_landlord": "Jiandikishe kama Mwenye Nyumba",
+  "home": "Nyumbani",
+  "properties": "Mali",
+  "tenants": "Wapangaji",
+  "finance": "Fedha",
+  "more": "Zaidi",
+  "my_unit": "Chumba Changu",
+  "payments": "Malipo",
+  "settings": "Mipangilio",
+  "sms_logs": "SMS Logs",
+  "maintenance": "Matengenezo",
+  "logout": "Toka",
+  "dark_mode": "Hali ya Giza",
+  "language": "Lugha",
+  "about": "Kuhusu"
+}
