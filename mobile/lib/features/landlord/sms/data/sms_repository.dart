@@ -5,12 +5,12 @@ class SmsRepository {
   SmsRepository(this._client);
 
   Future<List<dynamic>> getLogs() async {
-    final response = await _client.get('/sms/logs');
+    final response = await _client.get('/landlord/sms/logs');
     return response.data['data'] ?? [];
   }
 
   Future<Map<String, dynamic>> sendBroadcast(Map<String, dynamic> data) async {
-    final response = await _client.post('/sms/broadcast', data: data);
+    final response = await _client.post('/landlord/sms/send', data: data);
     return response.data['data'] ?? {};
   }
 }

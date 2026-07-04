@@ -11,7 +11,7 @@ class TenantsRepository {
   }
 
   Future<Map<String, dynamic>> getTenant(String id) async {
-    final response = await _client.get('/');
+    final response = await _client.get('${ApiEndpoints.tenants}/$id');
     return response.data['data'] ?? {};
   }
 
@@ -21,11 +21,11 @@ class TenantsRepository {
   }
 
   Future<Map<String, dynamic>> updateTenant(String id, Map<String, dynamic> data) async {
-    final response = await _client.put('/', data: data);
+    final response = await _client.patch('${ApiEndpoints.tenants}/$id', data: data);
     return response.data['data'] ?? {};
   }
 
   Future<void> deleteTenant(String id) async {
-    await _client.delete('/');
+    await _client.delete('${ApiEndpoints.tenants}/$id');
   }
 }

@@ -5,12 +5,12 @@ class TenantMaintenanceRepository {
   TenantMaintenanceRepository(this._client);
 
   Future<List<dynamic>> getMyRequests() async {
-    final response = await _client.get('/tenant/maintenance');
+    final response = await _client.get('/tenant/maintenance-requests');
     return response.data['data'] ?? [];
   }
 
   Future<Map<String, dynamic>> submitRequest(Map<String, dynamic> data) async {
-    final response = await _client.post('/tenant/maintenance', data: data);
+    final response = await _client.post('/tenant/maintenance-requests', data: data);
     return response.data['data'] ?? {};
   }
 }

@@ -23,7 +23,12 @@ class UnitDetailScreen extends ConsumerWidget {
         title: const Text('Unit Details'),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
         actions: [
-          IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => context.push('/landlord/units/add?id=')),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: unitAsync.hasValue
+                ? () => context.push('/landlord/units/add?propertyId=${unitAsync.value?['property_id'] ?? ''}')
+                : null,
+          ),
         ],
       ),
       body: unitAsync.when(

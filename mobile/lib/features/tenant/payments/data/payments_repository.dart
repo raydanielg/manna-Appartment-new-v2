@@ -5,7 +5,7 @@ class TenantPaymentsRepository {
   TenantPaymentsRepository(this._client);
 
   Future<List<dynamic>> getMyPayments() async {
-    final response = await _client.get('/tenant/payments');
+    final response = await _client.get('/tenant/my-payments');
     return response.data['data'] ?? [];
   }
 }

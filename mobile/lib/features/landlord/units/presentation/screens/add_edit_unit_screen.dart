@@ -7,7 +7,9 @@ import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/units_provider.dart';
 
 class AddEditUnitScreen extends ConsumerStatefulWidget {
-  const AddEditUnitScreen({super.key});
+  final String? propertyId;
+
+  const AddEditUnitScreen({super.key, this.propertyId});
 
   @override
   ConsumerState<AddEditUnitScreen> createState() => _AddEditUnitScreenState();
@@ -35,8 +37,18 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
+      final propertyId = widget.propertyId;
+      if (propertyId == null || propertyId.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Property ID is missing'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+          );
+        }
+        return;
+      }
+
       final repo = ref.read(unitsRepositoryProvider);
-      await repo.createUnit({
+      await repo.createUnit(propertyId, {
         'name': _nameController.text.trim(),
         'monthly_rent': int.tryParse(_rentController.text) ?? 0,
         'size': _sizeController.text.trim(),

@@ -23,7 +23,7 @@ class PropertiesRepository {
   }
 
   Future<PropertyModel> updateProperty(String id, Map<String, dynamic> data) async {
-    final response = await _client.put('${ApiEndpoints.properties}/$id', data: data);
+    final response = await _client.patch('${ApiEndpoints.properties}/$id', data: data);
     return PropertyModel.fromJson(response.data['data'] ?? {});
   }
 

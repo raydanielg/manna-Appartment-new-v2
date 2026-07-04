@@ -39,7 +39,7 @@ class UnitsListScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/landlord/units/add'),
+        onPressed: () => context.push('/landlord/units/add?propertyId=${propertyId ?? ''}'),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add),
         label: const Text('Add Unit'),
