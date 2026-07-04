@@ -39,7 +39,15 @@ class PaymentGatewayController extends Controller
         }
 
         if ($request->type === 'subscription') {
-            return $this->initiateSubscription($request, $user, $organization);
+            try {
+                return $this->initiateSubscription($request, $user, $organization);
+            } catch (\Exception $e) {
+                Log::error('Payment initiation failed', [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                return $this->error('Payment could not be initiated: ' . $e->getMessage(), null, 500);
+            }
         }
 
         return $this->error('Tenant payments are not yet supported via this gateway.', null, 400);
@@ -101,7 +109,12 @@ class PaymentGatewayController extends Controller
 
         if (!$this->isSessionSuccessful($session)) {
             $transaction->update(['status' => 'failed']);
-            return $this->error($session['message'] ?? 'Failed to create Snippe payment session.', $session, 500);
+            Log::error('Snippe session failed', ['response' => $session]);
+            return $this->error(
+                $session['message'] ?? 'Failed to create payment session. Please check your Snippe configuration.',
+                $session,
+                502
+            );
         }
 
         $transaction->update([

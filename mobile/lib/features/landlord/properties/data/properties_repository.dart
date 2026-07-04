@@ -32,19 +32,18 @@ class PropertiesRepository {
     String? description,
     List<String> imagePaths = const [],
   }) async {
-    final files = <MultipartFile>[];
-    for (final path in imagePaths) {
-      final name = path.split('/').last;
-      files.add(await MultipartFile.fromFile(path, filename: name));
-    }
     final formData = FormData.fromMap({
       'name': name,
       'address': address,
       'type': type,
       if (location != null && location.isNotEmpty) 'location': location,
       if (description != null && description.isNotEmpty) 'description': description,
-      if (files.isNotEmpty) 'images': files,
     });
+    for (var i = 0; i < imagePaths.length; i++) {
+      final path = imagePaths[i];
+      final fileName = path.split('/').last;
+      formData.files.add(MapEntry('images[$i]', await MultipartFile.fromFile(path, filename: fileName)));
+    }
     final response = await _client.post(ApiEndpoints.properties, data: formData);
     return PropertyModel.fromJson(response.data['data'] ?? {});
   }

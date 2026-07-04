@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -95,10 +96,37 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
 
       _startPolling(providerReference ?? result['reference'] as String);
     } catch (e) {
-      _showSnack('Kosa: $e');
+      final message = _extractErrorMessage(e);
+      _showSnack(message);
     } finally {
       setState(() => _isPaying = false);
     }
+  }
+
+  String _extractErrorMessage(dynamic error) {
+    if (error is DioException) {
+      final response = error.response;
+      if (response?.data is Map) {
+        final data = response!.data as Map;
+        if (data['message'] is String && data['message'].toString().isNotEmpty) {
+          return data['message'].toString();
+        }
+        if (data['errors'] is Map) {
+          final errors = data['errors'] as Map;
+          final messages = <String>[];
+          errors.forEach((key, value) {
+            if (value is List) {
+              for (final msg in value) {
+                messages.add('${msg.toString()}');
+              }
+            }
+          });
+          if (messages.isNotEmpty) return messages.join('\n');
+        }
+      }
+      return error.message ?? 'Imeshindwa kuanzisha malipo. Tafadhali jaribu tena.';
+    }
+    return error.toString();
   }
 
   void _startPolling(String reference) {

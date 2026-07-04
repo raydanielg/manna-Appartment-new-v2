@@ -66,11 +66,22 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
       final response = error.response;
       if (response?.data is Map) {
         final data = response!.data as Map;
-        if (data['message'] is String) return data['message'];
         if (data['errors'] is Map) {
           final errors = data['errors'] as Map;
-          final first = errors.values.firstWhere((v) => v is List && v.isNotEmpty, orElse: () => []);
-          if (first is List && first.isNotEmpty) return first.first.toString();
+          final messages = <String>[];
+          errors.forEach((key, value) {
+            if (value is List) {
+              for (final msg in value) {
+                messages.add('$key: ${msg.toString()}');
+              }
+            } else if (value is String) {
+              messages.add('$key: $value');
+            }
+          });
+          if (messages.isNotEmpty) return messages.join('\n');
+        }
+        if (data['message'] is String && data['message'].toString().isNotEmpty) {
+          return data['message'].toString();
         }
       }
       return error.message ?? 'Request failed. Please try again.';
