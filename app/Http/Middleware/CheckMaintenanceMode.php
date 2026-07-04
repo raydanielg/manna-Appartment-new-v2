@@ -10,7 +10,11 @@ class CheckMaintenanceMode
 {
     public function handle(Request $request, Closure $next)
     {
-        $maintenance = Setting::get('maintenance_mode', 'off');
+        try {
+            $maintenance = Setting::get('maintenance_mode', 'off');
+        } catch (\Exception $e) {
+            $maintenance = 'off';
+        }
 
         if ($maintenance === 'on' && !$request->is('admin/*') && !$request->is('login')) {
             return response()->view('errors.maintenance', [], 503);
