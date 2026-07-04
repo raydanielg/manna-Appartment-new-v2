@@ -13,6 +13,10 @@ import '../../features/landlord/contracts/presentation/screens/contract_detail_s
 import '../../features/landlord/contracts/presentation/screens/contracts_list_screen.dart';
 import '../../features/landlord/contracts/presentation/screens/create_contract_screen.dart';
 import '../../features/landlord/dashboard/presentation/screens/landlord_home_screen.dart';
+import '../../features/landlord/kyc/presentation/screens/kyc_intro_screen.dart';
+import '../../features/landlord/kyc/presentation/screens/kyc_status_screen.dart';
+import '../../features/landlord/kyc/presentation/screens/kyc_upload_documents_screen.dart';
+import '../../features/landlord/kyc/presentation/screens/kyc_verified_screen.dart';
 import '../../features/landlord/maintenance/presentation/screens/landlord_more_screen.dart';
 import '../../features/landlord/maintenance/presentation/screens/maintenance_requests_screen.dart';
 import '../../features/landlord/payments/presentation/screens/payment_detail_screen.dart';
@@ -69,6 +73,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/settings/language', builder: (context, state) => const LanguageToggleScreen()),
       GoRoute(path: '/settings/about', builder: (context, state) => const AboutScreen()),
       GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
+
+      // Landlord KYC flow (outside shell to hide bottom nav)
+      GoRoute(path: '/landlord/kyc', builder: (context, state) => const KycIntroScreen()),
+      GoRoute(path: '/landlord/kyc/upload', builder: (context, state) => const KycUploadDocumentsScreen()),
+      GoRoute(path: '/landlord/kyc/under-review', builder: (context, state) => const KycStatusScreen()),
+      GoRoute(path: '/landlord/kyc/verified', builder: (context, state) => const KycVerifiedScreen()),
 
       // Landlord routes
       ShellRoute(

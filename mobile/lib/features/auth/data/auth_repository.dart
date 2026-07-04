@@ -45,6 +45,16 @@ class AuthRepository {
 
   Future<String?> getToken() => SecureStorageService.getToken();
 
+  Future<Map<String, dynamic>?> getKycStatus() async {
+    try {
+      final response = await _client.get(ApiEndpoints.kycStatus);
+      final data = response.data['data'] ?? response.data;
+      return data is Map<String, dynamic> ? data : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> register({
     required String name,
     required String phone,

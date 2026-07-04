@@ -48,8 +48,15 @@ class LoginController extends Controller
         $abilities = $this->getAbilities($user);
         $token = $user->createToken($tokenName, $abilities)->plainTextToken;
 
+        $userData = $user->only(['id', 'full_name', 'phone', 'role', 'organization_id', 'status', 'must_change_password']);
+        $userData['organization'] = $user->organization ? [
+            'business_name' => $user->organization->business_name,
+            'kyc_status' => $user->organization->kyc_status,
+            'status' => $user->organization->status,
+        ] : null;
+
         return $this->success('Login successful.', [
-            'user' => $user->only(['id', 'full_name', 'phone', 'role', 'organization_id', 'status', 'must_change_password']),
+            'user' => $userData,
             'access_token' => $token,
             'token' => $token,
         ]);

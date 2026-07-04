@@ -4,8 +4,16 @@ import '../constants/app_colors.dart';
 class ErrorState extends StatelessWidget {
   final String message;
   final VoidCallback? onRetry;
+  final VoidCallback? onAction;
+  final String actionLabel;
 
-  const ErrorState({super.key, required this.message, this.onRetry});
+  const ErrorState({
+    super.key,
+    required this.message,
+    this.onRetry,
+    this.onAction,
+    this.actionLabel = 'Continue',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +37,13 @@ class ErrorState extends StatelessWidget {
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
+              ),
+            ],
+            if (onAction != null) ...[
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: onAction,
+                child: Text(actionLabel),
               ),
             ],
           ],

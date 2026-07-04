@@ -3,17 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
-import '../../../../../features/auth/providers/auth_provider.dart';
-import '../../providers/kyc_provider.dart';
+import '../../../../../features/landlord/dashboard/providers/dashboard_provider.dart';
 
-class KycStatusScreen extends ConsumerStatefulWidget {
-  const KycStatusScreen({super.key});
+class KycVerifiedScreen extends ConsumerStatefulWidget {
+  const KycVerifiedScreen({super.key});
 
   @override
-  ConsumerState<KycStatusScreen> createState() => _KycStatusScreenState();
+  ConsumerState<KycVerifiedScreen> createState() => _KycVerifiedScreenState();
 }
 
-class _KycStatusScreenState extends ConsumerState<KycStatusScreen>
+class _KycVerifiedScreenState extends ConsumerState<KycVerifiedScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
@@ -23,10 +22,10 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      duration: const Duration(milliseconds: 900),
+    )..forward();
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
     );
   }
 
@@ -36,50 +35,19 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen>
     super.dispose();
   }
 
-  Future<void> _checkStatus() async {
-    final approved = await ref.read(kycProvider.notifier).checkStatus();
-    if (approved && mounted) {
-      await ref.read(authProvider.notifier).refreshUserFromServer();
-      context.go('/landlord/kyc/verified');
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Verification is still in progress. Please wait.'),
-          backgroundColor: AppColors.primary,
-        ),
-      );
-    }
+  void _goToDashboard() {
+    ref.invalidate(landlordDashboardProvider);
+    context.go('/landlord/home');
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final kycState = ref.watch(kycProvider);
 
     return PopScope(
       canPop: false,
       child: Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-        appBar: AppBar(
-          backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings),
-              color: AppColors.primary,
-              onPressed: () => context.go('/settings'),
-            ),
-            IconButton(
-              icon: const Icon(Icons.logout),
-              color: AppColors.primary,
-              onPressed: () async {
-                await ref.read(authProvider.notifier).logout();
-                if (context.mounted) context.go('/auth/login');
-              },
-            ),
-          ],
-        ),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -98,17 +66,17 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen>
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: Colors.green.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.access_time_filled, size: 80, color: AppColors.primary),
+                    child: const Icon(Icons.verified, size: 80, color: Colors.green),
                   ),
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  'Under Review',
+                  'Congratulations!',
                   style: GoogleFonts.nunito(
-                    fontSize: 24,
+                    fontSize: 26,
                     fontWeight: FontWeight.w700,
                     color: isDark ? Colors.white : AppColors.textDark,
                   ),
@@ -116,7 +84,7 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Your KYC documents have been submitted successfully. Our team will review them and get back to you within 24 hours.',
+                  'Your KYC has been verified successfully. You can now access your landlord dashboard and start managing your properties.',
                   style: GoogleFonts.nunito(
                     fontSize: 14,
                     color: isDark ? Colors.white70 : AppColors.textLight,
@@ -125,11 +93,9 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen>
                 ),
                 const SizedBox(height: 40),
                 ElevatedButton.icon(
-                  onPressed: kycState.isLoading ? null : _checkStatus,
-                  icon: kycState.isLoading
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.refresh),
-                  label: Text(kycState.isLoading ? 'Checking...' : 'Check Status'),
+                  onPressed: _goToDashboard,
+                  icon: const Icon(Icons.dashboard),
+                  label: const Text('Go to Dashboard'),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                     backgroundColor: AppColors.primary,

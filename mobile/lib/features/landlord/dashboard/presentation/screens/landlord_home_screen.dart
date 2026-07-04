@@ -38,7 +38,18 @@ class LandlordHomeScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 dashboardAsync.when(
                   loading: () => const LoadingIndicator(),
-                  error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(landlordDashboardProvider)),
+                  error: (e, _) {
+                    final message = e.toString();
+                    final isSetupError = message.toLowerCase().contains('kyc') ||
+                        message.toLowerCase().contains('subscription') ||
+                        message.toLowerCase().contains('organization');
+                    return ErrorState(
+                      message: message,
+                      onRetry: () => ref.invalidate(landlordDashboardProvider),
+                      onAction: isSetupError ? () => context.go('/landlord/subscription') : null,
+                      actionLabel: 'Complete Setup',
+                    );
+                  },
                   data: (data) => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

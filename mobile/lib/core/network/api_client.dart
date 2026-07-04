@@ -84,7 +84,7 @@ class ApiClient {
       path,
       data: _encodeBody(data),
       queryParameters: queryParameters,
-      options: _jsonOptions(options),
+      options: _jsonOptions(data, options),
     );
   }
 
@@ -98,7 +98,7 @@ class ApiClient {
       path,
       data: _encodeBody(data),
       queryParameters: queryParameters,
-      options: _jsonOptions(options),
+      options: _jsonOptions(data, options),
     );
   }
 
@@ -112,7 +112,7 @@ class ApiClient {
       path,
       data: _encodeBody(data),
       queryParameters: queryParameters,
-      options: _jsonOptions(options),
+      options: _jsonOptions(data, options),
     );
   }
 
@@ -126,7 +126,7 @@ class ApiClient {
       path,
       data: _encodeBody(data),
       queryParameters: queryParameters,
-      options: _jsonOptions(options),
+      options: _jsonOptions(data, options),
     );
   }
 
@@ -137,11 +137,17 @@ class ApiClient {
     return jsonEncode(data);
   }
 
-  Options? _jsonOptions(Options? options) {
-    if (options != null) {
-      return options.copyWith(contentType: 'application/json');
+  Options? _jsonOptions(dynamic data, Options? options) {
+    final String contentType;
+    if (data is FormData) {
+      contentType = 'multipart/form-data';
+    } else {
+      contentType = 'application/json';
     }
-    return Options(contentType: 'application/json');
+    if (options != null) {
+      return options.copyWith(contentType: contentType);
+    }
+    return Options(contentType: contentType);
   }
 
   Future<Response> uploadFile(

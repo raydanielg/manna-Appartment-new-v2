@@ -26,6 +26,9 @@ class UserModel {
   final String? organizationId;
   final String? status;
   final String? email;
+  final String? kycStatus;
+  final String? organizationStatus;
+  final String? businessName;
 
   UserModel({
     required this.id,
@@ -35,9 +38,13 @@ class UserModel {
     this.organizationId,
     this.status,
     this.email,
+    this.kycStatus,
+    this.organizationStatus,
+    this.businessName,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final org = json['organization'];
     return UserModel(
       id: json['id'] ?? json['uuid'] ?? '',
       fullName: json['full_name'] ?? json['name'] ?? '',
@@ -46,6 +53,35 @@ class UserModel {
       organizationId: json['organization_id'],
       status: json['status'],
       email: json['email'],
+      kycStatus: org is Map ? org['kyc_status'] : null,
+      organizationStatus: org is Map ? org['status'] : null,
+      businessName: org is Map ? org['business_name'] : null,
+    );
+  }
+
+  UserModel copyWith({
+    String? id,
+    String? fullName,
+    String? phone,
+    String? role,
+    String? organizationId,
+    String? status,
+    String? email,
+    String? kycStatus,
+    String? organizationStatus,
+    String? businessName,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      phone: phone ?? this.phone,
+      role: role ?? this.role,
+      organizationId: organizationId ?? this.organizationId,
+      status: status ?? this.status,
+      email: email ?? this.email,
+      kycStatus: kycStatus ?? this.kycStatus,
+      organizationStatus: organizationStatus ?? this.organizationStatus,
+      businessName: businessName ?? this.businessName,
     );
   }
 
@@ -57,5 +93,8 @@ class UserModel {
         'organization_id': organizationId,
         'status': status,
         'email': email,
+        'kyc_status': kycStatus,
+        'organization_status': organizationStatus,
+        'business_name': businessName,
       };
 }

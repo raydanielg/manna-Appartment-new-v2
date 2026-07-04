@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/storage/secure_storage_service.dart';
 import '../data/auth_repository.dart';
 import '../data/models/login_response_model.dart';
 
@@ -26,6 +28,7 @@ class AuthState {
 
   bool get isAuthenticated => user != null;
   String? get role => user?.role;
+  bool get isKycApproved => user == null || user!.role != 'landlord' || user!.kycStatus == 'approved';
 
   AuthState copyWith({
     UserModel? user,
@@ -147,6 +150,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     await _repository.logout();
     state = const AuthState();
+  }
+
+  Future<void> refreshUserFromServer() async {
+    try {
+      final kycData = await _repository.getKycStatus();
+      final kycStatus = kycData?['kyc_status'];
+      final user = state.user;
+      if (user != null && kycStatus != null) {
+        final updated = user.copyWith(kycStatus: kycStatus.toString());
+        state = state.copyWith(user: updated);
+        await SecureStorageService.setUserData(jsonEncode(updated.toJson()));
+      }
+    } catch (e) {
+      _logger.e('Refresh user error: $e');
+    }
   }
 
   void clearError() {
