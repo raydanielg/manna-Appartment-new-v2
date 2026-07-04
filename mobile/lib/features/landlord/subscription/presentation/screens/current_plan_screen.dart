@@ -176,11 +176,70 @@ class CurrentPlanScreen extends ConsumerWidget {
                   icon: const Icon(Icons.arrow_upward),
                   onPressed: () => context.push('/landlord/subscription/plans'),
                 ),
+                const SizedBox(height: 32),
+                Text('Subscription History', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                const SizedBox(height: 12),
+                _buildHistoryList(context, ref),
               ],
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildHistoryList(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final invoicesAsync = ref.watch(subscriptionInvoicesProvider);
+    return invoicesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Text('Could not load history.', style: TextStyle(color: isDark ? Colors.white70 : AppColors.textLight)),
+      data: (invoices) {
+        if (invoices.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text('No subscription history yet.', style: TextStyle(color: isDark ? Colors.white70 : AppColors.textLight)),
+          );
+        }
+        return Column(
+          children: invoices.map((invoice) {
+            final planName = invoice['plan']?['name'] ?? 'Subscription';
+            final amount = invoice['amount'] ?? 0;
+            final status = invoice['status']?.toString() ?? 'unknown';
+            final paid = status == 'active' || status == 'paid';
+            final date = invoice['created_at']?.toString() ?? '';
+            final reference = invoice['payment_reference']?.toString() ?? '';
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                leading: CircleAvatar(
+                  backgroundColor: paid ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                  child: Icon(paid ? Icons.check : Icons.pending, size: 18, color: paid ? Colors.green : Colors.red),
+                ),
+                title: Text(planName, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                subtitle: Text(
+                  '${date.isNotEmpty ? date.substring(0, 10) : '-'} • ${reference.isNotEmpty ? 'Ref: $reference' : 'No reference'}',
+                  style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textLight),
+                ),
+                trailing: Text(
+                  amount == 0 ? 'FREE' : 'TZS $amount',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
+                ),
+                onTap: () => context.push('/landlord/subscription/invoice', extra: invoice),
+              ),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 }

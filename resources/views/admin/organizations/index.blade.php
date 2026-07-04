@@ -18,6 +18,7 @@
                 <th class="px-5 py-2.5 font-medium">Subscription</th>
                 <th class="px-5 py-2.5 font-medium">Properties</th>
                 <th class="px-5 py-2.5 font-medium">Tenants</th>
+                <th class="px-5 py-2.5 font-medium">Actions</th>
             </tr></thead>
             <tbody>
                 @forelse($organizations as $org)
@@ -42,9 +43,15 @@
                     </td>
                     <td class="px-5 py-2.5 text-xs text-gray-700">{{ $org->properties_count }}</td>
                     <td class="px-5 py-2.5 text-xs text-gray-700">{{ $org->tenants_count }}</td>
+                    <td class="px-5 py-2.5">
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('admin.organizations.show', $org->id) }}" class="px-2 py-1 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 text-[10px] font-medium">View</a>
+                            <button type="button" onclick="deleteOrganization('{{ route('admin.organizations.destroy', $org->id) }}')" class="px-2 py-1 rounded-md bg-red-600 text-white hover:bg-red-700 text-[10px] font-medium">Delete</button>
+                        </div>
+                    </td>
                 </tr>
                 @empty
-                <tr><td colspan="7" class="px-5 py-8 text-center text-gray-400 text-xs">No organizations yet</td></tr>
+                <tr><td colspan="8" class="px-5 py-8 text-center text-gray-400 text-xs">No organizations yet</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -54,3 +61,39 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function deleteOrganization(url) {
+    Swal.fire({
+        title: 'Delete organization?',
+        text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Delete',
+        confirmButtonColor: '#dc2626',
+        cancelButtonText: 'Cancel',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+            form.style.display = 'none';
+
+            const csrf = document.createElement('input');
+            csrf.name = '_token';
+            csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+            form.appendChild(csrf);
+
+            const method = document.createElement('input');
+            method.name = '_method';
+            method.value = 'DELETE';
+            form.appendChild(method);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+</script>
+@endpush

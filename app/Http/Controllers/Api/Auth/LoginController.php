@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
@@ -48,7 +49,8 @@ class LoginController extends Controller
         $abilities = $this->getAbilities($user);
         $token = $user->createToken($tokenName, $abilities)->plainTextToken;
 
-        $userData = $user->only(['id', 'full_name', 'phone', 'role', 'organization_id', 'status', 'must_change_password']);
+        $userData = $user->only(['id', 'full_name', 'phone', 'email', 'role', 'organization_id', 'status', 'must_change_password']);
+        $userData['avatar'] = $user->avatar ? Storage::url($user->avatar) : null;
         $userData['organization'] = $user->organization ? [
             'business_name' => $user->organization->business_name,
             'kyc_status' => $user->organization->kyc_status,

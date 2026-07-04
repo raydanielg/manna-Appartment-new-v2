@@ -50,8 +50,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!mounted) return;
 
     if (authState.isAuthenticated) {
-      final route =
-          authState.role == 'landlord' ? '/landlord/home' : '/tenant/home';
+      try {
+        await ref.read(authProvider.notifier).refreshUserFromServer();
+      } catch (_) {
+        // continue with cached data
+      }
+      if (!mounted) return;
+      final refreshed = ref.read(authProvider);
+      if (!refreshed.isOrganizationActive) {
+        context.go('/banned');
+        return;
+      }
+      final route = refreshed.role == 'landlord'
+          ? (refreshed.isKycApproved ? '/landlord/home' : '/landlord/kyc')
+          : '/tenant/home';
       context.go(route);
     } else {
       if (onboardingComplete == 'true') {

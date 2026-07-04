@@ -14,6 +14,11 @@ final subscriptionPlansProvider = FutureProvider.autoDispose((ref) async {
   return repo.getPlans();
 });
 
+final subscriptionInvoicesProvider = FutureProvider.autoDispose((ref) async {
+  final repo = ref.watch(subscriptionRepositoryProvider);
+  return repo.getInvoices();
+});
+
 final freeTrialNotifierProvider = StateNotifierProvider<FreeTrialNotifier, AsyncValue<void>>((ref) {
   return FreeTrialNotifier(ref.read(subscriptionRepositoryProvider), ref);
 });

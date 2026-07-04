@@ -29,6 +29,7 @@ class UserModel {
   final String? kycStatus;
   final String? organizationStatus;
   final String? businessName;
+  final String? avatar;
 
   UserModel({
     required this.id,
@@ -41,6 +42,7 @@ class UserModel {
     this.kycStatus,
     this.organizationStatus,
     this.businessName,
+    this.avatar,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -56,6 +58,7 @@ class UserModel {
       kycStatus: org is Map ? org['kyc_status'] : null,
       organizationStatus: org is Map ? org['status'] : null,
       businessName: org is Map ? org['business_name'] : null,
+      avatar: json['avatar']?.toString(),
     );
   }
 
@@ -70,6 +73,7 @@ class UserModel {
     String? kycStatus,
     String? organizationStatus,
     String? businessName,
+    String? avatar,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -82,6 +86,7 @@ class UserModel {
       kycStatus: kycStatus ?? this.kycStatus,
       organizationStatus: organizationStatus ?? this.organizationStatus,
       businessName: businessName ?? this.businessName,
+      avatar: avatar ?? this.avatar,
     );
   }
 
@@ -96,5 +101,6 @@ class UserModel {
         'kyc_status': kycStatus,
         'organization_status': organizationStatus,
         'business_name': businessName,
+        'avatar': avatar,
       };
 }

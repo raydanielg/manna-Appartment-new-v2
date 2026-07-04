@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/storage/secure_storage_service.dart';
@@ -53,6 +54,31 @@ class AuthRepository {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<Map<String, dynamic>> getProfile() async {
+    final response = await _client.get(ApiEndpoints.landlordProfile);
+    return response.data['data'] ?? {};
+  }
+
+  Future<Map<String, dynamic>> updateProfile({String? fullName, String? email, String? phone}) async {
+    final response = await _client.post(
+      ApiEndpoints.landlordProfile,
+      data: {
+        if (fullName != null) 'full_name': fullName,
+        if (email != null) 'email': email,
+        if (phone != null) 'phone': phone,
+      },
+    );
+    return response.data['data'] ?? {};
+  }
+
+  Future<Map<String, dynamic>> updateAvatar(FormData formData) async {
+    final response = await _client.post(
+      ApiEndpoints.landlordAvatar,
+      data: formData,
+    );
+    return response.data['data'] ?? {};
   }
 
   Future<void> register({

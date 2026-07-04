@@ -130,6 +130,10 @@ Route::prefix('v1')->group(function () {
             Route::post('/kyc/submit', [LandlordOrganizationController::class, 'submitKyc']);
             Route::get('/kyc/status', [LandlordOrganizationController::class, 'kycStatus']);
 
+            Route::get('/profile', [\App\Http\Controllers\Api\Landlord\ProfileController::class, 'show']);
+            Route::post('/profile', [\App\Http\Controllers\Api\Landlord\ProfileController::class, 'update']);
+            Route::post('/profile/avatar', [\App\Http\Controllers\Api\Landlord\ProfileController::class, 'updateAvatar']);
+
             Route::get('/subscriptions/plans', [SubscriptionController::class, 'plans']);
             Route::get('/subscriptions/current', [SubscriptionController::class, 'current']);
             Route::post('/subscriptions/free-trial', [SubscriptionController::class, 'freeTrial']);

@@ -12,7 +12,14 @@ class PlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final features = plan['features'] as List<dynamic>? ?? [];
+    final features = (plan['features_json'] as List<dynamic>? ?? (plan['features'] as List<dynamic>? ?? []));
+    final billingCycle = plan['billing_cycle']?.toString() ?? 'monthly';
+    final isTrial = billingCycle == 'trial';
+    final price = plan['price'] ?? 0;
+    final propertyLimit = plan['property_limit'] ?? 0;
+    final unitLimit = plan['unit_limit'] ?? 0;
+    final smsIncluded = plan['sms_included'] ?? 0;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: isCurrent
@@ -36,7 +43,26 @@ class PlanCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text('TZS ${plan['price'] ?? 0}/month', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.primary)),
+            Text(
+              isTrial ? 'Free Trial' : 'TZS $price/${billingCycle.replaceAll('ly', '')}',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.primary),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _LimitItem(label: 'Properties', value: propertyLimit == 0 ? 'Unlimited' : propertyLimit.toString()),
+                  _LimitItem(label: 'Units', value: unitLimit == 0 ? 'Unlimited' : unitLimit.toString()),
+                  _LimitItem(label: 'SMS', value: smsIncluded.toString()),
+                ],
+              ),
+            ),
             const SizedBox(height: 12),
             ...features.map((f) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -47,10 +73,28 @@ class PlanCard extends StatelessWidget {
               ]),
             )),
             const SizedBox(height: 16),
-            if (!isCurrent) PrimaryButton(text: 'Select Plan', onPressed: onSelect ?? () {}),
+            if (!isCurrent) PrimaryButton(text: isTrial ? 'Start Free Trial' : 'Select Plan', onPressed: onSelect ?? () {}),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _LimitItem extends StatelessWidget {
+  final String label;
+  final String value;
+  const _LimitItem({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      children: [
+        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+        const SizedBox(height: 2),
+        Text(label, style: TextStyle(fontSize: 10, color: isDark ? Colors.white60 : AppColors.textLight)),
+      ],
     );
   }
 }

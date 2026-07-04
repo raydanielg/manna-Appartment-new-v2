@@ -29,6 +29,7 @@ class AuthState {
   bool get isAuthenticated => user != null;
   String? get role => user?.role;
   bool get isKycApproved => user == null || user!.role != 'landlord' || user!.kycStatus == 'approved';
+  bool get isOrganizationActive => user == null || user!.role != 'landlord' || user!.organizationStatus == 'active';
 
   AuthState copyWith({
     UserModel? user,
@@ -164,6 +165,69 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
     } catch (e) {
       _logger.e('Refresh user error: $e');
+    }
+  }
+
+  Future<void> refreshFullProfile() async {
+    try {
+      final data = await _repository.getProfile();
+      final user = state.user;
+      if (user != null && data.isNotEmpty) {
+        final updated = user.copyWith(
+          fullName: data['full_name']?.toString() ?? user.fullName,
+          email: data['email']?.toString() ?? user.email,
+          phone: data['phone']?.toString() ?? user.phone,
+          avatar: data['avatar']?.toString() ?? user.avatar,
+          kycStatus: data['organization']?['kyc_status']?.toString() ?? user.kycStatus,
+        );
+        state = state.copyWith(user: updated);
+        await SecureStorageService.setUserData(jsonEncode(updated.toJson()));
+      }
+    } catch (e) {
+      _logger.e('Refresh full profile error: $e');
+    }
+  }
+
+  Future<bool> updateProfile({String? fullName, String? email, String? phone}) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final data = await _repository.updateProfile(fullName: fullName, email: email, phone: phone);
+      final user = state.user;
+      if (user != null) {
+        final updated = user.copyWith(
+          fullName: data['full_name']?.toString() ?? user.fullName,
+          email: data['email']?.toString() ?? user.email,
+          phone: data['phone']?.toString() ?? user.phone,
+        );
+        state = state.copyWith(user: updated, isLoading: false);
+        await SecureStorageService.setUserData(jsonEncode(updated.toJson()));
+      }
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: _parseError(e));
+      return false;
+    }
+  }
+
+  Future<bool> updateAvatar(String filePath) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final fileName = filePath.split('/').last;
+      final formData = FormData.fromMap({
+        'avatar': await MultipartFile.fromFile(filePath, filename: fileName),
+      });
+      final data = await _repository.updateAvatar(formData);
+      final user = state.user;
+      if (user != null) {
+        final avatarUrl = data['avatar_url']?.toString();
+        final updated = user.copyWith(avatar: avatarUrl);
+        state = state.copyWith(user: updated, isLoading: false);
+        await SecureStorageService.setUserData(jsonEncode(updated.toJson()));
+      }
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: _parseError(e));
+      return false;
     }
   }
 

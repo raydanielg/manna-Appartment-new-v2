@@ -54,7 +54,7 @@ class RegisterLandlordController extends Controller
             $organization->id
         );
 
-        $userData = $user->only(['id', 'full_name', 'phone', 'role', 'organization_id', 'status']);
+        $userData = $user->only(['id', 'full_name', 'phone', 'email', 'avatar', 'role', 'organization_id', 'status']);
         $userData['organization'] = [
             'business_name' => $organization->business_name,
             'kyc_status' => $organization->kyc_status,

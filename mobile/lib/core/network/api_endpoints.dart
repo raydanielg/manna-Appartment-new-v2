@@ -23,6 +23,8 @@ class ApiEndpoints {
   static const String staff = '/landlord/staff';
   static const String kyc = '/landlord/kyc/submit';
   static const String kycStatus = '/landlord/kyc/status';
+  static const String landlordProfile = '/landlord/profile';
+  static const String landlordAvatar = '/landlord/profile/avatar';
   static const String maintenanceRequests = '/landlord/maintenance-requests';
 
   // Tenant

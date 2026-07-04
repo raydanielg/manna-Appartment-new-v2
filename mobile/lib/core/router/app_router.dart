@@ -9,6 +9,10 @@ import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/verify_otp_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
+import '../../shared/banned/presentation/screens/banned_screen.dart';
+import '../../shared/settings/presentation/screens/help_support_screen.dart';
+import '../../shared/settings/presentation/screens/privacy_policy_screen.dart';
+import '../../shared/settings/presentation/screens/terms_of_service_screen.dart';
 import '../../features/landlord/contracts/presentation/screens/contract_detail_screen.dart';
 import '../../features/landlord/contracts/presentation/screens/contracts_list_screen.dart';
 import '../../features/landlord/contracts/presentation/screens/create_contract_screen.dart';
@@ -22,6 +26,7 @@ import '../../features/landlord/maintenance/presentation/screens/maintenance_req
 import '../../features/landlord/payments/presentation/screens/payment_detail_screen.dart';
 import '../../features/landlord/payments/presentation/screens/payments_list_screen.dart';
 import '../../features/landlord/payments/presentation/screens/record_payment_screen.dart';
+import '../../features/landlord/profile/presentation/screens/landlord_profile_screen.dart';
 import '../../features/landlord/properties/presentation/screens/add_edit_property_screen.dart';
 import '../../features/landlord/properties/presentation/screens/properties_list_screen.dart';
 import '../../features/landlord/properties/presentation/screens/property_detail_screen.dart';
@@ -31,6 +36,7 @@ import '../../features/landlord/staff_management/presentation/screens/add_staff_
 import '../../features/landlord/staff_management/presentation/screens/staff_list_screen.dart';
 import '../../features/landlord/staff_management/presentation/screens/staff_permissions_screen.dart';
 import '../../features/landlord/subscription/presentation/screens/current_plan_screen.dart';
+import '../../features/landlord/subscription/presentation/screens/invoice_detail_screen.dart';
 import '../../features/landlord/subscription/presentation/screens/payment_checkout_screen.dart';
 import '../../features/landlord/subscription/presentation/screens/subscription_plans_screen.dart';
 import '../../features/landlord/tenants/presentation/screens/add_tenant_screen.dart';
@@ -71,7 +77,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/auth/reset-password', builder: (context, state) => const ResetPasswordScreen()),
       GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(path: '/settings/language', builder: (context, state) => const LanguageToggleScreen()),
+      GoRoute(path: '/banned', builder: (context, state) => const BannedScreen()),
       GoRoute(path: '/settings/about', builder: (context, state) => const AboutScreen()),
+      GoRoute(path: '/settings/help-support', builder: (context, state) => const HelpSupportScreen()),
+      GoRoute(path: '/settings/privacy', builder: (context, state) => const PrivacyPolicyScreen()),
+      GoRoute(path: '/settings/terms', builder: (context, state) => const TermsOfServiceScreen()),
       GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
 
       // Landlord KYC flow (outside shell to hide bottom nav)
@@ -98,6 +108,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/landlord/payments', builder: (context, state) => const PaymentsListScreen()),
           GoRoute(path: '/landlord/payments/record', builder: (context, state) => const RecordPaymentScreen()),
           GoRoute(path: '/landlord/payments/:id', builder: (context, state) => const PaymentDetailScreen()),
+          GoRoute(path: '/landlord/profile', builder: (context, state) => const LandlordProfileScreen()),
           GoRoute(path: '/landlord/contracts', builder: (context, state) => const ContractsListScreen()),
           GoRoute(path: '/landlord/contracts/create', builder: (context, state) => const CreateContractScreen()),
           GoRoute(path: '/landlord/contracts/:id', builder: (context, state) => const ContractDetailScreen()),
@@ -107,6 +118,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/landlord/subscription', builder: (context, state) => const CurrentPlanScreen()),
           GoRoute(path: '/landlord/subscription/plans', builder: (context, state) => const SubscriptionPlansScreen()),
           GoRoute(path: '/landlord/subscription/checkout', builder: (context, state) => const PaymentCheckoutScreen()),
+          GoRoute(path: '/landlord/subscription/invoice', builder: (context, state) => InvoiceDetailScreen(invoice: state.extra as Map<String, dynamic>)),
           GoRoute(path: '/landlord/staff', builder: (context, state) => const StaffListScreen()),
           GoRoute(path: '/landlord/staff/add', builder: (context, state) => const AddStaffScreen()),
           GoRoute(path: '/landlord/staff/:id/permissions', builder: (context, state) => const StaffPermissionsScreen()),
@@ -145,11 +157,11 @@ class LandlordScaffold extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentIndex = _getIndex(context);
     final items = [
-      _NavItem('Home', Icons.home_outlined, Icons.home_rounded),
-      _NavItem('Properties', Icons.apartment_outlined, Icons.apartment_rounded),
-      _NavItem('Tenants', Icons.people_outline, Icons.people_alt_rounded),
-      _NavItem('Payments', Icons.payments_outlined, Icons.payments_rounded),
-      _NavItem('More', Icons.more_horiz, Icons.more_horiz_rounded),
+      _NavItem('Home', Icons.home_outlined, Icons.home),
+      _NavItem('Properties', Icons.apartment_outlined, Icons.apartment),
+      _NavItem('Tenants', Icons.people_outline, Icons.people),
+      _NavItem('Payments', Icons.payments_outlined, Icons.payments),
+      _NavItem('More', Icons.apps_outlined, Icons.apps),
     ];
     final routes = ['/landlord/home', '/landlord/properties', '/landlord/tenants', '/landlord/payments', '/landlord/more'];
 
@@ -163,12 +175,12 @@ class LandlordScaffold extends StatelessWidget {
           ),
           boxShadow: isDark
               ? null
-              : [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, -2))],
+              : [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, -4))],
         ),
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: items.asMap().entries.map((entry) {
@@ -179,37 +191,49 @@ class LandlordScaffold extends StatelessWidget {
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => context.go(routes[i]),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isActive
-                                ? const Color(0xFF059669).withValues(alpha: 0.1)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(20),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: isActive ? AppColors.primary : Colors.transparent,
+                              shape: BoxShape.circle,
+                              boxShadow: isActive
+                                  ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.4), blurRadius: 10, offset: const Offset(0, 3))]
+                                  : null,
+                            ),
+                            child: Icon(
+                              isActive ? item.activeIcon : item.icon,
+                              size: isActive ? 24 : 22,
+                              color: isActive
+                                  ? Colors.white
+                                  : (isDark ? Colors.white50 : Colors.grey.shade500),
+                            ),
                           ),
-                          child: Icon(
-                            isActive ? item.activeIcon : item.icon,
-                            size: 22,
-                            color: isActive
-                                ? const Color(0xFF059669)
-                                : (isDark ? Colors.white38 : Colors.grey.shade400),
+                          const SizedBox(height: 4),
+                          Text(
+                            item.label,
+                            style: TextStyle(
+                              fontSize: isActive ? 11 : 10,
+                              fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                              color: isActive
+                                  ? AppColors.primary
+                                  : (isDark ? Colors.white50 : Colors.grey.shade500),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          item.label,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                            color: isActive
-                                ? const Color(0xFF059669)
-                                : (isDark ? Colors.white38 : Colors.grey.shade400),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -248,10 +272,10 @@ class TenantScaffold extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentIndex = _getIndex(context);
     final items = [
-      _NavItem('Home', Icons.home_outlined, Icons.home_rounded),
-      _NavItem('My Unit', Icons.door_front_door_outlined, Icons.door_front_door_rounded),
-      _NavItem('Payments', Icons.payments_outlined, Icons.payments_rounded),
-      _NavItem('More', Icons.more_horiz, Icons.more_horiz_rounded),
+      _NavItem('Home', Icons.home_outlined, Icons.home),
+      _NavItem('My Unit', Icons.door_front_door_outlined, Icons.door_front_door),
+      _NavItem('Payments', Icons.payments_outlined, Icons.payments),
+      _NavItem('More', Icons.apps_outlined, Icons.apps),
     ];
     final routes = ['/tenant/home', '/tenant/my-unit', '/tenant/payments', '/tenant/more'];
 
@@ -265,12 +289,12 @@ class TenantScaffold extends StatelessWidget {
           ),
           boxShadow: isDark
               ? null
-              : [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, -2))],
+              : [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, -4))],
         ),
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: items.asMap().entries.map((entry) {
@@ -281,37 +305,49 @@ class TenantScaffold extends StatelessWidget {
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () => context.go(routes[i]),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isActive
-                                ? const Color(0xFF059669).withValues(alpha: 0.1)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(20),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: isActive ? AppColors.primary : Colors.transparent,
+                              shape: BoxShape.circle,
+                              boxShadow: isActive
+                                  ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.4), blurRadius: 10, offset: const Offset(0, 3))]
+                                  : null,
+                            ),
+                            child: Icon(
+                              isActive ? item.activeIcon : item.icon,
+                              size: isActive ? 24 : 22,
+                              color: isActive
+                                  ? Colors.white
+                                  : (isDark ? Colors.white50 : Colors.grey.shade500),
+                            ),
                           ),
-                          child: Icon(
-                            isActive ? item.activeIcon : item.icon,
-                            size: 22,
-                            color: isActive
-                                ? const Color(0xFF059669)
-                                : (isDark ? Colors.white38 : Colors.grey.shade400),
+                          const SizedBox(height: 4),
+                          Text(
+                            item.label,
+                            style: TextStyle(
+                              fontSize: isActive ? 11 : 10,
+                              fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                              color: isActive
+                                  ? AppColors.primary
+                                  : (isDark ? Colors.white50 : Colors.grey.shade500),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          item.label,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                            color: isActive
-                                ? const Color(0xFF059669)
-                                : (isDark ? Colors.white38 : Colors.grey.shade400),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );

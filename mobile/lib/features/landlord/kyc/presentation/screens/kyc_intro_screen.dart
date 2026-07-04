@@ -13,6 +13,25 @@ class KycIntroScreen extends ConsumerStatefulWidget {
 }
 
 class _KycIntroScreenState extends ConsumerState<KycIntroScreen> {
+  bool _isChecking = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkStatus();
+  }
+
+  Future<void> _checkStatus() async {
+    await ref.read(authProvider.notifier).refreshUserFromServer();
+    if (!mounted) return;
+    final authState = ref.read(authProvider);
+    if (authState.isKycApproved) {
+      context.go('/landlord/home');
+      return;
+    }
+    setState(() => _isChecking = false);
+  }
+
   void _startVerification() {
     context.go('/landlord/kyc/upload');
   }
@@ -49,7 +68,9 @@ class _KycIntroScreenState extends ConsumerState<KycIntroScreen> {
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Column(
+            child: _isChecking
+                ? const Center(child: CircularProgressIndicator())
+                : Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

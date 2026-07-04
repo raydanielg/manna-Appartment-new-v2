@@ -59,9 +59,13 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/organizations', [OrganizationController::class, 'index'])->name('organizations');
+    Route::get('/organizations/{id}', [OrganizationController::class, 'show'])->name('organizations.show');
+    Route::post('/organizations/{id}/assign-plan', [OrganizationController::class, 'assignPlan'])->name('organizations.assign-plan');
+    Route::delete('/organizations/{id}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
     Route::get('/kyc', [KycController::class, 'index'])->name('kyc');
     Route::post('/kyc/{id}/review', [KycController::class, 'review'])->name('kyc.review');
     Route::get('/plans', [PlanController::class, 'index'])->name('plans');
+    Route::put('/plans/{id}', [PlanController::class, 'update'])->name('plans.update');
     Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue');
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
     Route::get('/sms-logs', [SmsLogController::class, 'index'])->name('sms_logs');

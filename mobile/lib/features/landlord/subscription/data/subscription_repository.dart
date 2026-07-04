@@ -15,6 +15,18 @@ class SubscriptionRepository {
     return response.data['data'] ?? [];
   }
 
+  Future<List<dynamic>> getInvoices() async {
+    final response = await _client.get('/landlord/subscriptions/invoices');
+    final data = response.data;
+    if (data is Map && data['data'] is List) {
+      return data['data'] as List<dynamic>;
+    }
+    if (data is Map && data['data'] is Map && data['data']['data'] is List) {
+      return data['data']['data'] as List<dynamic>;
+    }
+    return [];
+  }
+
   Future<Map<String, dynamic>> activateFreeTrial() async {
     final response = await _client.post(ApiEndpoints.freeTrial);
     return response.data['data'] ?? {};
