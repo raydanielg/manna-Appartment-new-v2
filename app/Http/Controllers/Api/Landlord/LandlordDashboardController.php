@@ -9,7 +9,6 @@ use App\Models\Payment;
 use App\Models\Property;
 use App\Models\Tenant;
 use App\Traits\ApiResponse;
-use Illuminate\Support\Facades\DB;
 
 class LandlordDashboardController extends Controller
 {
@@ -29,17 +28,17 @@ class LandlordDashboardController extends Controller
         $totalExpected = Contract::where('status', 'active')->sum('rent_amount');
         $outstanding = max(0, $totalExpected - $totalIncome);
 
-        $monthlyIncome = Payment::select(
-            DB::raw('DATE_FORMAT(payment_date, "%b") as month'),
-            DB::raw('SUM(amount) as amount')
-        )
-            ->where('status', 'confirmed')
+        $monthlyIncome = Payment::where('status', 'confirmed')
             ->where('payment_date', '>=', now()->subMonths(6)->startOfMonth())
-            ->groupBy('month')
             ->orderBy('payment_date', 'asc')
-            ->limit(6)
             ->get()
-            ->map(fn ($r) => ['month' => $r->month, 'amount' => (float) $r->amount]);
+            ->groupBy(fn ($p) => $p->payment_date->format('Y-m'))
+            ->map(fn ($group, $key) => [
+                'month' => \Carbon\Carbon::createFromFormat('Y-m', $key)->format('M'),
+                'amount' => (float) $group->sum('amount'),
+            ])
+            ->take(6)
+            ->values();
 
         $recentPayments = Payment::with('tenant.user')
             ->where('status', 'confirmed')

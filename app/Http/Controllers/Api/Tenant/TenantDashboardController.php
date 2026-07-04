@@ -8,7 +8,6 @@ use App\Models\MaintenanceRequest;
 use App\Models\Payment;
 use App\Models\Tenant;
 use App\Traits\ApiResponse;
-use Illuminate\Support\Facades\DB;
 
 class TenantDashboardController extends Controller
 {
