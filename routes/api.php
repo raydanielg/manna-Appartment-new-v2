@@ -188,6 +188,7 @@ Route::prefix('v1')->group(function () {
                 Route::get('/finance/export', [FinanceController::class, 'export']);
 
                 Route::post('/sms/send', [SmsController::class, 'send']);
+                Route::post('/sms/broadcast', [SmsController::class, 'broadcast']);
                 Route::get('/sms/logs', [SmsController::class, 'logs']);
                 Route::get('/sms/balance', [SmsController::class, 'balance']);
 

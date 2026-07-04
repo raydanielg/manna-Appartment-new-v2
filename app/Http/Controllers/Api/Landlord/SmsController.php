@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Landlord;
 use App\Http\Controllers\Controller;
 use App\Models\SmsLog;
 use App\Models\Tenant;
+use App\Services\SmsService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,14 +32,73 @@ class SmsController extends Controller
             'recipient_phone' => $request->recipient_phone,
             'message' => $request->message,
             'type' => $request->type,
+            'organization_id' => $organization->id,
             'status' => 'queued',
         ]);
 
-        // TODO: dispatch SendSmsJob
-        $organization->decrement('sms_balance');
-        $sms->update(['status' => 'sent', 'sent_at' => now()]);
+        app(SmsService::class)->send($request->recipient_phone, $request->message, $request->type, $organization->id);
 
         return $this->success('SMS queued successfully.', $sms, 201);
+    }
+
+    public function broadcast(Request $request)
+    {
+        $request->validate([
+            'recipient_type' => 'required|in:all_tenants,active_tenants,overdue_tenants,custom_numbers',
+            'message' => 'required|string',
+            'custom_numbers' => 'nullable|array',
+            'custom_numbers.*' => 'string',
+        ]);
+
+        $organization = Auth::user()->organization;
+        $user = Auth::user();
+
+        if ($organization->sms_balance <= 0) {
+            return $this->error('Insufficient SMS balance. Please top up.', null, 403);
+        }
+
+        $recipientType = $request->recipient_type;
+        $message = $request->message;
+        $phones = [];
+
+        if ($recipientType === 'custom_numbers') {
+            $phones = $request->input('custom_numbers', []);
+        } else {
+            $query = Tenant::with(['user', 'payments'])->where('organization_id', $organization->id);
+            if ($recipientType === 'active_tenants') {
+                $query->where('status', 'active');
+            } elseif ($recipientType === 'overdue_tenants') {
+                $query->where('status', 'active');
+            }
+            $tenants = $query->get();
+            if ($recipientType === 'overdue_tenants') {
+                $tenants = $tenants->filter(function ($tenant) {
+                    $rent = $tenant->unit?->rent_amount ?? 0;
+                    $paid = $tenant->payments->sum('amount');
+                    return $rent > 0 && $paid < $rent;
+                });
+            }
+            $phones = $tenants->map(fn ($t) => $t->user?->phone)->filter()->unique()->values()->toArray();
+        }
+
+        if (empty($phones)) {
+            return $this->error('No recipients found for this group.', null, 422);
+        }
+
+        if ($organization->sms_balance < count($phones)) {
+            return $this->error('Insufficient SMS balance for this broadcast.', null, 403);
+        }
+
+        $smsService = app(SmsService::class);
+        $sentCount = 0;
+        foreach ($phones as $phone) {
+            $smsService->send($phone, $message, 'broadcast', $organization->id);
+            $sentCount++;
+        }
+
+        $organization->decrement('sms_balance', $sentCount);
+
+        return $this->success("Broadcast sent to {$sentCount} recipients.", ['sent_count' => $sentCount]);
     }
 
     public function logs(Request $request)

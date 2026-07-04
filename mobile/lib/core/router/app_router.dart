@@ -18,11 +18,13 @@ import '../../features/landlord/contracts/presentation/screens/contract_sign_scr
 import '../../features/landlord/contracts/presentation/screens/contracts_list_screen.dart';
 import '../../features/landlord/contracts/presentation/screens/create_contract_screen.dart';
 import '../../features/landlord/dashboard/presentation/screens/landlord_home_screen.dart';
+import '../../features/landlord/help/presentation/screens/landlord_help_screen.dart';
 import '../../features/landlord/kyc/presentation/screens/kyc_intro_screen.dart';
 import '../../features/landlord/kyc/presentation/screens/kyc_status_screen.dart';
 import '../../features/landlord/kyc/presentation/screens/kyc_upload_documents_screen.dart';
 import '../../features/landlord/kyc/presentation/screens/kyc_verified_screen.dart';
 import '../../features/landlord/maintenance/presentation/screens/landlord_more_screen.dart';
+import '../../features/landlord/maintenance/presentation/screens/maintenance_detail_screen.dart';
 import '../../features/landlord/maintenance/presentation/screens/maintenance_requests_screen.dart';
 import '../../features/landlord/payments/presentation/screens/payment_detail_screen.dart';
 import '../../features/landlord/payments/presentation/screens/payments_list_screen.dart';
@@ -117,6 +119,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/landlord/sms', builder: (context, state) => const SmsBroadcastScreen()),
           GoRoute(path: '/landlord/sms/logs', builder: (context, state) => const SmsLogsScreen()),
           GoRoute(path: '/landlord/maintenance', builder: (context, state) => const MaintenanceRequestsScreen()),
+          GoRoute(path: '/landlord/maintenance/:id', builder: (context, state) => const MaintenanceDetailScreen()),
+          GoRoute(path: '/landlord/help', builder: (context, state) => const LandlordHelpScreen()),
           GoRoute(path: '/landlord/subscription', builder: (context, state) => const CurrentPlanScreen()),
           GoRoute(path: '/landlord/subscription/plans', builder: (context, state) => const SubscriptionPlansScreen()),
           GoRoute(path: '/landlord/subscription/checkout', builder: (context, state) => const PaymentCheckoutScreen()),

@@ -8,3 +8,8 @@ final smsLogsProvider = FutureProvider.autoDispose((ref) async {
   final repo = ref.watch(smsRepositoryProvider);
   return repo.getLogs();
 });
+
+final smsBalanceProvider = FutureProvider.autoDispose((ref) async {
+  final repo = ref.watch(smsRepositoryProvider);
+  return repo.getBalance();
+});

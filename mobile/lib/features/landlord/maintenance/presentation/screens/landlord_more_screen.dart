@@ -50,15 +50,66 @@ class LandlordMoreScreen extends ConsumerWidget {
             title: 'Logout',
             subtitle: 'Sign out of your account',
             color: AppColors.error,
-            onTap: () async {
-              await ref.read(authProvider.notifier).logout();
-              if (context.mounted) context.go('/auth/login');
-            },
+            onTap: () => _showLogoutConfirmation(context, ref),
           ),
         ],
       ),
     );
   }
+
+  void _showLogoutConfirmation(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              icon: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.1), shape: BoxShape.circle),
+                child: const Icon(Icons.logout, color: AppColors.error, size: 32),
+              ),
+              title: Text('Logout', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800)),
+              content: Text('Are you sure you want to sign out of your account?', textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 14, color: AppColors.textLight)),
+              actionsAlignment: MainAxisAlignment.center,
+              actions: [
+                SizedBox(
+                  width: 120,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: Text('Cancel', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+                SizedBox(
+                  width: 120,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                    onPressed: () async {
+                      setDialogState(() => _isLoggingOut = true);
+                      await ref.read(authProvider.notifier).logout();
+                      setDialogState(() => _isLoggingOut = false);
+                      if (dialogContext.mounted) {
+                        Navigator.pop(dialogContext);
+                      }
+                      if (context.mounted) {
+                        context.go('/auth/login');
+                      }
+                    },
+                    child: _isLoggingOut
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : Text('Logout', style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: Colors.white)),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  bool _isLoggingOut = false;
 
   Widget _buildProfileHeader(BuildContext context, String name, String phone) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

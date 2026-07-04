@@ -6,11 +6,21 @@ class SmsRepository {
 
   Future<List<dynamic>> getLogs() async {
     final response = await _client.get('/landlord/sms/logs');
-    return response.data['data'] ?? [];
+    final data = response.data['data'];
+    if (data is Map && data['data'] is List) return data['data'];
+    if (data is List) return data;
+    return [];
   }
 
   Future<Map<String, dynamic>> sendBroadcast(Map<String, dynamic> data) async {
-    final response = await _client.post('/landlord/sms/send', data: data);
-    return response.data['data'] ?? {};
+    final response = await _client.post('/landlord/sms/broadcast', data: data);
+    return response.data ?? {};
+  }
+
+  Future<int> getBalance() async {
+    final response = await _client.get('/landlord/sms/balance');
+    final data = response.data['data'];
+    if (data is Map) return data['sms_balance'] ?? 0;
+    return 0;
   }
 }
