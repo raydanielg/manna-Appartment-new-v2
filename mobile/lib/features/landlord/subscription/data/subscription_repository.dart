@@ -18,4 +18,18 @@ class SubscriptionRepository {
     final response = await _client.post('/landlord/subscriptions/subscribe', data: {'plan_id': planId});
     return response.data['data'] ?? {};
   }
+
+  Future<Map<String, dynamic>> initiatePayment(String planId, String phone) async {
+    final response = await _client.post('/payments-gateway/initiate', data: {
+      'type': 'subscription',
+      'id': planId,
+      'phone': phone,
+    });
+    return response.data['data'] ?? {};
+  }
+
+  Future<Map<String, dynamic>> verifyPayment(String reference) async {
+    final response = await _client.get('/payments-gateway/verify/$reference');
+    return response.data['data'] ?? {};
+  }
 }
