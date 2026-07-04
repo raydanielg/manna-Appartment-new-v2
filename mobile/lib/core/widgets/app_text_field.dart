@@ -10,8 +10,10 @@ class AppTextField extends StatelessWidget {
   final Widget? prefix;
   final Widget? suffix;
   final void Function(String)? onChanged;
+  final void Function()? onTap;
   final int? maxLength;
   final int maxLines;
+  final bool readOnly;
 
   const AppTextField({
     super.key,
@@ -24,8 +26,10 @@ class AppTextField extends StatelessWidget {
     this.prefix,
     this.suffix,
     this.onChanged,
+    this.onTap,
     this.maxLength,
     this.maxLines = 1,
+    this.readOnly = false,
   });
 
   @override
@@ -36,6 +40,8 @@ class AppTextField extends StatelessWidget {
       keyboardType: keyboardType,
       validator: validator,
       onChanged: onChanged,
+      onTap: onTap,
+      readOnly: readOnly,
       maxLength: maxLength,
       maxLines: obscureText ? 1 : maxLines,
       style: const TextStyle(fontSize: 15),

@@ -37,21 +37,7 @@ class PropertyDetailScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: double.infinity,
-                height: 180,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryDark],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Center(
-                  child: Icon(Icons.apartment, size: 64, color: Colors.white70),
-                ),
-              ),
+              _buildImageGallery(context, property),
               const SizedBox(height: 20),
               Text(
                 property.name,
@@ -60,20 +46,20 @@ class PropertyDetailScreen extends ConsumerWidget {
               const SizedBox(height: 4),
               Text(
                 property.address ?? 'No address',
-                style: TextStyle(fontSize: 14, color: isDark ? Colors.white60 : AppColors.textLight),
+                style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white60 : AppColors.textLight),
               ),
               const SizedBox(height: 20),
               _buildInfoRow(context, Icons.category_outlined, 'Type', property.type ?? 'N/A'),
-              _buildInfoRow(context, Icons.meeting_room_outlined, 'Total Units', ''),
-              _buildInfoRow(context, Icons.check_circle_outline, 'Occupied', ''),
-              _buildInfoRow(context, Icons.highlight_off, 'Vacant', ''),
-              if (property.monthlyRevenue != null)
-                _buildInfoRow(context, Icons.account_balance_wallet, 'Monthly Revenue', 'TZS '),
-              if (property.description != null) ...[
+              _buildInfoRow(context, Icons.meeting_room_outlined, 'Total Units', '${property.unitsCount ?? 0}'),
+              _buildInfoRow(context, Icons.check_circle_outline, 'Occupied', '${property.occupiedUnits ?? 0}'),
+              _buildInfoRow(context, Icons.highlight_off, 'Vacant', '${property.vacantUnits ?? 0}'),
+              if (property.monthlyRevenue != null && property.monthlyRevenue! > 0)
+                _buildInfoRow(context, Icons.account_balance_wallet, 'Monthly Revenue', 'TZS ${property.monthlyRevenue!.toStringAsFixed(0)}'),
+              if (property.description != null && property.description!.isNotEmpty) ...[
                 const SizedBox(height: 20),
                 Text('Description', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
                 const SizedBox(height: 8),
-                Text(property.description!, style: TextStyle(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textDark)),
+                Text(property.description!, style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textDark)),
               ],
               const SizedBox(height: 24),
               Row(
@@ -88,7 +74,7 @@ class PropertyDetailScreen extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () => context.push('/landlord/units?propertyId=${property.id}'),
                       style: ElevatedButton.styleFrom(backgroundColor: AppColors.info),
                       icon: const Icon(Icons.meeting_room),
                       label: const Text('Units'),
@@ -103,6 +89,39 @@ class PropertyDetailScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildImageGallery(BuildContext context, property) {
+    final images = property.images is List ? property.images as List<String> : <String>[];
+    final hasImages = images.isNotEmpty;
+    if (!hasImages) {
+      return Container(
+        width: double.infinity,
+        height: 180,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Center(child: Icon(Icons.apartment, size: 64, color: Colors.white70)),
+      );
+    }
+    return SizedBox(
+      height: 180,
+      child: PageView.builder(
+        itemCount: images.length,
+        itemBuilder: (context, index) => ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image.network(
+            images[index],
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              child: const Icon(Icons.apartment, color: AppColors.primary, size: 48),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
@@ -111,9 +130,9 @@ class PropertyDetailScreen extends ConsumerWidget {
         children: [
           Icon(icon, size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
-          Text(label, style: TextStyle(fontSize: 14, color: isDark ? Colors.white60 : AppColors.textLight)),
+          Text(label, style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white60 : AppColors.textLight)),
           const Spacer(),
-          Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+          Text(value, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
         ],
       ),
     );

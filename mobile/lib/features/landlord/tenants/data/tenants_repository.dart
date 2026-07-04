@@ -28,4 +28,8 @@ class TenantsRepository {
   Future<void> deleteTenant(String id) async {
     await _client.delete('${ApiEndpoints.tenants}/$id');
   }
+
+  Future<void> moveOut(String id) async {
+    await _client.post('${ApiEndpoints.tenants}/$id/move-out');
+  }
 }

@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
@@ -18,8 +21,10 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _picker = ImagePicker();
   String _type = 'apartment';
   bool _isLoading = false;
+  List<String> _imagePaths = [];
 
   @override
   void dispose() {
@@ -29,18 +34,31 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImages() async {
+    final picked = await _picker.pickMultiImage(maxWidth: 1200, maxHeight: 1200, imageQuality: 80);
+    if (picked.isEmpty) return;
+    setState(() {
+      _imagePaths = [..._imagePaths, ...picked.map((e) => e.path)];
+    });
+  }
+
+  void _removeImage(int index) {
+    setState(() => _imagePaths.removeAt(index));
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
       final repo = ref.read(propertiesRepositoryProvider);
-      final data = {
-        'name': _nameController.text.trim(),
-        'address': _addressController.text.trim(),
-        'type': _type,
-        'description': _descriptionController.text.trim(),
-      };
-      await repo.createProperty(data);
+      await repo.createProperty(
+        name: _nameController.text.trim(),
+        address: _addressController.text.trim(),
+        type: _type,
+        description: _descriptionController.text.trim(),
+        imagePaths: _imagePaths,
+      );
+      ref.invalidate(propertiesListProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -55,7 +73,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: '),
+            content: Text('Error: $e'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -72,8 +90,13 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text('Add Property'),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+        title: Text('Add Property', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) context.pop();
+          },
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -96,12 +119,14 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
                 validator: (v) => v == null || v.isEmpty ? 'Address is required' : null,
               ),
               const SizedBox(height: 16),
-              Text('Property Type', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+              Text('Property Type', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: _type,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  filled: true,
+                  fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
                 items: const [
@@ -120,6 +145,10 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
                 maxLines: 3,
               ),
               const SizedBox(height: 24),
+              Text('Property Photos', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+              const SizedBox(height: 10),
+              _buildImagePicker(context),
+              const SizedBox(height: 24),
               PrimaryButton(
                 text: 'Save Property',
                 isLoading: _isLoading,
@@ -129,6 +158,75 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildImagePicker(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            ..._imagePaths.asMap().entries.map((entry) {
+              final index = entry.key;
+              final path = entry.value;
+              return Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(
+                      File(path),
+                      width: 90,
+                      height: 90,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: GestureDetector(
+                      onTap: () => _removeImage(index),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                        child: const Icon(Icons.close, size: 14, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }),
+            GestureDetector(
+              onTap: _pickImages,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_photo_alternate, color: AppColors.primary),
+                    const SizedBox(height: 4),
+                    Text('Add', style: GoogleFonts.nunito(fontSize: 11, color: isDark ? Colors.white70 : AppColors.textLight)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (_imagePaths.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text('${_imagePaths.length} photo(s) selected', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+          ),
+      ],
     );
   }
 }

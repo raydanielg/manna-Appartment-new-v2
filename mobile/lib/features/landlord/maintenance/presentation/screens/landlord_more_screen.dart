@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
+import '../../../../../features/landlord/subscription/providers/subscription_provider.dart';
 
 class LandlordMoreScreen extends ConsumerWidget {
   const LandlordMoreScreen({super.key});
@@ -11,11 +13,12 @@ class LandlordMoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = ref.watch(authProvider).user;
+    final planAsync = ref.watch(currentPlanProvider);
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text('More'),
+        title: Text('More', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         automaticallyImplyLeading: false,
       ),
       body: ListView(
@@ -23,16 +26,24 @@ class LandlordMoreScreen extends ConsumerWidget {
         children: [
           _buildProfileHeader(context, user?.fullName ?? 'Landlord', user?.phone ?? ''),
           const SizedBox(height: 20),
+          planAsync.when(
+            loading: () => const SizedBox(),
+            error: (_, __) => const SizedBox(),
+            data: (plan) => _buildPlanCard(context, plan),
+          ),
+          const SizedBox(height: 20),
           _buildSectionTitle(context, 'Management'),
           _buildMenuItem(context, icon: Icons.apartment, title: 'Properties', subtitle: 'Manage your properties & units', onTap: () => context.push('/landlord/properties')),
           _buildMenuItem(context, icon: Icons.people, title: 'Tenants', subtitle: 'View and manage tenants', onTap: () => context.push('/landlord/tenants')),
           _buildMenuItem(context, icon: Icons.description_outlined, title: 'Contracts', subtitle: 'View and create contracts', onTap: () => context.push('/landlord/contracts')),
           _buildMenuItem(context, icon: Icons.payments, title: 'Payments', subtitle: 'Record and view payments', onTap: () => context.push('/landlord/payments')),
-          _buildMenuItem(context, icon: Icons.sms_outlined, title: 'SMS', subtitle: 'Broadcast messages and view logs', onTap: () => context.push('/landlord/sms')),
+          _buildMenuItem(context, icon: Icons.sms_outlined, title: 'SMS Broadcast', subtitle: 'Send reminders and messages', onTap: () => context.push('/landlord/sms')),
           _buildMenuItem(context, icon: Icons.build_outlined, title: 'Maintenance', subtitle: 'Respond to tenant requests', onTap: () => context.push('/landlord/maintenance')),
           const SizedBox(height: 20),
           _buildSectionTitle(context, 'Account'),
+          _buildMenuItem(context, icon: Icons.subscriptions_outlined, title: 'Subscription Plan', subtitle: 'View and manage your plan', onTap: () => context.push('/landlord/subscription')),
           _buildMenuItem(context, icon: Icons.settings_outlined, title: 'Settings', subtitle: 'App preferences', onTap: () => context.push('/settings')),
+          _buildMenuItem(context, icon: Icons.help_outline, title: 'How to Use', subtitle: 'Quick guide for landlords', onTap: () => context.push('/landlord/help')),
           _buildMenuItem(
             context,
             icon: Icons.logout,
@@ -51,53 +62,93 @@ class LandlordMoreScreen extends ConsumerWidget {
 
   Widget _buildProfileHeader(BuildContext context, String name, String phone) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Card(
-      child: Padding(
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [AppColors.primary, AppColors.info]),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.25),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'L',
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: Colors.white),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  phone,
+                  style: GoogleFonts.nunito(fontSize: 13, color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.white70),
+            onPressed: () => context.push('/landlord/profile'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlanCard(BuildContext context, Map<String, dynamic> plan) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final planName = plan['plan']?['name'] ?? plan['plan_name'] ?? 'No Plan';
+    final status = plan['status']?.toString() ?? 'inactive';
+    final isActive = status == 'active';
+    return InkWell(
+      onTap: () => context.push('/landlord/subscription'),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
         padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
         child: Row(
           children: [
             Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primary, AppColors.primaryDark],
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Center(
-                child: Text(
-                  name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'L',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.workspace_premium, color: AppColors.primary),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    name,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    phone,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: isDark ? Colors.white60 : AppColors.textLight,
-                    ),
-                  ),
+                  Text('Current Plan', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+                  Text(planName, style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
                 ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(color: isActive ? AppColors.success.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
+              child: Text(
+                isActive ? 'Active' : 'Inactive',
+                style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w800, color: isActive ? AppColors.success : Colors.red),
               ),
             ),
           ],
@@ -112,12 +163,7 @@ class LandlordMoreScreen extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 8, left: 4),
       child: Text(
         title,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: isDark ? Colors.white60 : AppColors.textLight,
-          letterSpacing: 0.5,
-        ),
+        style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: isDark ? Colors.white60 : AppColors.textLight, letterSpacing: 0.5),
       ),
     );
   }
@@ -132,31 +178,20 @@ class LandlordMoreScreen extends ConsumerWidget {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final iconColor = color ?? AppColors.primary;
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: isDark ? 0.15 : 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
+          decoration: BoxDecoration(color: iconColor.withValues(alpha: isDark ? 0.15 : 0.1), borderRadius: BorderRadius.circular(12)),
           child: Icon(icon, color: iconColor),
         ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: color ?? (isDark ? Colors.white : AppColors.textDark),
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(
-            fontSize: 12,
-            color: isDark ? Colors.white60 : AppColors.textLight,
-          ),
-        ),
+        title: Text(title, style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: color ?? (isDark ? Colors.white : AppColors.textDark))),
+        subtitle: Text(subtitle, style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,
       ),

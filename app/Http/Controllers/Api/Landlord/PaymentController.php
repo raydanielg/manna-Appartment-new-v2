@@ -25,22 +25,60 @@ class PaymentController extends Controller
         $request->validate([
             'contract_id' => 'required|uuid|exists:contracts,id',
             'tenant_id' => 'required|uuid|exists:tenants,id',
+            'payment_type' => 'required|in:rent,water,electricity,other',
             'amount' => 'required|numeric|min:0',
             'method' => 'required|string|max:255',
             'reference_number' => 'nullable|string|max:255',
-            'payment_date' => 'required|date',
-            'month_covered' => 'required|string|max:255',
+            'payment_date' => 'nullable|date',
+            'month_covered' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
 
         $payment = Payment::create(array_merge(
             $request->only([
-                'contract_id', 'tenant_id', 'amount', 'method', 'reference_number', 'payment_date', 'month_covered', 'notes',
+                'contract_id', 'tenant_id', 'payment_type', 'amount', 'method', 'reference_number', 'payment_date', 'month_covered', 'notes',
             ]),
-            ['recorded_by' => Auth::id(), 'status' => 'confirmed']
+            [
+                'payment_date' => $request->payment_date ?? now()->toDateString(),
+                'recorded_by' => Auth::id(),
+                'status' => 'confirmed',
+            ]
         ));
 
-        return $this->success('Payment recorded.', $payment->load(['tenant.user', 'contract']), 201);
+        return $this->success('Payment recorded.', $payment->load(['tenant.user', 'contract.unit']), 201);
+    }
+
+    public function show($id)
+    {
+        $payment = Payment::with(['tenant.user', 'contract.unit'])->findOrFail($id);
+        return $this->success('Payment retrieved.', $payment);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $payment = Payment::findOrFail($id);
+        $request->validate([
+            'payment_type' => 'nullable|in:rent,water,electricity,other',
+            'amount' => 'nullable|numeric|min:0',
+            'method' => 'nullable|string|max:255',
+            'reference_number' => 'nullable|string|max:255',
+            'payment_date' => 'nullable|date',
+            'month_covered' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+        ]);
+
+        $payment->update($request->only([
+            'payment_type', 'amount', 'method', 'reference_number', 'payment_date', 'month_covered', 'notes',
+        ]));
+
+        return $this->success('Payment updated.', $payment->load(['tenant.user', 'contract.unit']));
+    }
+
+    public function destroy($id)
+    {
+        $payment = Payment::findOrFail($id);
+        $payment->delete();
+        return $this->success('Payment deleted.');
     }
 
     public function tenantPayments(Request $request, $tenantId)

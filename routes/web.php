@@ -62,6 +62,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/organizations/{id}', [OrganizationController::class, 'show'])->name('organizations.show');
     Route::post('/organizations/{id}/assign-plan', [OrganizationController::class, 'assignPlan'])->name('organizations.assign-plan');
     Route::delete('/organizations/{id}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
+    Route::get('/properties', [\App\Http\Controllers\Admin\PropertyController::class, 'index'])->name('properties');
+    Route::get('/properties/{id}', [\App\Http\Controllers\Admin\PropertyController::class, 'show'])->name('properties.show');
     Route::get('/kyc', [KycController::class, 'index'])->name('kyc');
     Route::post('/kyc/{id}/review', [KycController::class, 'review'])->name('kyc.review');
     Route::get('/plans', [PlanController::class, 'index'])->name('plans');

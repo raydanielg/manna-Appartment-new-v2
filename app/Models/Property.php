@@ -18,9 +18,15 @@ class Property extends Model
         'organization_id',
         'name',
         'location',
+        'address',
         'type',
         'description',
+        'images_json',
         'status',
+    ];
+
+    protected $casts = [
+        'images_json' => 'array',
     ];
 
     protected static function boot()

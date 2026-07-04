@@ -16,7 +16,9 @@ class ProfileController extends Controller
     public function show()
     {
         $user = Auth::user()->load('organization');
-        return $this->success('Profile retrieved.', $user);
+        $data = $user->toArray();
+        $data['avatar'] = $user->avatar ? Storage::url($user->avatar) : null;
+        return $this->success('Profile retrieved.', $data);
     }
 
     public function update(Request $request)

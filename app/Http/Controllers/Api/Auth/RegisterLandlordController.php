@@ -9,6 +9,7 @@ use App\Services\SmsService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class RegisterLandlordController extends Controller
@@ -54,7 +55,8 @@ class RegisterLandlordController extends Controller
             $organization->id
         );
 
-        $userData = $user->only(['id', 'full_name', 'phone', 'email', 'avatar', 'role', 'organization_id', 'status']);
+        $userData = $user->only(['id', 'full_name', 'phone', 'email', 'role', 'organization_id', 'status']);
+        $userData['avatar'] = $user->avatar ? Storage::url($user->avatar) : null;
         $userData['organization'] = [
             'business_name' => $organization->business_name,
             'kyc_status' => $organization->kyc_status,

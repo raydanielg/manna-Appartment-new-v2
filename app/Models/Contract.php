@@ -19,12 +19,16 @@ class Contract extends Model
         'unit_id',
         'organization_id',
         'contract_number',
+        'contract_type',
+        'template_content',
         'duration_type',
         'start_date',
         'end_date',
         'rent_amount',
         'deposit_amount',
         'status',
+        'signature_path',
+        'signed_at',
         'pdf_url',
     ];
 

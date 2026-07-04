@@ -170,10 +170,16 @@ Route::prefix('v1')->group(function () {
                 Route::patch('/contracts/{id}', [ContractController::class, 'update']);
                 Route::post('/contracts/{id}/renew', [ContractController::class, 'renew']);
                 Route::post('/contracts/{id}/terminate', [ContractController::class, 'terminate']);
+                Route::get('/contracts/template/download', [\App\Http\Controllers\Api\Landlord\ContractTemplateController::class, 'download']);
                 Route::get('/contracts/{id}/pdf', [ContractController::class, 'pdf']);
+                Route::post('/contracts/{id}/sign', [ContractController::class, 'sign']);
+                Route::get('/contracts/{id}/download', [ContractController::class, 'downloadPdf']);
 
                 Route::get('/payments', [PaymentController::class, 'index']);
                 Route::post('/payments', [PaymentController::class, 'store']);
+                Route::get('/payments/{id}', [PaymentController::class, 'show']);
+                Route::patch('/payments/{id}', [PaymentController::class, 'update']);
+                Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);
                 Route::get('/tenants/{id}/payments', [PaymentController::class, 'tenantPayments']);
 
                 Route::get('/finance/summary', [FinanceController::class, 'summary']);

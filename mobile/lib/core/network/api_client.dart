@@ -162,4 +162,20 @@ class ApiClient {
     });
     return _dio.post(path, data: formData);
   }
+
+  Future<Response> download(String path, String savePath, {Map<String, dynamic>? queryParameters}) async {
+    final token = await SecureStorageService.getToken();
+    return _dio.download(
+      path,
+      savePath,
+      queryParameters: queryParameters,
+      options: Options(
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+          'Accept': 'application/octet-stream',
+        },
+        responseType: ResponseType.bytes,
+      ),
+    );
+  }
 }
