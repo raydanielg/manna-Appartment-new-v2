@@ -60,6 +60,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/organizations', [OrganizationController::class, 'index'])->name('organizations');
     Route::get('/kyc', [KycController::class, 'index'])->name('kyc');
+    Route::post('/kyc/{id}/review', [KycController::class, 'review'])->name('kyc.review');
     Route::get('/plans', [PlanController::class, 'index'])->name('plans');
     Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue');
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');

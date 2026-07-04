@@ -20,7 +20,7 @@ class ApiEndpoints {
   static const String smsLogs = '/landlord/sms/logs';
   static const String subscriptions = '/landlord/subscriptions';
   static const String staff = '/landlord/staff';
-  static const String kyc = '/landlord/kyc';
+  static const String kyc = '/landlord/kyc/submit';
   static const String kycStatus = '/landlord/kyc/status';
   static const String maintenanceRequests = '/landlord/maintenance-requests';
 

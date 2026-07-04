@@ -21,12 +21,15 @@
             <tbody>
                 @forelse($organizations as $org)
                 <tr class="border-t border-gray-100 hover:bg-gray-50/50 transition-colors">
-                    <td class="px-5 py-2.5 text-xs font-medium text-gray-900">{{ $org->name }}</td>
-                    <td class="px-5 py-2.5 text-xs text-gray-500">{{ $org->phone }}</td>
+                    <td class="px-5 py-2.5 text-xs font-medium text-gray-900">{{ $org->business_name ?? '-' }}</td>
+                    <td class="px-5 py-2.5 text-xs text-gray-500">{{ $org->owner->phone ?? '-' }}</td>
                     <td class="px-5 py-2.5">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium {{ $org->status === 'active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-100 text-gray-700 border border-gray-200' }}">{{ ucfirst($org->status) }}</span>
                     </td>
-                    <td class="px-5 py-2.5 text-xs text-gray-700">{{ ucfirst($org->kyc_status) }}</td>
+                    <td class="px-5 py-2.5">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium
+                            {{ $org->kyc_status === 'approved' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : ($org->kyc_status === 'pending' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-red-50 text-red-700 border border-red-100') }}">{{ ucfirst($org->kyc_status) }}</span>
+                    </td>
                     <td class="px-5 py-2.5 text-xs text-gray-700">{{ $org->properties_count }}</td>
                     <td class="px-5 py-2.5 text-xs text-gray-700">{{ $org->tenants_count }}</td>
                 </tr>

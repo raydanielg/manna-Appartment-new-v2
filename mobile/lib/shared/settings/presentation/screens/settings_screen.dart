@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../features/auth/providers/auth_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -18,7 +19,20 @@ class SettingsScreen extends ConsumerWidget {
         title: const Text('Settings'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              final authState = ref.read(authProvider);
+              if (authState.role == 'tenant') {
+                context.go('/tenant/home');
+              } else if (authState.isKycApproved) {
+                context.go('/landlord/home');
+              } else {
+                context.go('/landlord/kyc');
+              }
+            }
+          },
         ),
       ),
       body: ListView(
@@ -56,8 +70,20 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
           _buildSectionTitle(context, 'App'),
-          _buildMenuItem(context, icon: Icons.language, title: 'Language', subtitle: 'English / Swahili'),
-          _buildMenuItem(context, icon: Icons.info_outline, title: 'About', subtitle: 'Manna Apartment v1.0.0'),
+          _buildMenuItem(
+            context,
+            icon: Icons.language,
+            title: 'Language',
+            subtitle: 'English / Swahili',
+            onTap: () => context.go('/settings/language'),
+          ),
+          _buildMenuItem(
+            context,
+            icon: Icons.info_outline,
+            title: 'About',
+            subtitle: 'Manna Apartment v1.0.0',
+            onTap: () => context.go('/settings/about'),
+          ),
           _buildMenuItem(context, icon: Icons.help_outline, title: 'Help & Support', subtitle: 'Get help and contact support'),
           const SizedBox(height: 20),
           _buildSectionTitle(context, 'Legal'),
