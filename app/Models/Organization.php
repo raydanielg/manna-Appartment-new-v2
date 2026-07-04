@@ -20,6 +20,7 @@ class Organization extends Model
         'subscription_id',
         'sms_balance',
         'status',
+        'suspension_reason',
     ];
 
     protected static function boot()

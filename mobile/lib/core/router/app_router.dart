@@ -8,6 +8,9 @@ import '../../features/auth/presentation/screens/register_landlord_screen.dart';
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/admin/landlords/presentation/screens/add_landlord_screen.dart';
+import '../../features/admin/landlords/presentation/screens/admin_landlord_detail_screen.dart';
+import '../../features/admin/landlords/presentation/screens/admin_landlords_screen.dart';
 import '../../features/auth/presentation/screens/verify_otp_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../shared/banned/presentation/screens/banned_screen.dart';
@@ -81,6 +84,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/auth/reset-password', builder: (context, state) => const ResetPasswordScreen()),
       GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(path: '/settings/language', builder: (context, state) => const LanguageToggleScreen()),
+      GoRoute(path: '/admin/landlords', builder: (context, state) => const AdminLandlordsScreen()),
+      GoRoute(path: '/admin/landlords/create', builder: (context, state) => const AddLandlordScreen()),
+      GoRoute(path: '/admin/landlords/:id', builder: (context, state) => const AdminLandlordDetailScreen()),
       GoRoute(path: '/banned', builder: (context, state) => const BannedScreen()),
       GoRoute(path: '/settings/about', builder: (context, state) => const AboutScreen()),
       GoRoute(path: '/settings/help-support', builder: (context, state) => const HelpSupportScreen()),

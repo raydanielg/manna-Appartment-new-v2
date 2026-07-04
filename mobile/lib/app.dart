@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'core/constants/app_colors.dart';
 import 'core/localization/app_localizations.dart';
+import 'core/localization/locale_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/storage/local_cache_service.dart';
 
@@ -13,6 +14,7 @@ class MannaApartmentApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
 
     ErrorWidget.builder = (FlutterErrorDetails details) {
       return Material(
@@ -47,6 +49,7 @@ class MannaApartmentApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       themeMode: themeMode,
+      locale: locale,
       theme: _buildTheme(Brightness.light),
       darkTheme: _buildTheme(Brightness.dark),
       localizationsDelegates: const [

@@ -88,8 +88,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
     ref.listen(authProvider, (previous, next) {
       if (next.isAuthenticated) {
-        final route =
-            next.role == 'landlord' ? '/landlord/home' : '/tenant/home';
+        final route = switch (next.role) {
+          'super_admin' => '/admin/landlords',
+          'landlord' => '/landlord/home',
+          _ => '/tenant/home',
+        };
         context.go(route);
       }
     });

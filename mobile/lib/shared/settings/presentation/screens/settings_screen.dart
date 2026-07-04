@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/locale_provider.dart';
 import '../../../../features/auth/providers/auth_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -12,6 +13,8 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
+    final currentLanguage = locale.languageCode == 'sw' ? 'Swahili' : 'English';
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
@@ -74,8 +77,8 @@ class SettingsScreen extends ConsumerWidget {
             context,
             icon: Icons.language,
             title: 'Language',
-            subtitle: 'English / Swahili',
-            onTap: () => context.go('/settings/language'),
+            subtitle: 'Current: $currentLanguage',
+            onTap: () => context.push('/settings/language'),
           ),
           _buildMenuItem(
             context,

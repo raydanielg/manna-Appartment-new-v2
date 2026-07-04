@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\PaymentGatewayController;
 use App\Http\Controllers\Api\Staff\StaffDashboardController;
 use App\Http\Controllers\Api\Staff\StaffPaymentController;
 use App\Http\Controllers\Api\Staff\StaffTenantController;
+use App\Http\Controllers\Api\Admin\LandlordManagementController;
 use App\Http\Controllers\Api\SuperAdmin\AnalyticsController;
 use App\Http\Controllers\Api\SuperAdmin\KycReviewController;
 use App\Http\Controllers\Api\SuperAdmin\OrganizationController;
@@ -109,6 +110,16 @@ Route::prefix('v1')->group(function () {
             Route::get('/revenue', [RevenueController::class, 'index']);
             Route::get('/analytics', [AnalyticsController::class, 'index']);
             Route::get('/sms-usage', [AnalyticsController::class, 'smsUsage']);
+        });
+
+        // Admin (super admin mobile/web)
+        Route::middleware(['role:super_admin'])->prefix('admin')->group(function () {
+            Route::get('/landlords', [LandlordManagementController::class, 'index']);
+            Route::post('/landlords', [LandlordManagementController::class, 'store']);
+            Route::get('/landlords/{id}', [LandlordManagementController::class, 'show']);
+            Route::patch('/landlords/{id}/status', [LandlordManagementController::class, 'updateStatus']);
+            Route::patch('/landlords/{id}/kyc', [LandlordManagementController::class, 'updateKycStatus']);
+            Route::delete('/landlords/{id}', [LandlordManagementController::class, 'destroy']);
         });
 
         // Staff (web only)

@@ -39,6 +39,11 @@ class LandlordMoreScreen extends ConsumerWidget {
           _buildMenuItem(context, icon: Icons.payments, title: 'Payments', subtitle: 'Record and view payments', onTap: () => context.push('/landlord/payments')),
           _buildMenuItem(context, icon: Icons.sms_outlined, title: 'SMS Broadcast', subtitle: 'Send reminders and messages', onTap: () => context.push('/landlord/sms')),
           _buildMenuItem(context, icon: Icons.build_outlined, title: 'Maintenance', subtitle: 'Respond to tenant requests', onTap: () => context.push('/landlord/maintenance')),
+          if (user?.role == 'super_admin') ...[
+            const SizedBox(height: 20),
+            _buildSectionTitle(context, 'Admin'),
+            _buildMenuItem(context, icon: Icons.admin_panel_settings, title: 'Manage Landlords', subtitle: 'View all owners & organizations', onTap: () => context.push('/admin/landlords')),
+          ],
           const SizedBox(height: 20),
           _buildSectionTitle(context, 'Account'),
           _buildMenuItem(context, icon: Icons.subscriptions_outlined, title: 'Subscription Plan', subtitle: 'View and manage your plan', onTap: () => context.push('/landlord/subscription')),
