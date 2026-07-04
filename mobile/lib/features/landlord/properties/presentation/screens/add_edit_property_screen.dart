@@ -29,13 +29,6 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
   List<String> _imagePaths = [];
   final Map<String, String> _fieldErrors = {};
 
-  final _propertyTypes = [
-    ('apartment', 'Apartment', Icons.apartment),
-    ('house', 'House', Icons.home),
-    ('commercial', 'Commercial', Icons.store),
-    ('mixed', 'Mixed Use', Icons.domain),
-  ];
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -143,7 +136,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: Column(
@@ -151,61 +144,59 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
             children: [
               _buildHeader(context),
               const SizedBox(height: 24),
-              _buildCard(
-                context,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Basic Information', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
-                    const SizedBox(height: 16),
-                    AppTextField(
-                      label: 'Property Name',
-                      hint: 'e.g. Manna Apartments',
-                      controller: _nameController,
-                      prefix: const Icon(Icons.apartment, size: 20),
-                      validator: (v) => v == null || v.isEmpty ? 'Name is required' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    AppTextField(
-                      label: 'Address',
-                      hint: 'e.g. Kijitonyama, Dar es Salaam',
-                      controller: _addressController,
-                      prefix: const Icon(Icons.location_on, size: 20),
-                      validator: (v) => v == null || v.isEmpty ? 'Address is required' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    AppTextField(
-                      label: 'Location (Optional)',
-                      hint: 'e.g. Dar es Salaam',
-                      controller: _locationController,
-                      prefix: const Icon(Icons.map, size: 20),
-                    ),
-                    const SizedBox(height: 20),
-                    Text('Property Type', style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-                    const SizedBox(height: 10),
-                    _buildTypeChips(context),
-                    const SizedBox(height: 16),
-                    AppTextField(
-                      label: 'Description',
-                      hint: 'Optional description',
-                      controller: _descriptionController,
-                      maxLines: 3,
-                    ),
-                  ],
-                ),
+              AppTextField(
+                label: 'Property Name',
+                hint: 'e.g. Manna Apartments',
+                controller: _nameController,
+                prefix: const Icon(Icons.apartment, size: 20),
+                validator: (v) => v == null || v.isEmpty ? 'Name is required' : null,
               ),
-              const SizedBox(height: 20),
-              _buildCard(
-                context,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Property Photos', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
-                    const SizedBox(height: 12),
-                    _buildImagePicker(context),
-                  ],
-                ),
+              const SizedBox(height: 16),
+              AppTextField(
+                label: 'Address',
+                hint: 'e.g. Kijitonyama, Dar es Salaam',
+                controller: _addressController,
+                prefix: const Icon(Icons.location_on, size: 20),
+                validator: (v) => v == null || v.isEmpty ? 'Address is required' : null,
               ),
+              const SizedBox(height: 16),
+              AppTextField(
+                label: 'Location (Optional)',
+                hint: 'e.g. Dar es Salaam',
+                controller: _locationController,
+                prefix: const Icon(Icons.map, size: 20),
+              ),
+              const SizedBox(height: 16),
+              Text('Property Type', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: _type,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                ),
+                dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                items: const [
+                  DropdownMenuItem(value: 'apartment', child: Text('Apartment')),
+                  DropdownMenuItem(value: 'house', child: Text('House')),
+                  DropdownMenuItem(value: 'commercial', child: Text('Commercial')),
+                  DropdownMenuItem(value: 'mixed', child: Text('Mixed Use')),
+                ],
+                onChanged: (v) => setState(() => _type = v ?? 'apartment'),
+              ),
+              const SizedBox(height: 16),
+              AppTextField(
+                label: 'Description',
+                hint: 'Optional description',
+                controller: _descriptionController,
+                maxLines: 3,
+              ),
+              const SizedBox(height: 24),
+              Text('Property Photos', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+              const SizedBox(height: 10),
+              _buildImagePicker(context),
               const SizedBox(height: 24),
               PrimaryButton(
                 text: 'Save Property',
@@ -248,51 +239,6 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildCard(BuildContext context, {required Widget child}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 16, offset: const Offset(0, 4))],
-      ),
-      child: child,
-    );
-  }
-
-  Widget _buildTypeChips(BuildContext context) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: _propertyTypes.map((item) {
-        final (value, label, icon) = item;
-        final isActive = _type == value;
-        return ChoiceChip(
-          label: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: isActive ? AppColors.primary : Colors.grey.shade600),
-              const SizedBox(width: 6),
-              Text(label),
-            ],
-          ),
-          selected: isActive,
-          selectedColor: AppColors.primary.withValues(alpha: 0.12),
-          backgroundColor: Colors.grey.shade100,
-          labelStyle: GoogleFonts.nunito(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: isActive ? AppColors.primary : Colors.grey.shade700,
-          ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: isActive ? AppColors.primary : Colors.transparent)),
-          onSelected: (_) => setState(() => _type = value),
-        );
-      }).toList(),
     );
   }
 
