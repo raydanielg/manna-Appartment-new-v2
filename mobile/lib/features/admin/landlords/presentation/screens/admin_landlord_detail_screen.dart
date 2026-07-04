@@ -18,12 +18,66 @@ class AdminLandlordDetailScreen extends ConsumerStatefulWidget {
 
 class _AdminLandlordDetailScreenState extends ConsumerState<AdminLandlordDetailScreen> {
   final _reasonController = TextEditingController();
+  final _businessNameController = TextEditingController();
+  final _smsBalanceController = TextEditingController();
+  final _ownerNameController = TextEditingController();
+  final _ownerPhoneController = TextEditingController();
+  final _ownerEmailController = TextEditingController();
   bool _isLoading = false;
+  bool _isSaving = false;
+  String _kycStatus = 'pending';
 
   @override
   void dispose() {
     _reasonController.dispose();
+    _businessNameController.dispose();
+    _smsBalanceController.dispose();
+    _ownerNameController.dispose();
+    _ownerPhoneController.dispose();
+    _ownerEmailController.dispose();
     super.dispose();
+  }
+
+  void _initControllers(Map<String, dynamic> org) {
+    final owner = org['owner'];
+    _businessNameController.text = org['business_name']?.toString() ?? '';
+    _smsBalanceController.text = org['sms_balance']?.toString() ?? '0';
+    _ownerNameController.text = owner?['full_name']?.toString() ?? '';
+    _ownerPhoneController.text = owner?['phone']?.toString() ?? '';
+    _ownerEmailController.text = owner?['email']?.toString() ?? '';
+    _kycStatus = org['kyc_status']?.toString() ?? 'pending';
+  }
+
+  Future<void> _saveDetails(String id) async {
+    setState(() => _isSaving = true);
+    try {
+      final repo = ref.read(adminLandlordsRepositoryProvider);
+      await repo.updateLandlord(id, {
+        if (_businessNameController.text.trim().isNotEmpty) 'business_name': _businessNameController.text.trim(),
+        if (_smsBalanceController.text.trim().isNotEmpty) 'sms_balance': num.tryParse(_smsBalanceController.text.trim()),
+        'kyc_status': _kycStatus,
+      });
+      await repo.updateLandlordOwner(id, {
+        if (_ownerNameController.text.trim().isNotEmpty) 'full_name': _ownerNameController.text.trim(),
+        if (_ownerPhoneController.text.trim().isNotEmpty) 'phone': _ownerPhoneController.text.trim(),
+        if (_ownerEmailController.text.trim().isNotEmpty) 'email': _ownerEmailController.text.trim(),
+      });
+      ref.invalidate(adminLandlordDetailProvider(id));
+      ref.invalidate(adminLandlordsProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Details updated successfully'), backgroundColor: AppColors.success),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   Future<void> _updateStatus(String id, String status) async {
@@ -92,12 +146,33 @@ class _AdminLandlordDetailScreenState extends ConsumerState<AdminLandlordDetailS
           final status = org['status'] ?? 'active';
           final owner = org['owner'];
           final kyc = org['kyc_status'] ?? 'pending';
+          _initControllers(org);
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildInfoCard(context, org, owner),
+                const SizedBox(height: 20),
+                Text('Edit Details', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                const SizedBox(height: 12),
+                _buildEditableCard(context, child: Column(
+                  children: [
+                    AppTextField(label: 'Business Name', controller: _businessNameController),
+                    const SizedBox(height: 12),
+                    AppTextField(label: 'SMS Balance', controller: _smsBalanceController, keyboardType: TextInputType.number),
+                    const SizedBox(height: 12),
+                    _buildKycDropdown(context, kyc),
+                    const SizedBox(height: 12),
+                    AppTextField(label: 'Owner Full Name', controller: _ownerNameController),
+                    const SizedBox(height: 12),
+                    AppTextField(label: 'Owner Phone', controller: _ownerPhoneController, keyboardType: TextInputType.phone),
+                    const SizedBox(height: 12),
+                    AppTextField(label: 'Owner Email', controller: _ownerEmailController, keyboardType: TextInputType.emailAddress),
+                    const SizedBox(height: 16),
+                    PrimaryButton(text: 'Save Changes', isLoading: _isSaving, onPressed: () => _saveDetails(id)),
+                  ],
+                )),
                 const SizedBox(height: 20),
                 Text('Status Actions', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
                 const SizedBox(height: 12),
@@ -173,6 +248,41 @@ class _AdminLandlordDetailScreenState extends ConsumerState<AdminLandlordDetailS
           );
         },
       ),
+    );
+  }
+
+  Widget _buildEditableCard(BuildContext context, {required Widget child}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildKycDropdown(BuildContext context, String current) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return DropdownButtonFormField<String>(
+      value: _kycStatus,
+      decoration: InputDecoration(
+        labelText: 'KYC Status',
+        filled: true,
+        fillColor: isDark ? const Color(0xFF26334D) : Colors.grey.shade50,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+      dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+      items: const [
+        DropdownMenuItem(value: 'pending', child: Text('Pending')),
+        DropdownMenuItem(value: 'approved', child: Text('Approved')),
+        DropdownMenuItem(value: 'rejected', child: Text('Rejected')),
+      ],
+      onChanged: (v) => setState(() => _kycStatus = v ?? 'pending'),
     );
   }
 

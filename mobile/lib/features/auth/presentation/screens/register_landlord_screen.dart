@@ -152,7 +152,9 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                         icon: Icons.business_outlined,
                         validator: (v) => v == null || v.trim().isEmpty ? 'Business name is required' : null,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
+                      _buildSectionTitle('Security', icon: Icons.lock_outline),
+                      const SizedBox(height: 12),
                       _buildLabel('Password *'),
                       _buildPasswordField(
                         controller: _passwordController,

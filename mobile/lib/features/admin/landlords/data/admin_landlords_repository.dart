@@ -40,4 +40,18 @@ class AdminLandlordsRepository {
   Future<void> deleteLandlord(String id) async {
     await _client.delete('/admin/landlords/$id');
   }
+
+  Future<void> bulkDeleteLandlords(List<String> ids) async {
+    await _client.post('/admin/landlords/bulk-delete', data: {'ids': ids});
+  }
+
+  Future<Map<String, dynamic>> updateLandlord(String id, Map<String, dynamic> data) async {
+    final response = await _client.patch('/admin/landlords/$id', data: data);
+    return response.data['data'] ?? {};
+  }
+
+  Future<Map<String, dynamic>> updateLandlordOwner(String id, Map<String, dynamic> data) async {
+    final response = await _client.patch('/admin/landlords/$id/owner', data: data);
+    return response.data['data'] ?? {};
+  }
 }

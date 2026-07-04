@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/storage/local_cache_service.dart';
+import '../../../../core/utils/app_update_checker.dart';
 import '../../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -42,6 +44,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Future<void> _initialize() async {
     await Future.delayed(const Duration(milliseconds: 1800));
     await ref.read(authProvider.notifier).checkAuth();
+
+    if (mounted) {
+      unawaited(AppUpdateChecker.checkForUpdate(context));
+    }
 
     final onboardingComplete =
         await LocalCacheService.getString('onboarding_complete');

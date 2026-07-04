@@ -115,4 +115,59 @@ class LandlordManagementController extends Controller
         $organization->delete();
         return $this->success('Landlord deleted.');
     }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'uuid',
+        ]);
+
+        $ids = $request->input('ids', []);
+        $organizations = Organization::whereIn('id', $ids)->get();
+        $deleted = 0;
+
+        foreach ($organizations as $organization) {
+            if ($organization->owner) {
+                $organization->owner->delete();
+            }
+            $organization->delete();
+            $deleted++;
+        }
+
+        return $this->success("{$deleted} landlord(s) deleted.");
+    }
+
+    public function update(Request $request, $id)
+    {
+        $organization = Organization::findOrFail($id);
+
+        $request->validate([
+            'business_name' => 'nullable|string|max:255',
+            'kyc_status' => 'nullable|in:pending,approved,rejected',
+            'sms_balance' => 'nullable|numeric|min:0',
+        ]);
+
+        $organization->update($request->only(['business_name', 'kyc_status', 'sms_balance']));
+        return $this->success('Organization updated.', $organization->load('owner'));
+    }
+
+    public function updateOwner(Request $request, $id)
+    {
+        $organization = Organization::findOrFail($id);
+        $owner = $organization->owner;
+
+        if (!$owner) {
+            return $this->error('This organization has no owner.', null, 404);
+        }
+
+        $request->validate([
+            'full_name' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|unique:users,phone,' . $owner->id,
+            'email' => 'nullable|email|unique:users,email,' . $owner->id,
+        ]);
+
+        $owner->update($request->only(['full_name', 'phone', 'email']));
+        return $this->success('Owner updated.', $organization->load('owner'));
+    }
 }

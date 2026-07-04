@@ -18,6 +18,69 @@ class AdminLandlordsScreen extends ConsumerStatefulWidget {
 class _AdminLandlordsScreenState extends ConsumerState<AdminLandlordsScreen> {
   String _searchQuery = '';
   String _filterStatus = 'all';
+  final Set<String> _selectedIds = {};
+  bool _isSelectionMode = false;
+  bool _isDeleting = false;
+
+  void _toggleSelection(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+      if (_selectedIds.isEmpty) {
+        _isSelectionMode = false;
+      }
+    });
+  }
+
+  void _enableSelection(String id) {
+    setState(() {
+      _isSelectionMode = true;
+      _selectedIds.add(id);
+    });
+  }
+
+  Future<void> _bulkDelete() async {
+    if (_selectedIds.isEmpty) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Landlords'),
+        content: Text('Are you sure you want to delete ${_selectedIds.length} landlord(s)?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: AppColors.error))),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _isDeleting = true);
+    try {
+      final repo = ref.read(adminLandlordsRepositoryProvider);
+      await repo.bulkDeleteLandlords(_selectedIds.toList());
+      ref.invalidate(adminLandlordsProvider);
+      setState(() {
+        _selectedIds.clear();
+        _isSelectionMode = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Landlords deleted successfully'), backgroundColor: AppColors.success),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isDeleting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +90,31 @@ class _AdminLandlordsScreenState extends ConsumerState<AdminLandlordsScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Manage Landlords', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
+        title: _isSelectionMode
+            ? Text('${_selectedIds.length} selected', style: GoogleFonts.nunito(fontWeight: FontWeight.w700))
+            : Text('Manage Landlords', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        leading: _isSelectionMode
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() {
+                  _selectedIds.clear();
+                  _isSelectionMode = false;
+                }),
+              )
+            : Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+              ),
+        actions: _isSelectionMode
+            ? [
+                IconButton(
+                  icon: _isDeleting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.delete),
+                  onPressed: _isDeleting ? null : _bulkDelete,
+                ),
+              ]
+            : null,
       ),
       drawer: _buildDrawer(context, isDark),
       body: Column(
@@ -84,7 +165,13 @@ class _AdminLandlordsScreenState extends ConsumerState<AdminLandlordsScreen> {
                   return ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: landlords.length,
-                    itemBuilder: (context, index) => _LandlordCard(landlord: landlords[index]),
+                    itemBuilder: (context, index) => _LandlordCard(
+                      landlord: landlords[index],
+                      isSelectionMode: _isSelectionMode,
+                      isSelected: _selectedIds.contains(landlords[index]['id']?.toString()),
+                      onTap: () => _isSelectionMode ? _toggleSelection(landlords[index]['id']!.toString()) : context.push('/admin/landlords/${landlords[index]['id']}'),
+                      onLongPress: () => _enableSelection(landlords[index]['id']!.toString()),
+                    ),
                   );
                 },
               ),
@@ -155,7 +242,18 @@ class _AdminLandlordsScreenState extends ConsumerState<AdminLandlordsScreen> {
 
 class _LandlordCard extends StatelessWidget {
   final Map<String, dynamic> landlord;
-  const _LandlordCard({required this.landlord});
+  final bool isSelectionMode;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  const _LandlordCard({
+    required this.landlord,
+    required this.isSelectionMode,
+    required this.isSelected,
+    required this.onTap,
+    required this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -175,40 +273,52 @@ class _LandlordCard extends StatelessWidget {
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        border: isSelected ? Border.all(color: AppColors.primary, width: 2) : null,
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/admin/landlords/${landlord['id']}'),
+        onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      landlord['business_name'] ?? 'Organization',
-                      style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark),
+              if (isSelectionMode) ...[
+                Icon(isSelected ? Icons.check_circle : Icons.circle_outlined, color: isSelected ? AppColors.primary : Colors.grey),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            landlord['business_name'] ?? 'Organization',
+                            style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
+                          child: Text(status.toUpperCase(), style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: statusColor)),
+                        ),
+                      ],
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
-                    child: Text(status.toUpperCase(), style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: statusColor)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text('Owner: ${owner?['full_name'] ?? 'N/A'}', style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white70 : AppColors.textLight)),
-              Text('Phone: ${owner?['phone'] ?? 'N/A'}', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  _buildBadge('KYC: ${kycStatus.toUpperCase()}', kycStatus == 'approved' ? AppColors.success : AppColors.warning),
-                  const SizedBox(width: 8),
-                  _buildBadge('SMS: ${landlord['sms_balance'] ?? 0}', AppColors.primary),
-                ],
+                    const SizedBox(height: 8),
+                    Text('Owner: ${owner?['full_name'] ?? 'N/A'}', style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white70 : AppColors.textLight)),
+                    Text('Phone: ${owner?['phone'] ?? 'N/A'}', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildBadge('KYC: ${kycStatus.toUpperCase()}', kycStatus == 'approved' ? AppColors.success : AppColors.warning),
+                        const SizedBox(width: 8),
+                        _buildBadge('SMS: ${landlord['sms_balance'] ?? 0}', AppColors.primary),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

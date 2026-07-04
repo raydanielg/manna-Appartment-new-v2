@@ -117,9 +117,12 @@ Route::prefix('v1')->group(function () {
             Route::get('/landlords', [LandlordManagementController::class, 'index']);
             Route::post('/landlords', [LandlordManagementController::class, 'store']);
             Route::get('/landlords/{id}', [LandlordManagementController::class, 'show']);
+            Route::patch('/landlords/{id}', [LandlordManagementController::class, 'update']);
+            Route::patch('/landlords/{id}/owner', [LandlordManagementController::class, 'updateOwner']);
             Route::patch('/landlords/{id}/status', [LandlordManagementController::class, 'updateStatus']);
             Route::patch('/landlords/{id}/kyc', [LandlordManagementController::class, 'updateKycStatus']);
             Route::delete('/landlords/{id}', [LandlordManagementController::class, 'destroy']);
+            Route::post('/landlords/bulk-delete', [LandlordManagementController::class, 'bulkDestroy']);
         });
 
         // Staff (web only)
