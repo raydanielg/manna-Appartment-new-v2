@@ -68,5 +68,6 @@ class Kernel extends HttpKernel
         'ensure.platform' => \App\Http\Middleware\EnsurePlatform::class,
         'subscription.active' => \App\Http\Middleware\CheckSubscriptionActive::class,
         'kyc.approved' => \App\Http\Middleware\CheckKycApproved::class,
+        'password.change' => \App\Http\Middleware\RequirePasswordChange::class,
     ];
 }

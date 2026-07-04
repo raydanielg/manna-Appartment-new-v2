@@ -38,6 +38,12 @@ class UnitController extends Controller
         return $this->success('Unit created.', $unit, 201);
     }
 
+    public function show($id)
+    {
+        $unit = Unit::with('property')->findOrFail($id);
+        return $this->success('Unit retrieved.', $unit);
+    }
+
     public function update(Request $request, $id)
     {
         $unit = Unit::findOrFail($id);

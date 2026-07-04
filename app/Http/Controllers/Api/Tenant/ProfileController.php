@@ -38,8 +38,27 @@ class ProfileController extends Controller
             return $this->error('Current password is incorrect.', null, 422);
         }
 
-        $user->update(['password' => Hash::make($request->new_password)]);
+        $user->update([
+            'password' => Hash::make($request->new_password),
+            'must_change_password' => false,
+        ]);
         return $this->success('Password changed successfully.');
+    }
+
+    public function forceChangePassword(Request $request)
+    {
+        $request->validate([
+            'new_password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        $user->update([
+            'password' => Hash::make($request->new_password),
+            'must_change_password' => false,
+        ]);
+
+        return $this->success('Password set successfully. You can now continue.');
     }
 
     public function notifications()

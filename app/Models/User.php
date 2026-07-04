@@ -23,6 +23,7 @@ class User extends Authenticatable
         'role',
         'organization_id',
         'status',
+        'must_change_password',
     ];
 
     protected $hidden = [
@@ -32,6 +33,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'must_change_password' => 'boolean',
     ];
 
     protected static function boot()

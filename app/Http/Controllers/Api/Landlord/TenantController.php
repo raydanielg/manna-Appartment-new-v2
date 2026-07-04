@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\SmsService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -40,6 +42,7 @@ class TenantController extends Controller
             'password' => Hash::make($password),
             'role' => 'tenant',
             'status' => 'active',
+            'must_change_password' => true,
         ]);
 
         $unit = Unit::findOrFail($request->unit_id);
@@ -54,10 +57,20 @@ class TenantController extends Controller
             'status' => 'active',
         ]);
 
-        // TODO: dispatch SMS with credentials
+        $message = "Karibu Manna Apartment, {$user->full_name}!\n"
+            . "Namba ya kuingia: {$request->phone}\n"
+            . "Nenosiri lako la muda: {$password}\n"
+            . "Tafadhali badilisha nenosiri lako ukiingia mara ya kwanza.";
+
+        app(SmsService::class)->send(
+            $request->phone,
+            $message,
+            'tenant_invite',
+            Auth::user()->organization_id
+        );
+
         return $this->success('Tenant created. Credentials sent via SMS.', [
             'tenant' => $tenant->load(['user', 'unit']),
-            'temporary_password' => $password, // remove in production
         ], 201);
     }
 
@@ -87,5 +100,12 @@ class TenantController extends Controller
         }
 
         return $this->success('Tenant moved out.', $tenant);
+    }
+
+    public function destroy($id)
+    {
+        $tenant = Tenant::findOrFail($id);
+        $tenant->delete();
+        return $this->success('Tenant deleted.');
     }
 }

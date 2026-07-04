@@ -49,7 +49,7 @@ class LoginController extends Controller
         $token = $user->createToken($tokenName, $abilities)->plainTextToken;
 
         return $this->success('Login successful.', [
-            'user' => $user->only(['id', 'full_name', 'phone', 'role', 'organization_id', 'status']),
+            'user' => $user->only(['id', 'full_name', 'phone', 'role', 'organization_id', 'status', 'must_change_password']),
             'access_token' => $token,
             'token' => $token,
         ]);

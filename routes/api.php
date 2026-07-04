@@ -81,7 +81,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/reset-password', [ForgotPasswordController::class, 'reset']);
 
     // Payment gateway callbacks (public webhooks)
-    Route::post('/payments-gateway/callback', [PaymentGatewayController::class, 'callback']);
+    Route::post('/payments-gateway/callback', [PaymentGatewayController::class, 'callback'])->name('snippe.webhook');
 
     // Authenticated routes
     Route::middleware('auth:sanctum')->group(function () {
@@ -122,71 +122,80 @@ Route::prefix('v1')->group(function () {
 
         // Landlord (mobile only)
         Route::middleware(['ensure.platform:mobile', 'role:landlord'])->prefix('landlord')->group(function () {
-            Route::get('/dashboard', [LandlordDashboardController::class, 'index']);
+            // Onboarding & account status (accessible before KYC/approval)
             Route::get('/organization', [LandlordOrganizationController::class, 'show']);
             Route::patch('/organization', [LandlordOrganizationController::class, 'update']);
             Route::get('/organization/usage', [LandlordOrganizationController::class, 'usage']);
             Route::post('/kyc/submit', [LandlordOrganizationController::class, 'submitKyc']);
             Route::get('/kyc/status', [LandlordOrganizationController::class, 'kycStatus']);
 
-            Route::get('/properties', [PropertyController::class, 'index']);
-            Route::post('/properties', [PropertyController::class, 'store']);
-            Route::get('/properties/{id}', [PropertyController::class, 'show']);
-            Route::patch('/properties/{id}', [PropertyController::class, 'update']);
-            Route::delete('/properties/{id}', [PropertyController::class, 'destroy']);
-
-            Route::get('/properties/{propertyId}/units', [UnitController::class, 'index']);
-            Route::post('/properties/{propertyId}/units', [UnitController::class, 'store']);
-            Route::patch('/units/{id}', [UnitController::class, 'update']);
-            Route::delete('/units/{id}', [UnitController::class, 'destroy']);
-
-            Route::get('/tenants', [TenantController::class, 'index']);
-            Route::post('/tenants', [TenantController::class, 'store']);
-            Route::get('/tenants/{id}', [TenantController::class, 'show']);
-            Route::patch('/tenants/{id}', [TenantController::class, 'update']);
-            Route::post('/tenants/{id}/move-out', [TenantController::class, 'moveOut']);
-
-            Route::get('/contracts', [ContractController::class, 'index']);
-            Route::post('/contracts', [ContractController::class, 'store']);
-            Route::get('/contracts/{id}', [ContractController::class, 'show']);
-            Route::patch('/contracts/{id}', [ContractController::class, 'update']);
-            Route::post('/contracts/{id}/renew', [ContractController::class, 'renew']);
-            Route::post('/contracts/{id}/terminate', [ContractController::class, 'terminate']);
-            Route::get('/contracts/{id}/pdf', [ContractController::class, 'pdf']);
-
-            Route::get('/payments', [PaymentController::class, 'index']);
-            Route::post('/payments', [PaymentController::class, 'store']);
-            Route::get('/tenants/{id}/payments', [PaymentController::class, 'tenantPayments']);
-
-            Route::get('/finance/summary', [FinanceController::class, 'summary']);
-            Route::get('/finance/income-trend', [FinanceController::class, 'incomeTrend']);
-            Route::get('/finance/outstanding-balances', [FinanceController::class, 'outstandingBalances']);
-            Route::get('/finance/export', [FinanceController::class, 'export']);
-
-            Route::post('/sms/send', [SmsController::class, 'send']);
-            Route::get('/sms/logs', [SmsController::class, 'logs']);
-            Route::get('/sms/balance', [SmsController::class, 'balance']);
-
             Route::get('/subscriptions/plans', [SubscriptionController::class, 'plans']);
             Route::get('/subscriptions/current', [SubscriptionController::class, 'current']);
             Route::post('/subscriptions/subscribe', [SubscriptionController::class, 'subscribe']);
             Route::get('/subscriptions/invoices', [SubscriptionController::class, 'invoices']);
 
-            Route::get('/staff', [StaffManagementController::class, 'index']);
-            Route::post('/staff', [StaffManagementController::class, 'store']);
-            Route::patch('/staff/{id}/permissions', [StaffManagementController::class, 'updatePermissions']);
-            Route::delete('/staff/{id}', [StaffManagementController::class, 'destroy']);
+            // Core management (requires approved KYC + active subscription)
+            Route::middleware(['kyc.approved', 'subscription.active'])->group(function () {
+                Route::get('/dashboard', [LandlordDashboardController::class, 'index']);
 
-            Route::get('/maintenance-requests', [\App\Http\Controllers\Api\Landlord\MaintenanceRequestController::class, 'index']);
-            Route::patch('/maintenance-requests/{id}/status', [\App\Http\Controllers\Api\Landlord\MaintenanceRequestController::class, 'updateStatus']);
+                Route::get('/properties', [PropertyController::class, 'index']);
+                Route::post('/properties', [PropertyController::class, 'store']);
+                Route::get('/properties/{id}', [PropertyController::class, 'show']);
+                Route::patch('/properties/{id}', [PropertyController::class, 'update']);
+                Route::delete('/properties/{id}', [PropertyController::class, 'destroy']);
+
+                Route::get('/units', [UnitController::class, 'allUnits']);
+                Route::get('/units/{id}', [UnitController::class, 'show']);
+                Route::get('/properties/{propertyId}/units', [UnitController::class, 'index']);
+                Route::post('/properties/{propertyId}/units', [UnitController::class, 'store']);
+                Route::patch('/units/{id}', [UnitController::class, 'update']);
+                Route::delete('/units/{id}', [UnitController::class, 'destroy']);
+
+                Route::get('/tenants', [TenantController::class, 'index']);
+                Route::post('/tenants', [TenantController::class, 'store']);
+                Route::get('/tenants/{id}', [TenantController::class, 'show']);
+                Route::patch('/tenants/{id}', [TenantController::class, 'update']);
+                Route::post('/tenants/{id}/move-out', [TenantController::class, 'moveOut']);
+                Route::delete('/tenants/{id}', [TenantController::class, 'destroy']);
+
+                Route::get('/contracts', [ContractController::class, 'index']);
+                Route::post('/contracts', [ContractController::class, 'store']);
+                Route::get('/contracts/{id}', [ContractController::class, 'show']);
+                Route::patch('/contracts/{id}', [ContractController::class, 'update']);
+                Route::post('/contracts/{id}/renew', [ContractController::class, 'renew']);
+                Route::post('/contracts/{id}/terminate', [ContractController::class, 'terminate']);
+                Route::get('/contracts/{id}/pdf', [ContractController::class, 'pdf']);
+
+                Route::get('/payments', [PaymentController::class, 'index']);
+                Route::post('/payments', [PaymentController::class, 'store']);
+                Route::get('/tenants/{id}/payments', [PaymentController::class, 'tenantPayments']);
+
+                Route::get('/finance/summary', [FinanceController::class, 'summary']);
+                Route::get('/finance/income-trend', [FinanceController::class, 'incomeTrend']);
+                Route::get('/finance/outstanding-balances', [FinanceController::class, 'outstandingBalances']);
+                Route::get('/finance/export', [FinanceController::class, 'export']);
+
+                Route::post('/sms/send', [SmsController::class, 'send']);
+                Route::get('/sms/logs', [SmsController::class, 'logs']);
+                Route::get('/sms/balance', [SmsController::class, 'balance']);
+
+                Route::get('/staff', [StaffManagementController::class, 'index']);
+                Route::post('/staff', [StaffManagementController::class, 'store']);
+                Route::patch('/staff/{id}/permissions', [StaffManagementController::class, 'updatePermissions']);
+                Route::delete('/staff/{id}', [StaffManagementController::class, 'destroy']);
+
+                Route::get('/maintenance-requests', [\App\Http\Controllers\Api\Landlord\MaintenanceRequestController::class, 'index']);
+                Route::patch('/maintenance-requests/{id}/status', [\App\Http\Controllers\Api\Landlord\MaintenanceRequestController::class, 'updateStatus']);
+            });
         });
 
         // Tenant (mobile only)
-        Route::middleware(['ensure.platform:mobile', 'role:tenant'])->prefix('tenant')->group(function () {
+        Route::middleware(['ensure.platform:mobile', 'role:tenant', 'password.change'])->prefix('tenant')->group(function () {
             Route::get('/dashboard', [TenantDashboardController::class, 'index']);
             Route::get('/profile', [TenantProfileController::class, 'show']);
             Route::patch('/profile', [TenantProfileController::class, 'update']);
             Route::post('/profile/change-password', [TenantProfileController::class, 'changePassword']);
+            Route::post('/profile/force-change-password', [TenantProfileController::class, 'forceChangePassword'])->name('tenant.profile.force-change-password');
             Route::get('/my-unit', [MyUnitController::class, 'show']);
             Route::get('/my-contract', [MyContractController::class, 'show']);
             Route::get('/my-contract/pdf', [MyContractController::class, 'pdf']);
