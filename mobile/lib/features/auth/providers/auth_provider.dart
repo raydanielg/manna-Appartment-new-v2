@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import '../../../core/network/api_client.dart';
@@ -153,6 +154,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   String _parseError(dynamic error) {
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map) {
+        if (data['message'] != null) return data['message'].toString();
+        if (data['errors'] is Map) {
+          final errors = data['errors'] as Map;
+          return errors.values
+              .expand((e) => e is List ? e.map((m) => m.toString()) : [e.toString()])
+              .join('\n');
+        }
+      }
+    }
     if (error is Exception) {
       return error.toString().replaceAll('Exception: ', '');
     }

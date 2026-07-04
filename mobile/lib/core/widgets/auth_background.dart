@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 
 class AuthBackground extends StatefulWidget {
   final Widget child;
-  final bool showToggle;
 
   const AuthBackground({
     super.key,
     required this.child,
-    this.showToggle = true,
   });
 
   @override
@@ -78,87 +76,6 @@ class AuthBackgroundState extends State<AuthBackground> {
             ),
           ),
         ),
-
-        // Dark/Light toggle
-        if (widget.showToggle)
-          Positioned(
-            top: 12,
-            right: 16,
-            child: ValueListenableBuilder<bool>(
-              valueListenable: _darkModeNotifier,
-              builder: (context, dark, _) {
-                return GestureDetector(
-                  onTap: () => _darkModeNotifier.value = !dark,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeInOutCubicEmphasized,
-                    width: 64,
-                    height: 32,
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      color: dark
-                          ? const Color(0xFF1E293B)
-                          : Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: dark
-                            ? const Color(0xFF2563EB).withValues(alpha: 0.4)
-                            : Colors.white.withValues(alpha: 0.3),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: dark
-                              ? const Color(0xFF2563EB).withValues(alpha: 0.3)
-                              : Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      children: [
-                        AnimatedAlign(
-                          duration: const Duration(milliseconds: 350),
-                          curve: Curves.easeInOutCubicEmphasized,
-                          alignment: dark
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: dark
-                                  ? const Color(0xFF2563EB)
-                                  : const Color(0xFFFBBF24),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: (dark
-                                          ? const Color(0xFF2563EB)
-                                          : const Color(0xFFFBBF24))
-                                      .withValues(alpha: 0.5),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              dark
-                                  ? Icons.dark_mode_rounded
-                                  : Icons.light_mode_rounded,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
 
         // Content
         SafeArea(

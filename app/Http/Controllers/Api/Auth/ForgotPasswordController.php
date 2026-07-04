@@ -23,7 +23,9 @@ class ForgotPasswordController extends Controller
         $user = User::where('phone', $request->phone)->first();
 
         if (!$user) {
-            return $this->error('Phone number not found.', null, 404);
+            throw ValidationException::withMessages([
+                'phone' => ['Phone number not found. Please check your number or register first.'],
+            ]);
         }
 
         $otp = app(OtpService::class)->generate($request->phone);

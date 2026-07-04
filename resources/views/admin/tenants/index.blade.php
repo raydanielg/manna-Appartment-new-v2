@@ -38,8 +38,8 @@
                         </td>
                         <td class="px-5 py-2.5 text-xs text-gray-500">{{ $tenant->user->phone ?? '-' }}</td>
                         <td class="px-5 py-2.5">
-                            <div class="text-xs font-medium text-gray-900">{{ $tenant->organization->name ?? 'N/A' }}</div>
-                            <div class="text-[10px] text-gray-400">Owner: {{ $tenant->organization->user->full_name ?? '-' }}</div>
+                            <div class="text-xs font-medium text-gray-900">{{ $tenant->organization->business_name ?? 'N/A' }}</div>
+                            <div class="text-[10px] text-gray-400">Owner: {{ $tenant->organization->owner->full_name ?? '-' }}</div>
                         </td>
                         <td class="px-5 py-2.5 text-xs text-gray-700">{{ $tenant->unit->name ?? '-' }}</td>
                         <td class="px-5 py-2.5">

@@ -6,6 +6,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
+import '../../../../../shared/notifications/providers/notifications_provider.dart';
 import '../../providers/dashboard_provider.dart';
 import '../widgets/income_chart.dart';
 import '../widgets/recent_activity_list.dart';
@@ -19,6 +20,7 @@ class LandlordHomeScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = ref.watch(authProvider).user;
     final dashboardAsync = ref.watch(landlordDashboardProvider);
+    final unreadCount = ref.watch(unreadCountProvider).value ?? 0;
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
@@ -32,7 +34,7 @@ class LandlordHomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context, user?.fullName ?? 'Landlord'),
+                _buildHeader(context, user?.fullName ?? 'Landlord', unreadCount),
                 const SizedBox(height: 24),
                 dashboardAsync.when(
                   loading: () => const LoadingIndicator(),
@@ -60,7 +62,7 @@ class LandlordHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, String name) {
+  Widget _buildHeader(BuildContext context, String name, int unreadCount) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final initials = name.trim().split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join().toUpperCase();
     return Row(
@@ -119,11 +121,31 @@ class LandlordHomeScreen extends ConsumerWidget {
             color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: IconButton(
-            onPressed: () => context.push('/notifications'),
-            icon: const Icon(Icons.notifications_none_rounded, size: 20),
-            color: isDark ? Colors.white70 : AppColors.textLight,
-            padding: EdgeInsets.zero,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                onPressed: () => context.push('/notifications'),
+                icon: const Icon(Icons.notifications_none_rounded, size: 20),
+                color: isDark ? Colors.white70 : AppColors.textLight,
+                padding: EdgeInsets.zero,
+              ),
+              if (unreadCount > 0)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: Text(
+                      unreadCount > 9 ? '9+' : '$unreadCount',
+                      style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ],

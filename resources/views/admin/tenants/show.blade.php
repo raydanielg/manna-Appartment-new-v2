@@ -23,11 +23,11 @@
                 </div>
                 <div>
                     <span class="text-xs text-gray-500">Landlord / Organization</span>
-                    <p class="font-medium text-gray-900">{{ $tenant->organization->name ?? '-' }}</p>
+                    <p class="font-medium text-gray-900">{{ $tenant->organization->business_name ?? '-' }}</p>
                 </div>
                 <div>
                     <span class="text-xs text-gray-500">Organization Owner</span>
-                    <p class="font-medium text-gray-900">{{ $tenant->organization->user->full_name ?? '-' }}</p>
+                    <p class="font-medium text-gray-900">{{ $tenant->organization->owner->full_name ?? '-' }}</p>
                 </div>
                 <div>
                     <span class="text-xs text-gray-500">Unit</span>

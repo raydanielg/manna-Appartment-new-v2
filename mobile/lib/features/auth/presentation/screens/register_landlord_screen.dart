@@ -232,8 +232,8 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                     ],
                   ),
                 ),
-                  const SizedBox(height: 20),
-                  Row(
+                const SizedBox(height: 20),
+                Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(

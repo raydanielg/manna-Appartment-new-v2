@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
+import '../../../../../shared/notifications/providers/notifications_provider.dart';
 import '../widgets/balance_summary_card.dart';
 import '../widgets/my_unit_card.dart';
 
@@ -14,6 +15,7 @@ class TenantHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = ref.watch(authProvider).user;
+    final unreadCount = ref.watch(unreadCountProvider).value ?? 0;
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
@@ -23,7 +25,7 @@ class TenantHomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(context, user?.fullName ?? 'Tenant'),
+              _buildHeader(context, user?.fullName ?? 'Tenant', unreadCount),
               const SizedBox(height: 24),
               const MyUnitCard(),
               const SizedBox(height: 24),
@@ -45,7 +47,7 @@ class TenantHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, String name) {
+  Widget _buildHeader(BuildContext context, String name, int unreadCount) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final initials = name.trim().split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join().toUpperCase();
     return Row(
@@ -104,11 +106,31 @@ class TenantHomeScreen extends ConsumerWidget {
             color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: IconButton(
-            onPressed: () => context.push('/notifications'),
-            icon: const Icon(Icons.notifications_none_rounded, size: 20),
-            color: isDark ? Colors.white70 : AppColors.textLight,
-            padding: EdgeInsets.zero,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                onPressed: () => context.push('/notifications'),
+                icon: const Icon(Icons.notifications_none_rounded, size: 20),
+                color: isDark ? Colors.white70 : AppColors.textLight,
+                padding: EdgeInsets.zero,
+              ),
+              if (unreadCount > 0)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: Text(
+                      unreadCount > 9 ? '9+' : '$unreadCount',
+                      style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ],
