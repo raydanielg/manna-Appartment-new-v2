@@ -23,6 +23,8 @@ class PaymentTransaction extends Model
         'currency',
         'status',
         'phone',
+        'payment_method',
+        'bank',
         'payload',
         'paid_at',
     ];

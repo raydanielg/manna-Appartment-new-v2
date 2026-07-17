@@ -111,14 +111,16 @@ class SnippeService
      */
     public function formatPhone(string $phone): string
     {
+        $phone = trim($phone);
+
+        if (Str::startsWith($phone, '+')) {
+            $phone = substr($phone, 1);
+        }
+
         $phone = preg_replace('/[^0-9]/', '', $phone);
 
         if (Str::startsWith($phone, '0')) {
             $phone = '255' . substr($phone, 1);
-        }
-
-        if (Str::startsWith($phone, '+')) {
-            $phone = substr($phone, 1);
         }
 
         return $phone;

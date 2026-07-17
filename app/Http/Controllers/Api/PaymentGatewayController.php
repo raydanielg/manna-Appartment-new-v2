@@ -84,7 +84,7 @@ class PaymentGatewayController extends Controller
         ]);
 
         $sessionData = [
-            'amount' => $plan->price * 100, // Snippe expects smallest currency unit (cents)
+            'amount' => (int) $plan->price, // TZS amounts are integers (no cents subdivision)
             'currency' => config('snippe.currency', 'TZS'),
             'allowed_methods' => $allowedMethods,
             'phone' => $request->phone,
