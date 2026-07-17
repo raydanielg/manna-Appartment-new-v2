@@ -35,7 +35,7 @@ class ContractCard extends StatelessWidget {
                       color: AppColors.info.withValues(alpha: isDark ? 0.15 : 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.description, color: AppColors.info, size: 22),
+                    child: Image.asset('assets/icons/contracts.png', width: 22, height: 22, errorBuilder: (_, __, ___) => const Icon(Icons.description, color: AppColors.info, size: 22)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

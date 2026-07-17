@@ -156,7 +156,7 @@ class _RequestCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                    child: Icon(Icons.build, color: statusColor, size: 22),
+                    child: Image.asset('assets/icons/maintainance.png', width: 22, height: 22, errorBuilder: (_, __, ___) => Icon(Icons.build, color: statusColor, size: 22)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

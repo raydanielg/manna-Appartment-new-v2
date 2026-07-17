@@ -15,7 +15,7 @@ class SmsLogTile extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(color: AppColors.info.withValues(alpha: isDark ? 0.15 : 0.1), borderRadius: BorderRadius.circular(12)),
-          child: const Icon(Icons.sms, color: AppColors.info, size: 20),
+          child: Image.asset('assets/icons/sms.png', width: 20, height: 20, errorBuilder: (_, __, ___) => const Icon(Icons.sms, color: AppColors.info, size: 20)),
         ),
         title: Text(log['recipient'] ?? 'Unknown', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
         subtitle: Text(log['message'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
