@@ -173,12 +173,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final data = await _repository.getProfile();
       final user = state.user;
       if (user != null && data.isNotEmpty) {
+        final org = data['organization'];
         final updated = user.copyWith(
           fullName: data['full_name']?.toString() ?? user.fullName,
           email: data['email']?.toString() ?? user.email,
           phone: data['phone']?.toString() ?? user.phone,
           avatar: data['avatar']?.toString() ?? user.avatar,
-          kycStatus: data['organization']?['kyc_status']?.toString() ?? user.kycStatus,
+          kycStatus: org is Map ? org['kyc_status']?.toString() ?? user.kycStatus : user.kycStatus,
+          businessName: org is Map ? org['business_name']?.toString() ?? user.businessName : user.businessName,
+          organizationStatus: org is Map ? org['status']?.toString() ?? user.organizationStatus : user.organizationStatus,
+          smsBalance: org is Map
+              ? (org['sms_balance'] is int
+                  ? org['sms_balance'] as int
+                  : (org['sms_balance'] != null ? int.tryParse(org['sms_balance'].toString()) : null)) ?? user.smsBalance
+              : user.smsBalance,
         );
         state = state.copyWith(user: updated);
         await SecureStorageService.setUserData(jsonEncode(updated.toJson()));

@@ -10,8 +10,9 @@ import '../../../../../features/auth/data/models/login_response_model.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
 import '../../../../../shared/notifications/providers/notifications_provider.dart';
 import '../../providers/dashboard_provider.dart';
+import '../../../tenants/providers/tenants_provider.dart';
+import '../../../tenants/presentation/widgets/tenant_card.dart';
 import '../widgets/income_chart.dart';
-import '../widgets/recent_activity_list.dart';
 import '../widgets/summary_cards.dart';
 
 class LandlordHomeScreen extends ConsumerWidget {
@@ -61,9 +62,7 @@ class LandlordHomeScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                       IncomeChart(data: data),
                       const SizedBox(height: 24),
-                      Text('Recent Activity', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-                      const SizedBox(height: 12),
-                      RecentActivityList(activities: data['recent_activity'] ?? []),
+                      _buildTenantsSection(context, ref, isDark),
                     ],
                   ),
                 ),
@@ -185,6 +184,70 @@ class LandlordHomeScreen extends ConsumerWidget {
                 ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTenantsSection(BuildContext context, WidgetRef ref, bool isDark) {
+    final tenantsAsync = ref.watch(tenantsListProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Tenants',
+              style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark),
+            ),
+            TextButton(
+              onPressed: () => context.push('/landlord/tenants'),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'View All',
+                    style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_forward_ios, size: 11, color: AppColors.primary),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        tenantsAsync.when(
+          loading: () => const LoadingIndicator(),
+          error: (_, __) => const SizedBox.shrink(),
+          data: (tenants) {
+            if (tenants.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  children: [
+                    Icon(Icons.people_outline, size: 36, color: isDark ? Colors.white24 : Colors.grey.shade300),
+                    const SizedBox(height: 10),
+                    Text(
+                      'No tenants yet',
+                      style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white38 : Colors.grey.shade400),
+                    ),
+                  ],
+                ),
+              );
+            }
+            final recent = tenants.take(3).toList();
+            return Column(
+              children: recent.map((t) => TenantCard(tenant: t)).toList(),
+            );
+          },
         ),
       ],
     );

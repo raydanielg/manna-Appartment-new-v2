@@ -220,6 +220,10 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
               ),
             ),
             const SizedBox(height: 32),
+
+            // Personal Info Card
+            _buildSectionTitle(context, isDark, 'Personal Information'),
+            const SizedBox(height: 12),
             _buildCard(
               context,
               child: Column(
@@ -231,12 +235,17 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
                   _buildField(context, label: 'Email', controller: _emailController, enabled: _isEditing, icon: Icons.email),
                   const Divider(height: 1),
                   _buildInfoRow(context, 'Role', user.role.toUpperCase()),
-                  const Divider(height: 1),
-                  _buildInfoRow(context, 'Organization', user.businessName ?? '-'),
                 ],
               ),
             ),
             const SizedBox(height: 24),
+
+            // Organization Card
+            _buildSectionTitle(context, isDark, 'Organization'),
+            const SizedBox(height: 12),
+            _buildOrgCard(context, user, isDark, kycApproved),
+            const SizedBox(height: 24),
+
             if (_isEditing) PrimaryButton(
               text: _isLoading ? 'Saving...' : 'Save Changes',
               icon: _isLoading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.save),
@@ -256,8 +265,86 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
       ),
       child: child,
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, bool isDark, String title) {
+    return Text(
+      title,
+      style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white60 : AppColors.textLight),
+    );
+  }
+
+  Widget _buildOrgCard(BuildContext context, UserModel user, bool isDark, bool kycApproved) {
+    final orgStatus = user.organizationStatus ?? 'active';
+    final isActive = orgStatus == 'active';
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.business, size: 20, color: AppColors.primary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    user.businessName ?? 'Organization',
+                    style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildOrgRow(context, isDark, 'SMS Balance', '${user.smsBalance ?? 0}', Icons.sms_outlined, const Color(0xFF0EA5E9)),
+            const Divider(height: 24),
+            _buildOrgRow(context, isDark, 'KYC Status', kycApproved ? 'Verified' : 'Pending', kycApproved ? Icons.verified : Icons.pending, kycApproved ? Colors.green : Colors.amber),
+            const Divider(height: 24),
+            _buildOrgRow(context, isDark, 'Account Status', isActive ? 'Active' : orgStatus, isActive ? Icons.check_circle : Icons.pause_circle, isActive ? Colors.green : Colors.orange),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrgRow(BuildContext context, bool isDark, String label, String value, IconData icon, Color color) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(width: 10),
+        Text(label, style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white60 : AppColors.textLight)),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            value,
+            style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: color),
+          ),
+        ),
+      ],
     );
   }
 

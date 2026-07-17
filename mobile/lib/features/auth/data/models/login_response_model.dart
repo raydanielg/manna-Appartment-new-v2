@@ -30,6 +30,7 @@ class UserModel {
   final String? organizationStatus;
   final String? suspensionReason;
   final String? businessName;
+  final int? smsBalance;
   final String? avatar;
 
   UserModel({
@@ -44,6 +45,7 @@ class UserModel {
     this.organizationStatus,
     this.suspensionReason,
     this.businessName,
+    this.smsBalance,
     this.avatar,
   });
 
@@ -61,6 +63,7 @@ class UserModel {
       organizationStatus: org is Map ? org['status'] : null,
       suspensionReason: org is Map ? org['suspension_reason'] : null,
       businessName: org is Map ? org['business_name'] : null,
+      smsBalance: org is Map ? (org['sms_balance'] is int ? org['sms_balance'] : (org['sms_balance'] != null ? int.tryParse(org['sms_balance'].toString()) : null)) : null,
       avatar: json['avatar']?.toString(),
     );
   }
@@ -77,6 +80,7 @@ class UserModel {
     String? organizationStatus,
     String? suspensionReason,
     String? businessName,
+    int? smsBalance,
     String? avatar,
   }) {
     return UserModel(
@@ -91,6 +95,7 @@ class UserModel {
       organizationStatus: organizationStatus ?? this.organizationStatus,
       suspensionReason: suspensionReason ?? this.suspensionReason,
       businessName: businessName ?? this.businessName,
+      smsBalance: smsBalance ?? this.smsBalance,
       avatar: avatar ?? this.avatar,
     );
   }
@@ -107,6 +112,7 @@ class UserModel {
         'organization_status': organizationStatus,
         'suspension_reason': suspensionReason,
         'business_name': businessName,
+        'sms_balance': smsBalance,
         'avatar': avatar,
       };
 }

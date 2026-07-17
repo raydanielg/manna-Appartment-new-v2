@@ -122,6 +122,46 @@ class _AdminLandlordDetailScreenState extends ConsumerState<AdminLandlordDetailS
     }
   }
 
+  Future<void> _deleteLandlord(String id, String name) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Delete Landlord?', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+        content: Text('Are you sure you want to delete $name? This action cannot be undone.', style: GoogleFonts.nunito(fontSize: 14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Cancel', style: GoogleFonts.nunito(fontWeight: FontWeight.w700))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Delete', style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final repo = ref.read(adminLandlordsRepositoryProvider);
+      await repo.deleteLandlord(id);
+      ref.invalidate(adminLandlordsProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Landlord deleted successfully'), backgroundColor: AppColors.success),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -243,6 +283,27 @@ class _AdminLandlordDetailScreenState extends ConsumerState<AdminLandlordDetailS
                     decoration: BoxDecoration(color: AppColors.warning.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                     child: Text('Reason: ${org['suspension_reason']}', style: GoogleFonts.nunito(color: AppColors.warning)),
                   ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                      side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => _deleteLandlord(id, owner?['full_name']?.toString() ?? org['business_name']?.toString() ?? 'this landlord'),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.delete_outline, size: 18),
+                        const SizedBox(width: 8),
+                        Text('Delete Landlord', style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -288,27 +349,69 @@ class _AdminLandlordDetailScreenState extends ConsumerState<AdminLandlordDetailS
 
   Widget _buildInfoCard(BuildContext context, Map<String, dynamic> org, Map<String, dynamic>? owner) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final status = (org['status'] ?? 'active').toString();
+    final kyc = (org['kyc_status'] ?? 'pending').toString();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(org['business_name'] ?? 'Organization', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
-          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.business, size: 22, color: AppColors.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  org['business_name'] ?? 'Organization',
+                  style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           _buildRow('Owner', owner?['full_name'] ?? 'N/A'),
           _buildRow('Phone', owner?['phone'] ?? 'N/A'),
           _buildRow('Email', owner?['email'] ?? 'N/A'),
-          _buildRow('Status', (org['status'] ?? 'active').toString()),
-          _buildRow('KYC', (org['kyc_status'] ?? 'pending').toString()),
-          _buildRow('SMS Balance', (org['sms_balance'] ?? 0).toString()),
-          _buildRow('Properties', (org['properties'] is List ? org['properties'].length : 0).toString()),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _buildStatusBadge('Status: $status', status == 'active' ? Colors.green : Colors.orange),
+              const SizedBox(width: 8),
+              _buildStatusBadge('KYC: $kyc', kyc == 'approved' ? Colors.green : (kyc == 'rejected' ? Colors.red : Colors.amber)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _buildRow('SMS Balance', '${org['sms_balance'] ?? 0}'),
+          _buildRow('Properties', '${org['properties'] is List ? org['properties'].length : 0}'),
         ],
       ),
+    );
+  }
+
+  Widget _buildStatusBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(text, style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
     );
   }
 

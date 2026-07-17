@@ -21,7 +21,8 @@ class IncomeChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final monthly = data['monthly_income'] ?? [];
+    final rawMonthly = data['monthly_income'];
+    final monthly = (rawMonthly is List) ? rawMonthly : <dynamic>[];
     final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
     final borderColor = isDark ? Colors.white10 : const Color(0xFFE2E8F0);
 
@@ -91,15 +92,16 @@ class IncomeChart extends StatelessWidget {
 
   List<Widget> _buildBars(List<dynamic> monthly, bool isDark) {
     final amounts = monthly.map<double>((m) => _parseAmount(m['amount'])).toList();
-    final maxAmount = amounts.reduce((a, b) => a > b ? a : b);
-    if (maxAmount == 0) return [];
+    final maxAmount = amounts.isNotEmpty ? amounts.reduce((a, b) => a > b ? a : b) : 0.0;
 
     return monthly.asMap().entries.map<Widget>((entry) {
       final i = entry.key;
       final m = entry.value;
       final amount = _parseAmount(m['amount']);
-      final pct = (amount / maxAmount * 100).clamp(8.0, 100.0);
-      final isHighest = amount == maxAmount;
+      final pct = maxAmount > 0
+          ? (amount / maxAmount * 100).clamp(8.0, 100.0)
+          : 8.0;
+      final isHighest = maxAmount > 0 && amount == maxAmount;
 
       return Expanded(
         child: Padding(
