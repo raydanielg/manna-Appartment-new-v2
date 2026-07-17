@@ -52,7 +52,8 @@ class CurrentPlanScreen extends ConsumerWidget {
         data: (plan) {
           final hasActivePlan = plan.isNotEmpty && _isActive(plan);
           final planName = plan['plan']?['name'] ?? plan['plan_name'] ?? 'No Plan';
-          final price = plan['plan']?['price'] ?? plan['price'] ?? 0;
+          final price = (plan['plan']?['price'] ?? plan['price'] ?? 0);
+          final priceFormatted = (price is num ? price.toDouble() : double.tryParse(price.toString()) ?? 0).toStringAsFixed(0);
           final billingCycle = plan['plan']?['billing_cycle'] ?? plan['billing_cycle'] ?? 'monthly';
           final endDate = plan['end_date'];
           final isTrial = planName.toLowerCase().contains('trial') || billingCycle == 'trial';
@@ -97,7 +98,7 @@ class CurrentPlanScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       if (hasActivePlan) ...[
                         Text(
-                          isTrial ? 'Free Trial' : 'TZS $price/${billingCycle.replaceAll('ly', '')}',
+                          isTrial ? 'Free Trial' : 'TZS $priceFormatted/${billingCycle.replaceAll('ly', '')}',
                           style: const TextStyle(fontSize: 16, color: Colors.white70),
                         ),
                         const SizedBox(height: 12),
@@ -209,6 +210,7 @@ class CurrentPlanScreen extends ConsumerWidget {
           children: invoices.map((invoice) {
             final planName = invoice['plan']?['name'] ?? 'Subscription';
             final amount = invoice['amount'] ?? 0;
+            final amountFormatted = (amount is num ? amount.toDouble() : double.tryParse(amount.toString()) ?? 0).toStringAsFixed(0);
             final status = invoice['status']?.toString() ?? 'unknown';
             final paid = status == 'active' || status == 'paid';
             final date = invoice['created_at']?.toString() ?? '';
@@ -231,7 +233,7 @@ class CurrentPlanScreen extends ConsumerWidget {
                   style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textLight),
                 ),
                 trailing: Text(
-                  amount == 0 ? 'FREE' : 'TZS $amount',
+                  amountFormatted == '0' ? 'FREE' : 'TZS $amountFormatted',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
                 ),
                 onTap: () => context.push('/landlord/subscription/invoice', extra: invoice),

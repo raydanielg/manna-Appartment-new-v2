@@ -44,9 +44,9 @@ class TenantHomeScreen extends ConsumerWidget {
                   data: (data) {
                     final unit = data['unit'] as Map<String, dynamic>?;
                     final contract = data['contract'] as Map<String, dynamic>?;
-                    final balance = (data['balance'] ?? 0).toDouble();
-                    final totalPaid = (data['total_paid'] ?? 0).toDouble();
-                    final rentAmount = (contract?['rent_amount'] ?? 0).toDouble();
+                    final balance = (data['balance'] is num ? (data['balance'] as num) : double.tryParse(data['balance']?.toString() ?? '0') ?? 0).toDouble();
+                    final totalPaid = (data['total_paid'] is num ? (data['total_paid'] as num) : double.tryParse(data['total_paid']?.toString() ?? '0') ?? 0).toDouble();
+                    final rentAmount = (contract?['rent_amount'] is num ? (contract?['rent_amount'] as num) : double.tryParse(contract?['rent_amount']?.toString() ?? '0') ?? 0).toDouble();
                     final recentPayments = data['recent_payments'] as List? ?? [];
                     final maintenanceRequests = data['maintenance_requests'] as List? ?? [];
 

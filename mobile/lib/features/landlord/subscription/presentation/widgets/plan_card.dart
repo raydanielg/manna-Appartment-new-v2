@@ -15,7 +15,7 @@ class PlanCard extends StatelessWidget {
     final features = (plan['features_json'] as List<dynamic>? ?? (plan['features'] as List<dynamic>? ?? []));
     final billingCycle = plan['billing_cycle']?.toString() ?? 'monthly';
     final isTrial = billingCycle == 'trial';
-    final price = plan['price'] ?? 0;
+    final price = (plan['price'] is num ? (plan['price'] as num).toDouble() : double.tryParse(plan['price']?.toString() ?? '0') ?? 0);
     final propertyLimit = plan['property_limit'] ?? 0;
     final unitLimit = plan['unit_limit'] ?? 0;
     final smsIncluded = plan['sms_included'] ?? 0;
@@ -44,7 +44,7 @@ class PlanCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              isTrial ? 'Free Trial' : 'TZS $price/${billingCycle.replaceAll('ly', '')}',
+              isTrial ? 'Free Trial' : 'TZS ${price.toStringAsFixed(0)}/${billingCycle.replaceAll('ly', '')}',
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.primary),
             ),
             const SizedBox(height: 12),

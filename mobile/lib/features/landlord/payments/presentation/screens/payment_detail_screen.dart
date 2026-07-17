@@ -39,7 +39,7 @@ class PaymentDetailScreen extends ConsumerWidget {
         loading: () => const LoadingIndicator(),
         error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(paymentDetailProvider(id))),
         data: (payment) {
-          final amount = (payment['amount'] ?? 0).toDouble();
+          final amount = payment['amount'] is num ? (payment['amount'] as num).toDouble() : double.tryParse(payment['amount']?.toString() ?? '0') ?? 0;
           final tenant = payment['tenant'];
           final contract = payment['contract'];
           final type = (payment['payment_type'] ?? 'rent').toString();

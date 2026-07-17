@@ -57,6 +57,11 @@ class Payment extends Model
         return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class, 'organization_id');
+    }
+
     public function recorder()
     {
         return $this->belongsTo(User::class, 'recorded_by');
