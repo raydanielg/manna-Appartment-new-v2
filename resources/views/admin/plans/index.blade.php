@@ -4,74 +4,164 @@
 @section('page_title', 'Subscription Plans')
 
 @section('content')
-<div class="bg-white rounded-xl border overflow-hidden">
-    <div class="px-5 py-4 border-b flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-gray-900">Plans</h3>
+@if(session('success'))
+<div class="mb-4 px-4 py-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
+    {{ session('success') }}
+</div>
+@endif
+
+<div class="flex items-center justify-between mb-5">
+    <p class="text-xs text-gray-500">{{ $plans->count() }} plans total</p>
+    <button type="button" onclick="addPlan()" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Add Plan
+    </button>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    @forelse($plans as $plan)
+    <div class="bg-white rounded-xl border overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
+        {{-- Card Header --}}
+        <div class="px-5 py-4 border-b {{ $plan->status === 'active' ? 'bg-emerald-50/60' : 'bg-gray-50' }}">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h4 class="text-sm font-bold text-gray-900">{{ $plan->name }}</h4>
+                    <span class="inline-flex items-center gap-1 mt-1">
+                        <span class="w-1.5 h-1.5 rounded-full {{ $plan->status === 'active' ? 'bg-emerald-500' : 'bg-gray-400' }}"></span>
+                        <span class="text-[10px] font-medium {{ $plan->status === 'active' ? 'text-emerald-600' : 'text-gray-400' }}">{{ ucfirst($plan->status) }}</span>
+                    </span>
+                </div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white border {{ $plan->billing_cycle === 'trial' ? 'border-amber-200 text-amber-700' : 'border-blue-200 text-blue-700' }}">{{ ucfirst($plan->billing_cycle) }}</span>
+            </div>
+        </div>
+
+        {{-- Price --}}
+        <div class="px-5 py-4">
+            <p class="text-3xl font-bold text-gray-900">TZS {{ number_format($plan->price) }}</p>
+            <p class="text-[11px] text-gray-400 mt-0.5">{{ $plan->billing_cycle === 'trial' ? 'for 3 days' : 'per ' . $plan->billing_cycle }}</p>
+        </div>
+
+        {{-- Limits --}}
+        <div class="px-5 pb-4 space-y-2.5 flex-1">
+            <div class="flex items-center justify-between py-1.5 border-b border-gray-50">
+                <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <span class="text-[11px] text-gray-500">Properties</span>
+                </div>
+                <span class="text-xs font-semibold text-gray-700">{{ $plan->property_limit ?: 'Unlimited' }}</span>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-gray-50">
+                <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="text-[11px] text-gray-500">Units</span>
+                </div>
+                <span class="text-xs font-semibold text-gray-700">{{ $plan->unit_limit ?: 'Unlimited' }}</span>
+            </div>
+            <div class="flex items-center justify-between py-1.5 border-b border-gray-50">
+                <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 3v-3z"/></svg>
+                    <span class="text-[11px] text-gray-500">SMS Included</span>
+                </div>
+                <span class="text-xs font-semibold text-gray-700">{{ number_format($plan->sms_included) }}</span>
+            </div>
+
+            @if(!empty($plan->features_json))
+            <div class="pt-2">
+                <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Features</p>
+                <ul class="space-y-1">
+                    @foreach((array)$plan->features_json as $feature)
+                    <li class="flex items-start gap-1.5 text-[11px] text-gray-600">
+                        <svg class="w-3 h-3 text-emerald-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        {{ $feature }}
+                    </li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+        </div>
+
+        {{-- Actions --}}
+        <div class="px-5 py-3 border-t bg-gray-50/50 flex items-center gap-2">
+            <button type="button" onclick="editPlan({{ json_encode($plan) }})" class="flex-1 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 text-[11px] font-semibold transition-colors">Edit</button>
+            <button type="button" onclick="deletePlan('{{ $plan->id }}', '{{ $plan->name }}')" class="px-3 py-1.5 rounded-lg bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 text-[11px] font-semibold transition-colors">Delete</button>
+        </div>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead><tr class="text-left text-xs text-gray-500 bg-gray-50/50">
-                <th class="px-5 py-2.5 font-medium">Name</th>
-                <th class="px-5 py-2.5 font-medium">Price</th>
-                <th class="px-5 py-2.5 font-medium">Cycle</th>
-                <th class="px-5 py-2.5 font-medium">Property Limit</th>
-                <th class="px-5 py-2.5 font-medium">Unit Limit</th>
-                <th class="px-5 py-2.5 font-medium">SMS Included</th>
-                <th class="px-5 py-2.5 font-medium">Status</th>
-                <th class="px-5 py-2.5 font-medium">Actions</th>
-            </tr></thead>
-            <tbody>
-                @forelse($plans as $plan)
-                <tr class="border-t border-gray-100 hover:bg-gray-50/50 transition-colors">
-                    <td class="px-5 py-2.5 text-xs font-medium text-gray-900">{{ $plan->name }}</td>
-                    <td class="px-5 py-2.5 text-xs text-gray-700">TZS {{ number_format($plan->price) }}</td>
-                    <td class="px-5 py-2.5 text-xs text-gray-700">{{ ucfirst($plan->billing_cycle) }}</td>
-                    <td class="px-5 py-2.5 text-xs text-gray-700">{{ $plan->property_limit ?: 'Unlimited' }}</td>
-                    <td class="px-5 py-2.5 text-xs text-gray-700">{{ $plan->unit_limit ?: 'Unlimited' }}</td>
-                    <td class="px-5 py-2.5 text-xs text-gray-700">{{ number_format($plan->sms_included) }}</td>
-                    <td class="px-5 py-2.5">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium {{ $plan->status === 'active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-100 text-gray-700 border border-gray-200' }}">{{ ucfirst($plan->status) }}</span>
-                    </td>
-                    <td class="px-5 py-2.5">
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="viewPlan({{ json_encode($plan) }})" class="px-2 py-1 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 text-[10px] font-medium">View</button>
-                            <button type="button" onclick="editPlan({{ json_encode($plan) }})" class="px-2 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-[10px] font-medium">Edit</button>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr><td colspan="8" class="px-5 py-8 text-center text-gray-400 text-xs">No plans</td></tr>
-                @endforelse
-            </tbody>
-        </table>
+    @empty
+    <div class="col-span-full bg-white rounded-xl border p-12 text-center">
+        <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <p class="text-sm text-gray-400 mb-1">No plans yet</p>
+        <p class="text-xs text-gray-400 mb-4">Create your first subscription plan</p>
+        <button type="button" onclick="addPlan()" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            Add Plan
+        </button>
     </div>
+    @endforelse
 </div>
 @endsection
 
 @push('scripts')
 <script>
-function viewPlan(plan) {
-    const features = (plan.features_json || []).map(f => `<li class="text-xs text-gray-600 py-1 border-b border-gray-50 last:border-0">${f}</li>`).join('');
+function addPlan() {
     Swal.fire({
-        title: plan.name,
+        title: 'Add New Plan',
         html: `
-            <div class="text-left space-y-2">
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <div class="bg-gray-50 p-2 rounded"><span class="text-gray-500">Price</span><p class="font-semibold text-gray-800">TZS ${Number(plan.price).toLocaleString()}</p></div>
-                    <div class="bg-gray-50 p-2 rounded"><span class="text-gray-500">Cycle</span><p class="font-semibold text-gray-800">${plan.billing_cycle}</p></div>
-                    <div class="bg-gray-50 p-2 rounded"><span class="text-gray-500">Properties</span><p class="font-semibold text-gray-800">${plan.property_limit || 'Unlimited'}</p></div>
-                    <div class="bg-gray-50 p-2 rounded"><span class="text-gray-500">Units</span><p class="font-semibold text-gray-800">${plan.unit_limit || 'Unlimited'}</p></div>
-                    <div class="bg-gray-50 p-2 rounded"><span class="text-gray-500">SMS</span><p class="font-semibold text-gray-800">${Number(plan.sms_included).toLocaleString()}</p></div>
-                    <div class="bg-gray-50 p-2 rounded"><span class="text-gray-500">Status</span><p class="font-semibold text-gray-800">${plan.status}</p></div>
+            <form id="planAddForm" method="POST" action="{{ route('admin.plans.store') }}" class="text-left space-y-3">
+                <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Plan Name</label>
+                    <input type="text" name="name" placeholder="e.g. Starter, Pro, Enterprise" class="w-full text-sm border rounded-lg px-3 py-2 outline-none focus:border-emerald-500" required>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Price (TZS)</label>
+                        <input type="number" name="price" placeholder="0" class="w-full text-sm border rounded-lg px-3 py-2 outline-none focus:border-emerald-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Billing Cycle</label>
+                        <select name="billing_cycle" class="w-full text-sm border rounded-lg px-3 py-2 outline-none focus:border-emerald-500">
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                            <option value="trial">Trial</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Property Limit</label>
+                        <input type="number" name="property_limit" value="0" class="w-full text-sm border rounded-lg px-3 py-2 outline-none focus:border-emerald-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Unit Limit</label>
+                        <input type="number" name="unit_limit" value="0" class="w-full text-sm border rounded-lg px-3 py-2 outline-none focus:border-emerald-500" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">SMS Included</label>
+                        <input type="number" name="sms_included" value="0" class="w-full text-sm border rounded-lg px-3 py-2 outline-none focus:border-emerald-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                        <select name="status" class="w-full text-sm border rounded-lg px-3 py-2 outline-none focus:border-emerald-500">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
-                    <p class="text-xs font-semibold text-gray-700 mb-1">Features</p>
-                    <ul class="bg-gray-50 p-2 rounded max-h-32 overflow-y-auto">${features || '<li class="text-xs text-gray-400 py-1">No features listed</li>'}</ul>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Features (comma separated)</label>
+                    <input type="text" name="features_json" placeholder="e.g. Property management, SMS alerts, Analytics" class="w-full text-sm border rounded-lg px-3 py-2 outline-none focus:border-emerald-500">
                 </div>
-            </div>
+            </form>
         `,
-        showConfirmButton: false,
-        showCloseButton: true,
+        showCancelButton: true,
+        confirmButtonText: 'Create Plan',
+        confirmButtonColor: '#024938',
+        cancelButtonText: 'Cancel',
+        preConfirm: () => {
+            document.getElementById('planAddForm').submit();
+        }
     });
 }
 
@@ -84,16 +174,16 @@ function editPlan(plan) {
                 <input type="hidden" name="_token" value="${document.querySelector('meta[name="csrf-token"]').content}">
                 <input type="hidden" name="_method" value="PUT">
                 <div>
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Name</label>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Plan Name</label>
                     <input type="text" name="name" value="${plan.name}" class="w-full text-sm border rounded-lg px-3 py-2 outline-none focus:border-emerald-500">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Price</label>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Price (TZS)</label>
                         <input type="number" name="price" value="${plan.price}" class="w-full text-sm border rounded-lg px-3 py-2 outline-none focus:border-emerald-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Cycle</label>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Billing Cycle</label>
                         <select name="billing_cycle" class="w-full text-sm border rounded-lg px-3 py-2 outline-none focus:border-emerald-500">
                             <option value="monthly" ${plan.billing_cycle === 'monthly' ? 'selected' : ''}>Monthly</option>
                             <option value="yearly" ${plan.billing_cycle === 'yearly' ? 'selected' : ''}>Yearly</option>
@@ -136,6 +226,29 @@ function editPlan(plan) {
         cancelButtonText: 'Cancel',
         preConfirm: () => {
             document.getElementById('planEditForm').submit();
+        }
+    });
+}
+
+function deletePlan(id, name) {
+    Swal.fire({
+        title: 'Delete Plan?',
+        text: `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Delete',
+        confirmButtonColor: '#dc2626',
+        cancelButtonText: 'Cancel',
+        preConfirm: () => {
+            fetch(`{{ url('admin/plans') }}/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+            }).then(() => {
+                window.location.reload();
+            });
         }
     });
 }

@@ -71,7 +71,9 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     Route::get('/kyc', [KycController::class, 'index'])->name('kyc');
     Route::post('/kyc/{id}/review', [KycController::class, 'review'])->name('kyc.review');
     Route::get('/plans', [PlanController::class, 'index'])->name('plans');
+    Route::post('/plans', [PlanController::class, 'store'])->name('plans.store');
     Route::put('/plans/{id}', [PlanController::class, 'update'])->name('plans.update');
+    Route::delete('/plans/{id}', [PlanController::class, 'destroy'])->name('plans.destroy');
     Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue');
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
     Route::get('/sms-logs', [SmsLogController::class, 'index'])->name('sms_logs');
