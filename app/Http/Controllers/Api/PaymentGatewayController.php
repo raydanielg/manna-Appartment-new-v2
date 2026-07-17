@@ -27,8 +27,7 @@ class PaymentGatewayController extends Controller
             'type' => 'required|in:subscription,payment',
             'id' => 'required|uuid',
             'phone' => 'required|string',
-            'payment_method' => 'required|in:mobile_money,card,bank_transfer',
-            'bank' => 'nullable|string|max:100',
+            'payment_method' => 'required|in:mobile_money',
         ]);
 
         $user = Auth::user();
@@ -61,13 +60,7 @@ class PaymentGatewayController extends Controller
             return $this->error('Selected subscription plan is not active.', null, 400);
         }
 
-        $paymentMethod = $request->payment_method;
-        $allowedMethods = match ($paymentMethod) {
-            'mobile_money' => ['mobile_money'],
-            'card' => ['card'],
-            'bank_transfer' => ['bank_transfer'],
-            default => ['mobile_money', 'card'],
-        };
+        $paymentMethod = 'mobile_money';
 
         $transaction = PaymentTransaction::create([
             'organization_id' => $organization->id,
@@ -80,13 +73,12 @@ class PaymentGatewayController extends Controller
             'status' => 'pending',
             'phone' => app(SnippeService::class)->formatPhone($request->phone),
             'payment_method' => $paymentMethod,
-            'bank' => $request->bank,
         ]);
 
         $sessionData = [
-            'amount' => (int) $plan->price, // TZS amounts are integers (no cents subdivision)
+            'amount' => (int) $plan->price,
             'currency' => config('snippe.currency', 'TZS'),
-            'allowed_methods' => $allowedMethods,
+            'allowed_methods' => ['mobile_money'],
             'phone' => $request->phone,
             'customer_name' => $user->full_name,
             'customer_email' => $user->email,
@@ -97,13 +89,8 @@ class PaymentGatewayController extends Controller
                 'plan_id' => $plan->id,
                 'type' => 'subscription',
                 'payment_method' => $paymentMethod,
-                'bank' => $request->bank,
             ],
         ];
-
-        if ($paymentMethod === 'bank_transfer' && $request->filled('bank')) {
-            $sessionData['bank_name'] = $request->bank;
-        }
 
         $session = app(SnippeService::class)->createSession($sessionData);
 
@@ -302,6 +289,12 @@ class PaymentGatewayController extends Controller
             return $this->error('Transaction not found.', null, 404);
         }
 
+        // Auto-verify: check Snippe API directly if still pending
+        if ($transaction->status === 'pending' && $transaction->provider_reference) {
+            $this->autoVerifyWithSnippe($transaction);
+            $transaction->refresh();
+        }
+
         return $this->success('Transaction status retrieved.', [
             'reference' => $transaction->id,
             'provider_reference' => $transaction->provider_reference,
@@ -310,5 +303,32 @@ class PaymentGatewayController extends Controller
             'currency' => $transaction->currency,
             'paid_at' => $transaction->paid_at,
         ]);
+    }
+
+    private function autoVerifyWithSnippe(PaymentTransaction $transaction)
+    {
+        try {
+            $service = app(SnippeService::class);
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . config('snippe.api_key'),
+                'Accept' => 'application/json',
+            ])->withOptions(['verify' => !app()->environment('local')])
+              ->get($service->baseUrl() . '/api/v1/sessions/' . $transaction->provider_reference);
+
+            if (!$response->successful()) {
+                return;
+            }
+
+            $data = $response->json();
+            $sessionStatus = $data['data']['status'] ?? $data['status'] ?? null;
+
+            if (in_array($sessionStatus, ['completed', 'paid', 'successful', 'success'])) {
+                $this->completeTransaction($transaction, $data);
+            } elseif (in_array($sessionStatus, ['failed', 'expired', 'cancelled', 'voided'])) {
+                $transaction->update(['status' => 'failed']);
+            }
+        } catch (\Exception $e) {
+            Log::error('Snippe auto-verify failed: ' . $e->getMessage());
+        }
     }
 }
