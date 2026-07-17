@@ -8,6 +8,7 @@ use App\Models\Organization;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class OrganizationController extends Controller
@@ -55,21 +56,34 @@ class OrganizationController extends Controller
 
         $organization = Auth::user()->organization;
 
-        $paths = [];
-        foreach (['id_photo_front', 'id_photo_back', 'selfie_photo', 'ownership_proof'] as $field) {
-            if ($request->hasFile($field)) {
-                $paths[$field] = Storage::disk('public')->put('kyc/' . $organization->id, $request->file($field));
-            }
+        if (!$organization) {
+            return $this->error('No organization found for this account.', null, 400);
         }
 
-        $kyc = KycDocument::updateOrCreate(
-            ['organization_id' => $organization->id],
-            array_merge($request->only(['id_number']), $paths, ['status' => 'pending'])
-        );
+        try {
+            $paths = [];
+            foreach (['id_photo_front', 'id_photo_back', 'selfie_photo', 'ownership_proof'] as $field) {
+                if ($request->hasFile($field)) {
+                    $paths[$field] = Storage::disk('public')->put('kyc/' . $organization->id, $request->file($field));
+                }
+            }
 
-        $organization->update(['kyc_status' => 'pending']);
+            $kyc = KycDocument::updateOrCreate(
+                ['organization_id' => $organization->id],
+                array_merge($request->only(['id_number']), $paths, ['status' => 'pending'])
+            );
 
-        return $this->success('KYC submitted successfully.', $kyc, 201);
+            $organization->update(['kyc_status' => 'pending']);
+
+            return $this->success('KYC submitted successfully.', $kyc, 201);
+        } catch (\Exception $e) {
+            Log::error('KYC submit failed', [
+                'organization_id' => $organization->id,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return $this->error('Could not submit KYC. Please try again.', null, 500);
+        }
     }
 
     public function kycStatus()

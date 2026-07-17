@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../data/kyc_repository.dart';
@@ -52,7 +53,7 @@ class KycNotifier extends StateNotifier<KycState> {
       state = state.copyWith(isLoading: false, status: status);
       return status == 'approved';
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: _parseError(e));
       return false;
     }
   }
@@ -76,8 +77,34 @@ class KycNotifier extends StateNotifier<KycState> {
       state = state.copyWith(isLoading: false, isSubmitted: true);
       return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: _parseError(e));
       return false;
     }
+  }
+
+  String _parseError(dynamic error) {
+    if (error is DioException) {
+      final data = error.response?.data;
+      if (data is Map) {
+        if (data['errors'] is Map) {
+          final errors = data['errors'] as Map;
+          return errors.values
+              .expand((e) => e is List ? e.map((m) => m.toString()) : [e.toString()])
+              .join('\n');
+        }
+        if (data['message'] != null) return data['message'].toString();
+      }
+      if (error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout) {
+        return 'Connection timed out. Please check your internet and try again.';
+      }
+      if (error.type == DioExceptionType.connectionError) {
+        return 'Could not connect to server. Please check your internet connection.';
+      }
+    }
+    if (error is Exception) {
+      return error.toString().replaceAll('Exception: ', '');
+    }
+    return error.toString();
   }
 }
