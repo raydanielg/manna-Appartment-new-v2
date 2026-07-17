@@ -239,13 +239,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (error is DioException) {
       final data = error.response?.data;
       if (data is Map) {
-        if (data['message'] != null) return data['message'].toString();
         if (data['errors'] is Map) {
           final errors = data['errors'] as Map;
           return errors.values
               .expand((e) => e is List ? e.map((m) => m.toString()) : [e.toString()])
               .join('\n');
         }
+        if (data['message'] != null) return data['message'].toString();
       }
     }
     if (error is Exception) {

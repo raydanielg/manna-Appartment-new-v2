@@ -10,7 +10,7 @@ class CreateSmsLogsTable extends Migration
     {
         Schema::create('sms_logs', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('organization_id');
+            $table->uuid('organization_id')->nullable();
             $table->string('recipient_phone');
             $table->text('message');
             $table->string('type');

@@ -382,6 +382,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (authState.error != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            authState.error!,
+                            style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => ref.read(authProvider.notifier).clearError(),
+                          child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 18),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 // Phone display
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -469,28 +496,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-                if (authState.error != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AuthColors.errorBg,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AuthColors.errorBorder),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            authState.error!,
-                            style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                if (authState.error != null) const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   height: 52,
