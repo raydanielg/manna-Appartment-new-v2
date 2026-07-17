@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../../core/config/app_config.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/primary_button.dart';
+import '../../../../../features/auth/data/models/login_response_model.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
 
 class LandlordProfileScreen extends ConsumerStatefulWidget {

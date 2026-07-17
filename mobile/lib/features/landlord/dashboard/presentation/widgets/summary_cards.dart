@@ -18,6 +18,7 @@ class SummaryCards extends StatelessWidget {
         value: '${data['properties_count'] ?? 0}',
         sub: 'Total managed',
         icon: Icons.apartment_outlined,
+        customIcon: 'assets/icons/propertiesicon.png',
         color: const Color(0xFF0EA5E9),
       ),
       _Item(
@@ -25,6 +26,7 @@ class SummaryCards extends StatelessWidget {
         value: '${data['tenants_count'] ?? 0}',
         sub: 'Active tenants',
         icon: Icons.people_alt_outlined,
+        customIcon: 'assets/icons/tenantsicon.png',
         color: const Color(0xFF059669),
       ),
       _Item(
@@ -32,6 +34,7 @@ class SummaryCards extends StatelessWidget {
         value: _formatAmount(monthIncome),
         sub: 'This month',
         icon: Icons.account_balance_wallet_outlined,
+        customIcon: 'assets/icons/incomeicon.png',
         color: const Color(0xFFF59E0B),
       ),
       _Item(
@@ -39,6 +42,7 @@ class SummaryCards extends StatelessWidget {
         value: _formatAmount(outstanding),
         sub: 'Pending collection',
         icon: Icons.error_outline,
+        customIcon: 'assets/icons/outstandingicon.png',
         color: const Color(0xFFEF4444),
       ),
     ];
@@ -83,7 +87,15 @@ class SummaryCards extends StatelessWidget {
                     color: item.color.withValues(alpha: isDark ? 0.15 : 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(item.icon, color: item.color, size: 16),
+                  child: item.customIcon != null
+                      ? Padding(
+                          padding: const EdgeInsets.all(6),
+                          child: Image.asset(
+                            item.customIcon!,
+                            errorBuilder: (_, __, ___) => Icon(item.icon, color: item.color, size: 16),
+                          ),
+                        )
+                      : Icon(item.icon, color: item.color, size: 16),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -131,6 +143,7 @@ class _Item {
   final String value;
   final String sub;
   final IconData icon;
+  final String? customIcon;
   final Color color;
 
   _Item({
@@ -138,6 +151,7 @@ class _Item {
     required this.value,
     required this.sub,
     required this.icon,
+    this.customIcon,
     required this.color,
   });
 }

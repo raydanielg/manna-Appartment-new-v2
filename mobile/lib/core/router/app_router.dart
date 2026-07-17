@@ -171,11 +171,11 @@ class LandlordScaffold extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentIndex = _getIndex(context);
     final items = [
-      _NavItem('Home', Icons.home_rounded, Icons.home_rounded),
-      _NavItem('Properties', Icons.apartment_rounded, Icons.apartment_rounded),
-      _NavItem('Tenants', Icons.people_rounded, Icons.people_rounded),
-      _NavItem('Payments', Icons.account_balance_wallet_rounded, Icons.account_balance_wallet_rounded),
-      _NavItem('More', Icons.grid_view_rounded, Icons.grid_view_rounded),
+      _NavItem('Home', Icons.home_rounded, Icons.home_rounded, customIcon: 'assets/icons/homeicons.png'),
+      _NavItem('Properties', Icons.apartment_rounded, Icons.apartment_rounded, customIcon: 'assets/icons/propertiesicon.png'),
+      _NavItem('Tenants', Icons.people_rounded, Icons.people_rounded, customIcon: 'assets/icons/tenantsicon.png'),
+      _NavItem('Payments', Icons.account_balance_wallet_rounded, Icons.account_balance_wallet_rounded, customIcon: 'assets/icons/incomeicon.png'),
+      _NavItem('More', Icons.grid_view_rounded, Icons.grid_view_rounded, customIcon: 'assets/icons/moreicon.png'),
     ];
     final routes = ['/landlord/home', '/landlord/properties', '/landlord/tenants', '/landlord/payments', '/landlord/more'];
 
@@ -218,11 +218,22 @@ class LandlordScaffold extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          isActive ? item.activeIcon : item.icon,
-                          size: isActive ? 22 : 20,
-                          color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500),
-                        ),
+                        item.customIcon != null
+                            ? Image.asset(
+                                item.customIcon!,
+                                width: isActive ? 22 : 20,
+                                height: isActive ? 22 : 20,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  isActive ? item.activeIcon : item.icon,
+                                  size: isActive ? 22 : 20,
+                                  color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500),
+                                ),
+                              )
+                            : Icon(
+                                isActive ? item.activeIcon : item.icon,
+                                size: isActive ? 22 : 20,
+                                color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500),
+                              ),
                         const SizedBox(height: 3),
                         Text(
                           item.label,
@@ -259,7 +270,8 @@ class _NavItem {
   final String label;
   final IconData icon;
   final IconData activeIcon;
-  _NavItem(this.label, this.icon, this.activeIcon);
+  final String? customIcon;
+  _NavItem(this.label, this.icon, this.activeIcon, {this.customIcon});
 }
 
 class TenantScaffold extends StatelessWidget {

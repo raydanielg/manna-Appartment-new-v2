@@ -110,18 +110,14 @@ class LandlordHomeScreen extends ConsumerWidget {
                       width: 48,
                       height: 48,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Center(
-                        child: Text(
-                          initials,
-                          style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
-                        ),
+                      errorBuilder: (_, __, ___) => Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Image.asset('assets/icons/avatar.png'),
                       ),
                     )
-                  : Center(
-                      child: Text(
-                        initials,
-                        style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
-                      ),
+                  : Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Image.asset('assets/icons/avatar.png'),
                     ),
             ),
           ),
