@@ -82,9 +82,6 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/verify-otp', [ForgotPasswordController::class, 'verifyOtp']);
     Route::post('/auth/reset-password', [ForgotPasswordController::class, 'reset']);
 
-    // Payment gateway callbacks (public webhooks)
-    Route::post('/payments-gateway/callback', [PaymentGatewayController::class, 'callback'])->name('snippe.webhook');
-
     // Authenticated routes
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/auth/logout', [LogoutController::class, 'logout']);
@@ -238,9 +235,12 @@ Route::prefix('v1')->group(function () {
         Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
         Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
         Route::post('/device-tokens', [NotificationController::class, 'registerToken']);
+
+        // Payment gateway (authenticated initiate/verify; callback stays public)
+        Route::post('/payments-gateway/initiate', [PaymentGatewayController::class, 'initiate']);
+        Route::get('/payments-gateway/verify/{ref}', [PaymentGatewayController::class, 'verify']);
     });
 
-    // Payment gateway (public initiate/verify)
-    Route::post('/payments-gateway/initiate', [PaymentGatewayController::class, 'initiate']);
-    Route::get('/payments-gateway/verify/{ref}', [PaymentGatewayController::class, 'verify']);
+    // Payment gateway callback (public webhook - no auth)
+    Route::post('/payments-gateway/callback', [PaymentGatewayController::class, 'callback'])->name('snippe.webhook');
 });
