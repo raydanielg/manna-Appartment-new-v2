@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class SnippeService
 {
-    private function baseUrl(): string
+    public function baseUrl(): string
     {
         return rtrim(config('snippe.base_url', 'https://api.snippe.sh'), '/');
     }
