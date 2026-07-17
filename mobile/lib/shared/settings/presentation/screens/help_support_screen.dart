@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
 
@@ -22,6 +23,12 @@ class HelpSupportScreen extends StatelessWidget {
         backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
         elevation: 0,
         title: Text('Help & Support', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) context.pop();
+          },
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -45,11 +52,11 @@ class HelpSupportScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            _buildContactCard(context, icon: Icons.phone, title: 'Call Us', value: '+255 700 000 000'),
+            _buildContactCard(context, icon: Icons.phone, title: 'Call Us', value: '0734070202'),
             const SizedBox(height: 12),
             _buildContactCard(context, icon: Icons.email, title: 'Email Us', value: 'support@mannaapartment.co.tz'),
             const SizedBox(height: 12),
-            _buildContactCard(context, icon: Icons.chat_bubble, title: 'WhatsApp', value: '+255 700 000 000'),
+            _buildContactCard(context, icon: Icons.chat_bubble, title: 'WhatsApp', value: '0734070202'),
             const SizedBox(height: 32),
             Text('Frequently Asked Questions', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
             const SizedBox(height: 12),
@@ -93,21 +100,31 @@ class HelpSupportScreen extends StatelessWidget {
 
   Widget _buildFaqItem(BuildContext context, String question, String answer) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tileColor = isDark ? const Color(0xFF1E293B) : Colors.white;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: tileColor,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: ExpansionTile(
-        title: Text(question, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-        iconColor: AppColors.primary,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Text(answer, style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white70 : AppColors.textLight)),
-          ),
-        ],
+      child: Material(
+        color: tileColor,
+        borderRadius: BorderRadius.circular(12),
+        child: ExpansionTile(
+          shape: const Border(),
+          collapsedShape: const Border(),
+          backgroundColor: tileColor,
+          collapsedBackgroundColor: tileColor,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          title: Text(question, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+          iconColor: AppColors.primary,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Text(answer, style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white70 : AppColors.textLight)),
+            ),
+          ],
+        ),
       ),
     );
   }

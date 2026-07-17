@@ -28,17 +28,22 @@ class LandlordDashboardController extends Controller
         $totalExpected = Contract::where('status', 'active')->sum('rent_amount');
         $outstanding = max(0, $totalExpected - $totalIncome);
 
-        $monthlyIncome = Payment::where('status', 'confirmed')
-            ->where('payment_date', '>=', now()->subMonths(6)->startOfMonth())
-            ->orderBy('payment_date', 'asc')
-            ->get()
-            ->groupBy(fn ($p) => $p->payment_date->format('Y-m'))
-            ->map(fn ($group, $key) => [
-                'month' => \Carbon\Carbon::createFromFormat('Y-m', $key)->format('M'),
-                'amount' => (float) $group->sum('amount'),
-            ])
-            ->take(6)
-            ->values();
+        $monthlyIncome = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $monthKey = $date->format('Y-m');
+            $monthLabel = $date->format('M');
+
+            $amount = Payment::where('status', 'confirmed')
+                ->whereYear('payment_date', $date->year)
+                ->whereMonth('payment_date', $date->month)
+                ->sum('amount');
+
+            $monthlyIncome->push([
+                'month' => $monthLabel,
+                'amount' => (float) $amount,
+            ]);
+        }
 
         $recentPayments = Payment::with('tenant.user')
             ->where('status', 'confirmed')

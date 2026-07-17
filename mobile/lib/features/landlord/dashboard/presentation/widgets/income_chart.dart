@@ -6,21 +6,30 @@ class IncomeChart extends StatelessWidget {
   final Map<String, dynamic> data;
   const IncomeChart({super.key, required this.data});
 
+  double _parseAmount(dynamic v) {
+    if (v == null) return 0;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString()) ?? 0;
+  }
+
+  String _formatAmount(double amount) {
+    if (amount >= 1000000) return '${(amount / 1000000).toStringAsFixed(1)}M';
+    if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(0)}K';
+    return amount.toStringAsFixed(0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final monthly = data['monthly_income'] ?? [];
-    final cardColor = isDark ? AppColors.darkCard : Colors.white;
-    final borderColor = isDark ? Colors.white10 : const Color(0xFFE5E7EB);
+    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderColor = isDark ? Colors.white10 : const Color(0xFFE2E8F0);
 
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: borderColor),
-        boxShadow: isDark
-            ? null
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -62,13 +71,13 @@ class IncomeChart extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Text(
                     'No data available',
-                    style: TextStyle(fontSize: 13, color: isDark ? Colors.white38 : Colors.grey.shade400),
+                    style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white38 : Colors.grey.shade400),
                   ),
                 ),
               )
             else
               SizedBox(
-                height: 140,
+                height: 160,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: _buildBars(monthly, isDark),
@@ -81,27 +90,44 @@ class IncomeChart extends StatelessWidget {
   }
 
   List<Widget> _buildBars(List<dynamic> monthly, bool isDark) {
-    final amounts = monthly.map<double>((m) => (m['amount'] ?? 0).toDouble()).toList();
+    final amounts = monthly.map<double>((m) => _parseAmount(m['amount'])).toList();
     final maxAmount = amounts.reduce((a, b) => a > b ? a : b);
     if (maxAmount == 0) return [];
 
-    return monthly.map<Widget>((m) {
-      final amount = (m['amount'] ?? 0).toDouble();
+    return monthly.asMap().entries.map<Widget>((entry) {
+      final i = entry.key;
+      final m = entry.value;
+      final amount = _parseAmount(m['amount']);
       final pct = (amount / maxAmount * 100).clamp(8.0, 100.0);
+      final isHighest = amount == maxAmount;
+
       return Expanded(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              Text(
+                _formatAmount(amount),
+                style: GoogleFonts.nunito(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: isHighest
+                      ? const Color(0xFF059669)
+                      : (isDark ? Colors.white54 : AppColors.textLight),
+                ),
+              ),
+              const SizedBox(height: 4),
               Container(
                 width: double.infinity,
-                height: (pct / 100 * 100).clamp(10.0, 100.0),
+                height: (pct / 100 * 110).clamp(12.0, 110.0),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [Color(0xFF059669), Color(0xFF34D399)],
+                    colors: isHighest
+                        ? [const Color(0xFF059669), const Color(0xFF34D399)]
+                        : [const Color(0xFF059669).withValues(alpha: 0.5), const Color(0xFF34D399).withValues(alpha: 0.5)],
                   ),
                   borderRadius: BorderRadius.circular(6),
                 ),
