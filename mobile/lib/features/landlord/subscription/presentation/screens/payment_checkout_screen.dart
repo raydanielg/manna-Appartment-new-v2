@@ -19,26 +19,12 @@ class PaymentCheckoutScreen extends ConsumerStatefulWidget {
 class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
     with TickerProviderStateMixin {
   final _phoneController = TextEditingController();
-  final _accountNumberController = TextEditingController();
   bool _isPaying = false;
   bool _showSuccess = false;
-  String _paymentMethod = 'mobile_money';
-  String? _selectedBank;
+  bool _showWaiting = false;
+  int _pollAttempts = 0;
   Timer? _pollTimer;
   late final AnimationController _successController;
-
-  final _banks = [
-    'NMB Bank',
-    'CRDB Bank',
-    'NBC Bank',
-    'Stanbic Bank',
-    'Diamond Trust Bank',
-    'Exim Bank',
-    'KCB Bank',
-    'Absa Bank',
-    'TPB Bank',
-    'Bank of Africa',
-  ];
 
   @override
   void initState() {
@@ -52,7 +38,6 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
   @override
   void dispose() {
     _phoneController.dispose();
-    _accountNumberController.dispose();
     _pollTimer?.cancel();
     _successController.dispose();
     super.dispose();
@@ -64,21 +49,18 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
       _showSnack('Weka namba ya simu ya kulipia.');
       return;
     }
-    if (_paymentMethod == 'bank_transfer' && (_selectedBank == null || _selectedBank!.isEmpty)) {
-      _showSnack('Chagua benki ya kulipia.');
-      return;
-    }
 
-    setState(() => _isPaying = true);
+    setState(() {
+      _isPaying = true;
+      _showWaiting = false;
+    });
 
     try {
       final repo = ref.read(subscriptionRepositoryProvider);
       final result = await repo.initiatePayment(
         plan['id'] as String,
         phone,
-        paymentMethod: _paymentMethod,
-        bank: _selectedBank,
-        accountNumber: _accountNumberController.text.trim(),
+        paymentMethod: 'mobile_money',
       );
 
       final checkoutUrl = result['checkout_url'] as String?;
@@ -94,6 +76,10 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
 
+      setState(() {
+        _isPaying = false;
+        _showWaiting = true;
+      });
       _startPolling(providerReference ?? result['reference'] as String);
     } catch (e) {
       final message = _extractErrorMessage(e);
@@ -130,15 +116,31 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
   }
 
   void _startPolling(String reference) {
+    _pollAttempts = 0;
     _pollTimer?.cancel();
     _pollTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      _pollAttempts++;
+
+      // Stop after 24 attempts (2 minutes)
+      if (_pollAttempts > 24) {
+        timer.cancel();
+        setState(() => _showWaiting = false);
+        _showSnack('Muda wa kusubiri umekwisha. Tafadhali angalia hali ya malipo baadaye.');
+        return;
+      }
+
       try {
         final repo = ref.read(subscriptionRepositoryProvider);
         final status = await repo.verifyPayment(reference);
 
         if (status['status'] == 'completed') {
           timer.cancel();
+          setState(() => _showWaiting = false);
           _showSuccessAnimation();
+        } else if (status['status'] == 'failed') {
+          timer.cancel();
+          setState(() => _showWaiting = false);
+          _showSnack('Malipo yameshindwa. Tafadhali jaribu tena.');
         }
       } catch (e) {
         // ignore polling errors
@@ -217,20 +219,44 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
                   ),
                 ),
                 const SizedBox(height: 24),
-                Text('Payment Method', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-                const SizedBox(height: 12),
-                _buildMethodToggle(context),
-                const SizedBox(height: 16),
-                if (_paymentMethod == 'bank_transfer') ...[
-                  _buildBankDropdown(context),
-                  const SizedBox(height: 12),
-                  AppTextField(label: 'Account Number / Reference', hint: 'Optional', controller: _accountNumberController, keyboardType: TextInputType.text),
-                  const SizedBox(height: 16),
-                ],
-                AppTextField(label: 'Phone Number', hint: '0712345678', controller: _phoneController, keyboardType: TextInputType.phone),
+                // Mobile Money info card
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.phone_android, color: AppColors.primary, size: 28),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Mobile Money', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                            const SizedBox(height: 2),
+                            Text('M-Pesa, Tigo Pesa, Airtel Money, Halopesa', style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                AppTextField(label: 'Namba ya Simu ya Kulipia', hint: '0712345678', controller: _phoneController, keyboardType: TextInputType.phone),
                 const SizedBox(height: 24),
                 PrimaryButton(
-                  text: _paymentMethod == 'bank_transfer' ? 'Pay via Bank' : 'Pay Now',
+                  text: 'Lipa Sasa',
                   icon: const Icon(Icons.lock),
                   isLoading: _isPaying,
                   onPressed: plan.isEmpty ? null : () => _pay(plan),
@@ -239,79 +265,55 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
             ),
           ),
           if (_showSuccess) _buildSuccessOverlay(),
+          if (_showWaiting) _buildWaitingOverlay(),
         ],
       ),
     );
   }
 
-  Widget _buildMethodToggle(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildWaitingOverlay() {
     return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          _buildMethodButton(context, 'mobile_money', Icons.phone_android, 'Mobile Money'),
-          _buildMethodButton(context, 'bank_transfer', Icons.account_balance, 'Bank'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMethodButton(BuildContext context, String method, IconData icon, String label) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isActive = _paymentMethod == method;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _paymentMethod = method),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
+      color: Colors.black.withValues(alpha: 0.7),
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(28),
           decoration: BoxDecoration(
-            color: isActive ? (isDark ? AppColors.primary.withValues(alpha: 0.2) : Colors.white) : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: isActive ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))] : null,
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 22, color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500)),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(fontSize: 11, fontWeight: isActive ? FontWeight.w800 : FontWeight.w600, color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500)),
+              const SizedBox(
+                width: 56,
+                height: 56,
+                child: CircularProgressIndicator(
+                  strokeWidth: 4,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Tunangalia malipo yako...',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Tafadhali kamilisha malipo kwenye ukurasa wa Snippe. Tutakujulisha otomatiki malipo yakapokewa.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: AppColors.textLight),
+              ),
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () {
+                  _pollTimer?.cancel();
+                  setState(() => _showWaiting = false);
+                },
+                child: const Text('Funga', style: TextStyle(color: AppColors.textLight)),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBankDropdown(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          isExpanded: true,
-          value: _selectedBank,
-          hint: Text('Chagua benki', style: TextStyle(color: isDark ? Colors.white60 : AppColors.textLight)),
-          icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
-          dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-          items: _banks.map((bank) => DropdownMenuItem(
-            value: bank,
-            child: Text(bank, style: TextStyle(color: isDark ? Colors.white : AppColors.textDark)),
-          )).toList(),
-          onChanged: (value) => setState(() => _selectedBank = value),
         ),
       ),
     );
