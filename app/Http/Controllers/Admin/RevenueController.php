@@ -16,8 +16,20 @@ class RevenueController extends Controller
 
     public function index(Request $request)
     {
-        $payments = Payment::with(['tenant.user', 'organization'])->where('status', 'confirmed')->latest()->paginate(20);
+        $paymentQuery = Payment::with(['tenant.user', 'organization'])->where('status', 'confirmed');
+
+        if ($request->filled('payment_status') && $request->payment_status !== 'all') {
+            $paymentQuery->where('status', $request->payment_status);
+        }
+
+        $payments = $paymentQuery->latest()->paginate(20);
         $subscriptions = Subscription::with(['organization.owner', 'plan'])->latest()->paginate(20);
-        return view('admin.revenue.index', compact('payments', 'subscriptions'));
+
+        $totalRevenue = Payment::where('status', 'confirmed')->sum('amount');
+        $subscriptionRevenue = Subscription::where('status', 'active')->sum('amount');
+        $activeSubs = Subscription::where('status', 'active')->count();
+        $totalPayments = Payment::where('status', 'confirmed')->count();
+
+        return view('admin.revenue.index', compact('payments', 'subscriptions', 'totalRevenue', 'subscriptionRevenue', 'activeSubs', 'totalPayments'));
     }
 }
