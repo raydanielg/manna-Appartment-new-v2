@@ -188,6 +188,7 @@ Route::prefix('v1')->group(function () {
 
                 Route::get('/payments', [PaymentController::class, 'index']);
                 Route::post('/payments', [PaymentController::class, 'store']);
+                Route::post('/payments/preview-overpayment', [PaymentController::class, 'previewOverpayment']);
                 Route::get('/payments/{id}', [PaymentController::class, 'show']);
                 Route::patch('/payments/{id}', [PaymentController::class, 'update']);
                 Route::delete('/payments/{id}', [PaymentController::class, 'destroy']);

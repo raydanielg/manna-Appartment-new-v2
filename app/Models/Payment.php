@@ -24,6 +24,8 @@ class Payment extends Model
         'reference_number',
         'payment_date',
         'month_covered',
+        'months_covered_count',
+        'overdue_date',
         'recorded_by',
         'status',
         'notes',
@@ -31,6 +33,7 @@ class Payment extends Model
 
     protected $casts = [
         'payment_date' => 'date',
+        'overdue_date' => 'date',
     ];
 
     protected static function boot()

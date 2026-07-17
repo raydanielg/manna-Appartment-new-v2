@@ -31,4 +31,19 @@ class PaymentsRepository {
     final response = await _client.get('${ApiEndpoints.payments}/$id');
     return response.data['data'] ?? {};
   }
+
+  Future<Map<String, dynamic>> previewOverpayment({
+    required String contractId,
+    required double amount,
+    String? paymentDate,
+    String? monthCovered,
+  }) async {
+    final response = await _client.post('${ApiEndpoints.payments}/preview-overpayment', data: {
+      'contract_id': contractId,
+      'amount': amount,
+      if (paymentDate != null) 'payment_date': paymentDate,
+      if (monthCovered != null) 'month_covered': monthCovered,
+    });
+    return response.data['data'] ?? {};
+  }
 }

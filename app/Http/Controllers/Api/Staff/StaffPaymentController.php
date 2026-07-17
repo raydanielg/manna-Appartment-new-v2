@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Api\Staff;
 
 use App\Http\Controllers\Controller;
-use App\Models\Contract;
 use App\Models\Payment;
-use App\Models\Tenant;
+use App\Services\PaymentService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class StaffPaymentController extends Controller
 {
@@ -32,13 +30,22 @@ class StaffPaymentController extends Controller
             'month_covered' => 'required|string|max:255',
         ]);
 
-        $payment = Payment::create(array_merge(
-            $request->only([
-                'contract_id', 'tenant_id', 'amount', 'method', 'reference_number', 'payment_date', 'month_covered',
-            ]),
-            ['recorded_by' => Auth::id(), 'status' => 'confirmed']
-        ));
+        $service = app(PaymentService::class);
+        $payment = $service->record($request->only([
+            'contract_id', 'tenant_id', 'amount', 'method',
+            'reference_number', 'payment_date', 'month_covered',
+        ]));
 
-        return $this->success('Payment recorded.', $payment->load(['tenant.user', 'contract']), 201);
+        $calc = $service->calculateCoverage(
+            (float) $payment->amount,
+            (float) $payment->contract->rent_amount,
+            \Carbon\Carbon::parse($payment->payment_date),
+            $payment->month_covered,
+        );
+
+        return $this->success('Payment recorded.', [
+            'payment' => $payment->load(['tenant.user', 'contract']),
+            'overpayment' => $calc,
+        ], 201);
     }
 }

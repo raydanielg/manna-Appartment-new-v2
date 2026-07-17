@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Api\Landlord;
 
 use App\Http\Controllers\Controller;
-use App\Models\Contract;
 use App\Models\Payment;
 use App\Models\Tenant;
+use App\Services\PaymentService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
@@ -18,6 +17,26 @@ class PaymentController extends Controller
     {
         $query = Payment::with(['tenant.user', 'contract'])->latest();
         return $this->paginated($query->paginate($request->get('per_page', 20)));
+    }
+
+    public function previewOverpayment(Request $request)
+    {
+        $request->validate([
+            'contract_id' => 'required|uuid|exists:contracts,id',
+            'amount' => 'required|numeric|min:0',
+            'payment_date' => 'nullable|date',
+            'month_covered' => 'nullable|string|max:255',
+        ]);
+
+        $service = app(PaymentService::class);
+        $calc = $service->previewCoverage(
+            $request->contract_id,
+            (float) $request->amount,
+            $request->payment_date,
+            $request->month_covered,
+        );
+
+        return $this->success('Overpayment preview.', $calc);
     }
 
     public function store(Request $request)
@@ -34,18 +53,23 @@ class PaymentController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $payment = Payment::create(array_merge(
-            $request->only([
-                'contract_id', 'tenant_id', 'payment_type', 'amount', 'method', 'reference_number', 'payment_date', 'month_covered', 'notes',
-            ]),
-            [
-                'payment_date' => $request->payment_date ?? now()->toDateString(),
-                'recorded_by' => Auth::id(),
-                'status' => 'confirmed',
-            ]
-        ));
+        $service = app(PaymentService::class);
+        $payment = $service->record($request->only([
+            'contract_id', 'tenant_id', 'payment_type', 'amount', 'method',
+            'reference_number', 'payment_date', 'month_covered', 'notes',
+        ]));
 
-        return $this->success('Payment recorded.', $payment->load(['tenant.user', 'contract.unit']), 201);
+        $calc = $service->calculateCoverage(
+            (float) $payment->amount,
+            (float) $payment->contract->rent_amount,
+            \Carbon\Carbon::parse($payment->payment_date),
+            $payment->month_covered,
+        );
+
+        return $this->success('Payment recorded.', [
+            'payment' => $payment->load(['tenant.user', 'contract.unit']),
+            'overpayment' => $calc,
+        ], 201);
     }
 
     public function show($id)
