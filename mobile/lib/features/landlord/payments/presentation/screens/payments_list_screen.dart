@@ -92,7 +92,7 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
                 },
                 data: (payments) {
                   final filtered = payments.where((p) {
-                    final tenant = (p['tenant']?['full_name'] ?? p['tenant_name'] ?? '').toString().toLowerCase();
+                    final tenant = (p['tenant']?['user']?['full_name'] ?? p['tenant']?['full_name'] ?? p['tenant_name'] ?? '').toString().toLowerCase();
                     final matchesSearch = tenant.contains(_searchQuery) || (p['reference'] ?? '').toString().toLowerCase().contains(_searchQuery);
                     final type = (p['payment_type'] ?? 'rent').toString();
                     final matchesType = _filterType == 'all' || type == _filterType;
@@ -142,7 +142,7 @@ class _PaymentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final amount = (payment['amount'] ?? 0).toDouble();
+    final amount = _parseAmount(payment['amount']);
     final type = (payment['payment_type'] ?? 'rent').toString();
     final date = payment['payment_date'] != null ? DateFormat('dd MMM yyyy').format(DateTime.tryParse(payment['payment_date'].toString()) ?? DateTime.now()) : '-';
     final Color typeColor = {
@@ -176,7 +176,7 @@ class _PaymentCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              payment['tenant']?['full_name'] ?? payment['tenant_name'] ?? 'Unknown',
+              payment['tenant']?['user']?['full_name'] ?? payment['tenant']?['full_name'] ?? payment['tenant_name'] ?? 'Unknown',
               style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight),
             ),
             Text(
@@ -190,6 +190,12 @@ class _PaymentCard extends StatelessWidget {
         ),
       );
     }
+
+  double _parseAmount(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString()) ?? 0;
+  }
 
   IconData _iconForType(String type) {
     switch (type) {

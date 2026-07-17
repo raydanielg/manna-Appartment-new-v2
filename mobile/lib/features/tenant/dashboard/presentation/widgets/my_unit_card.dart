@@ -3,10 +3,23 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 
 class MyUnitCard extends StatelessWidget {
-  const MyUnitCard({super.key});
+  final Map<String, dynamic>? unit;
+  final double? rentAmount;
+  final double? balance;
+
+  const MyUnitCard({
+    super.key,
+    this.unit,
+    this.rentAmount,
+    this.balance,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final unitName = unit?['name'] as String? ?? 'Not assigned';
+    final propertyName = unit?['property'] as String?;
+    final hasUnit = unit != null;
+
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
@@ -22,22 +35,30 @@ class MyUnitCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('My Unit', style: TextStyle(fontSize: 14, color: Colors.white70)),
-                Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)), child: const Text('ACTIVE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white))),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)), child: Text(hasUnit ? 'ACTIVE' : 'NONE', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white))),
               ],
             ),
             const SizedBox(height: 12),
-            Text('Not assigned', style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
+            Text(unitName, style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
+            if (propertyName != null) ...[
+              const SizedBox(height: 4),
+              Text(propertyName, style: GoogleFonts.nunito(fontSize: 13, color: Colors.white70)),
+            ],
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildStat(Icons.calendar_today, 'Rent Due', 'TZS 0')),
-                Expanded(child: _buildStat(Icons.account_balance_wallet, 'Balance', 'TZS 0')),
+                Expanded(child: _buildStat(Icons.calendar_today, 'Rent Due', 'TZS ${_formatAmount(rentAmount ?? 0)}')),
+                Expanded(child: _buildStat(Icons.account_balance_wallet, 'Balance', 'TZS ${_formatAmount(balance ?? 0)}')),
               ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatAmount(double amount) {
+    return amount.toStringAsFixed(0);
   }
 
   Widget _buildStat(IconData icon, String label, String value) {

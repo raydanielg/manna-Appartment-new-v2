@@ -135,7 +135,7 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
         } else if (status['status'] == 'failed') {
           timer.cancel();
           setState(() => _showWaiting = false);
-          _showSnack('Malipo yameshindwa. Tafadhali jaribu tena.');
+          _showSnack('Malipo yameshindwa. Huenda USSD push haikufika kwenye simu yako. Tafadhali hakikisha namba ya simu ni sahihi na jaribu tena.');
         }
       } catch (e) {
         // ignore polling errors

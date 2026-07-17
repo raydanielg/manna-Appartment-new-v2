@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/status_badge.dart';
 
@@ -10,17 +11,17 @@ class ContractCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final tenantName = contract['tenant']?['full_name'] ?? 'Unknown';
-    final unitName = contract['unit']?['name'] ?? 'N/A';
-    final startDate = contract['start_date'] ?? 'N/A';
-    final endDate = contract['end_date'] ?? 'N/A';
+    final tenantName = contract['tenant']?['full_name'] ?? contract['tenant']?['user']?['full_name'] ?? 'Unknown';
+    final unitName = contract['unit']?['name'] ?? contract['unit']?['unit_number'] ?? 'N/A';
+    final startDate = _formatDate(contract['start_date']);
+    final endDate = _formatDate(contract['end_date']);
     final status = contract['status'] ?? 'active';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/landlord/contracts/'),
+        onTap: () => context.push('/landlord/contracts/${contract['id']}'),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -41,9 +42,9 @@ class ContractCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(tenantName, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                        Text(tenantName, style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark), maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 2),
-                        Text('Unit: ', style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+                        Text('Unit: $unitName', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
@@ -64,18 +65,28 @@ class ContractCard extends StatelessWidget {
     );
   }
 
+  String _formatDate(dynamic date) {
+    if (date == null) return 'N/A';
+    final dt = DateTime.tryParse(date.toString());
+    if (dt == null) return date.toString();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+  }
+
   Widget _buildDate(BuildContext context, IconData icon, String label, String date) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
         Icon(icon, size: 16, color: isDark ? Colors.white60 : AppColors.textLight),
         const SizedBox(width: 6),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: TextStyle(fontSize: 10, color: isDark ? Colors.white60 : AppColors.textLight)),
-            Text(date, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppColors.textDark)),
-          ],
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: GoogleFonts.nunito(fontSize: 10, color: isDark ? Colors.white60 : AppColors.textLight)),
+              Text(date, style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppColors.textDark), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ],
+          ),
         ),
       ],
     );

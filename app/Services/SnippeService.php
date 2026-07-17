@@ -60,24 +60,35 @@ class SnippeService
             $payload['customer']['email'] = 'customer@manna.co.tz';
         }
 
+        $idempotencyKey = Str::limit($data['metadata']['transaction_id'] ?? Str::random(20), 30, '');
+
         try {
             $response = Http::withHeaders($this->headers())
                 ->withOptions(['verify' => !app()->environment('local')])
+                ->withHeaders(['Idempotency-Key' => $idempotencyKey])
                 ->post($this->baseUrl() . '/v1/payments', $payload);
 
             if ($response->successful()) {
-                return $response->json();
+                $result = $response->json();
+                Log::info('Snippe payment created', [
+                    'reference' => $result['data']['reference'] ?? null,
+                    'status' => $result['data']['status'] ?? null,
+                    'phone' => $phone,
+                ]);
+                return $result;
             }
 
             Log::error('Snippe payment creation failed', [
                 'status' => $response->status(),
                 'body' => $response->body(),
+                'payload' => $payload,
             ]);
 
+            $errorBody = $response->json();
             return [
                 'status' => 'error',
                 'code' => $response->status(),
-                'message' => 'Snippe payment creation failed: ' . $response->body(),
+                'message' => $errorBody['message'] ?? 'Snippe payment creation failed: ' . $response->body(),
             ];
         } catch (\Exception $e) {
             Log::error('Snippe payment exception: ' . $e->getMessage());
@@ -85,6 +96,42 @@ class SnippeService
                 'status' => 'error',
                 'code' => 500,
                 'message' => 'Could not reach Snippe: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Trigger USSD push to the customer's phone.
+     */
+    public function pushUssd(string $reference): array
+    {
+        try {
+            $response = Http::withHeaders($this->headers())
+                ->withOptions(['verify' => !app()->environment('local')])
+                ->post($this->baseUrl() . '/v1/payments/' . $reference . '/push', []);
+
+            if ($response->successful()) {
+                Log::info('Snippe USSD push sent', ['reference' => $reference]);
+                return $response->json();
+            }
+
+            Log::error('Snippe USSD push failed', [
+                'reference' => $reference,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return [
+                'status' => 'error',
+                'code' => $response->status(),
+                'message' => 'USSD push failed: ' . $response->body(),
+            ];
+        } catch (\Exception $e) {
+            Log::error('Snippe USSD push exception: ' . $e->getMessage());
+            return [
+                'status' => 'error',
+                'code' => 500,
+                'message' => 'Could not send USSD push: ' . $e->getMessage(),
             ];
         }
     }

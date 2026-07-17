@@ -124,7 +124,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
                 ),
                 hint: Text('Select tenant', style: GoogleFonts.nunito(fontSize: 14)),
                 items: tenants.map<DropdownMenuItem<String>>((t) {
-                  final name = t['full_name'] ?? t['name'] ?? 'Tenant';
+                  final name = t['user']?['full_name'] ?? t['full_name'] ?? 'Tenant';
                   return DropdownMenuItem(value: t['id'].toString(), child: Text(name, style: GoogleFonts.nunito(fontSize: 14)));
                 }).toList(),
                 onChanged: (v) => setState(() {

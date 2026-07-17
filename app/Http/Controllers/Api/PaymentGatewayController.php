@@ -109,6 +109,11 @@ class PaymentGatewayController extends Controller
             'payload' => $payment['data'] ?? $payment,
         ]);
 
+        // Trigger USSD push to ensure customer receives the payment prompt
+        if ($providerRef) {
+            $snippe->pushUssd($providerRef);
+        }
+
         return $this->success('Payment initiated. USSD push sent to your phone.', [
             'reference' => $transaction->id,
             'provider_reference' => $providerRef,

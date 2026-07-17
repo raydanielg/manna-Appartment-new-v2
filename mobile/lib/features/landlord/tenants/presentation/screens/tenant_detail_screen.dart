@@ -78,9 +78,15 @@ class TenantDetailScreen extends ConsumerWidget {
     );
   }
 
+  double _parseAmount(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString()) ?? 0;
+  }
+
   Widget _buildInfoCard(BuildContext context, Map<String, dynamic> tenant) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final balance = (tenant['balance_due'] ?? 0).toDouble();
+    final balance = _parseAmount(tenant['balance_due']);
     final unit = tenant['unit'] ?? {};
     final property = unit['property'] ?? {};
 
@@ -97,9 +103,9 @@ class TenantDetailScreen extends ConsumerWidget {
           const Divider(height: 1, indent: 56),
           _row(context, Icons.meeting_room_outlined, 'Unit', unit['name'] ?? 'No unit'),
           const Divider(height: 1, indent: 56),
-          _row(context, Icons.money_outlined, 'Rent', 'TZS ${(tenant['rent_amount'] ?? 0).toDouble().toStringAsFixed(0)}'),
+          _row(context, Icons.money_outlined, 'Rent', 'TZS ${_parseAmount(tenant['rent_amount']).toStringAsFixed(0)}'),
           const Divider(height: 1, indent: 56),
-          _row(context, Icons.account_balance_wallet, 'Total Paid', 'TZS ${(tenant['total_paid'] ?? 0).toDouble().toStringAsFixed(0)}'),
+          _row(context, Icons.account_balance_wallet, 'Total Paid', 'TZS ${_parseAmount(tenant['total_paid']).toStringAsFixed(0)}'),
           const Divider(height: 1, indent: 56),
           _row(context, Icons.warning_amber_rounded, 'Balance Due', 'TZS ${balance.toStringAsFixed(0)}', color: balance > 0 ? Colors.red : AppColors.success),
           const Divider(height: 1, indent: 56),
