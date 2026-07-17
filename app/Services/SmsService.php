@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Organization;
 use App\Models\SmsLog;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -41,6 +42,16 @@ class SmsService
         }
 
         return $log;
+    }
+
+    public function calcSmsCount(int $len): int
+    {
+        if ($len <= 160) return 1;
+        if ($len <= 306) return 2;
+        if ($len <= 459) return 3;
+        if ($len <= 612) return 4;
+        if ($len <= 765) return 5;
+        return intdiv($len - 765, 153) + 6;
     }
 
     private function sendViaNextSms(string $phone, string $message): bool

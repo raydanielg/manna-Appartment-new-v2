@@ -85,8 +85,12 @@ class SmsController extends Controller
             return $this->error('No recipients found for this group.', null, 422);
         }
 
-        if ($organization->sms_balance < count($phones)) {
-            return $this->error('Insufficient SMS balance for this broadcast.', null, 403);
+        $messageLen = strlen($message);
+        $smsPerMessage = $this->calcSmsCount($messageLen);
+        $totalSmsNeeded = $smsPerMessage * count($phones);
+
+        if ($organization->sms_balance < $totalSmsNeeded) {
+            return $this->error("Insufficient SMS balance. Need {$totalSmsNeeded} SMS ({$smsPerMessage} x {$totalSmsNeeded} recipients), have {$organization->sms_balance}.", null, 403);
         }
 
         $smsService = app(SmsService::class);
@@ -96,9 +100,23 @@ class SmsController extends Controller
             $sentCount++;
         }
 
-        $organization->decrement('sms_balance', $sentCount);
+        $organization->decrement('sms_balance', $totalSmsNeeded);
 
-        return $this->success("Broadcast sent to {$sentCount} recipients.", ['sent_count' => $sentCount]);
+        return $this->success("Broadcast sent to {$sentCount} recipients.", [
+            'sent_count' => $sentCount,
+            'sms_used' => $totalSmsNeeded,
+            'sms_remaining' => $organization->fresh()->sms_balance,
+        ]);
+    }
+
+    private function calcSmsCount(int $len): int
+    {
+        if ($len <= 160) return 1;
+        if ($len <= 306) return 2;
+        if ($len <= 459) return 3;
+        if ($len <= 612) return 4;
+        if ($len <= 765) return 5;
+        return (intdiv($len - 765, 153)) + 6;
     }
 
     public function logs(Request $request)

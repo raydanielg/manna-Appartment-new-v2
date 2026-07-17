@@ -85,8 +85,8 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
                 },
                 data: (tenants) {
                   final filtered = tenants.where((t) {
-                    final name = (t['full_name'] ?? t['name'] ?? '').toString().toLowerCase();
-                    final phone = (t['phone'] ?? '').toString().toLowerCase();
+                    final name = (t['user']?['full_name'] ?? t['full_name'] ?? '').toString().toLowerCase();
+                    final phone = (t['user']?['phone'] ?? t['phone'] ?? '').toString().toLowerCase();
                     final matchesSearch = name.contains(_searchQuery) || phone.contains(_searchQuery);
                     final status = (t['status'] ?? 'active').toString();
                     final matchesStatus = _filterStatus == 'all' || status == _filterStatus;

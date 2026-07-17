@@ -8,14 +8,20 @@ class TenantCard extends StatelessWidget {
   final Map<String, dynamic> tenant;
   const TenantCard({super.key, required this.tenant});
 
+  double _parseAmount(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString()) ?? 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final name = tenant['full_name'] ?? tenant['name'] ?? 'Unknown';
-    final phone = tenant['phone'] ?? '';
+    final name = tenant['user']?['full_name'] ?? tenant['full_name'] ?? 'Unknown';
+    final phone = tenant['user']?['phone'] ?? tenant['phone'] ?? '';
     final unit = tenant['unit']?['name'] ?? tenant['unit']?['unit_number'] ?? tenant['unit_name'] ?? 'No unit';
     final status = tenant['status'] ?? 'active';
-    final balanceDue = (tenant['balance_due'] ?? 0).toDouble();
+    final balanceDue = _parseAmount(tenant['balance_due']);
     final tenantId = tenant['id']?.toString() ?? '';
 
     return Container(
