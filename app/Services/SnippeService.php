@@ -28,6 +28,86 @@ class SnippeService
     }
 
     /**
+     * Create a mobile money payment intent via Payments API.
+     * Customer receives USSD push automatically.
+     */
+    public function createPayment(array $data): array
+    {
+        $phone = $this->formatPhone($data['phone'] ?? '');
+        $name = $data['customer_name'] ?? 'Manna User';
+        $parts = array_pad(explode(' ', $name, 2), 2, '');
+        $firstname = $parts[0] ?: 'Customer';
+        $lastname = $parts[1] ?: 'User';
+
+        $payload = [
+            'payment_type' => 'mobile',
+            'details' => [
+                'amount' => (int) $data['amount'],
+                'currency' => $data['currency'] ?? config('snippe.currency', 'TZS'),
+            ],
+            'phone_number' => $phone,
+            'customer' => [
+                'firstname' => $firstname,
+                'lastname' => $lastname,
+            ],
+            'webhook_url' => $data['webhook_url'] ?? route('snippe.webhook'),
+            'metadata' => $data['metadata'] ?? [],
+        ];
+
+        if (!empty($data['customer_email'])) {
+            $payload['customer']['email'] = $data['customer_email'];
+        }
+
+        try {
+            $response = Http::withHeaders($this->headers())
+                ->withOptions(['verify' => !app()->environment('local')])
+                ->post($this->baseUrl() . '/v1/payments', $payload);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            Log::error('Snippe payment creation failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return [
+                'status' => 'error',
+                'code' => $response->status(),
+                'message' => 'Snippe payment creation failed: ' . $response->body(),
+            ];
+        } catch (\Exception $e) {
+            Log::error('Snippe payment exception: ' . $e->getMessage());
+            return [
+                'status' => 'error',
+                'code' => 500,
+                'message' => 'Could not reach Snippe: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Get payment status from Snippe.
+     */
+    public function getPaymentStatus(string $reference): ?array
+    {
+        try {
+            $response = Http::withHeaders($this->headers())
+                ->withOptions(['verify' => !app()->environment('local')])
+                ->get($this->baseUrl() . '/v1/payments/' . $reference);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+        } catch (\Exception $e) {
+            Log::error('Snippe get payment status failed: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
      * Create a hosted checkout session.
      */
     public function createSession(array $data): array

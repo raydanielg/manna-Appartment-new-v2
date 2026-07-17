@@ -13,7 +13,6 @@ use App\Services\SubscriptionService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -75,14 +74,12 @@ class PaymentGatewayController extends Controller
             'payment_method' => $paymentMethod,
         ]);
 
-        $sessionData = [
+        $paymentData = [
             'amount' => (int) $plan->price,
             'currency' => config('snippe.currency', 'TZS'),
-            'allowed_methods' => ['mobile_money'],
             'phone' => $request->phone,
             'customer_name' => $user->full_name,
             'customer_email' => $user->email,
-            'description' => "Subscription: {$plan->name}",
             'metadata' => [
                 'transaction_id' => $transaction->id,
                 'organization_id' => $organization->id,
@@ -92,28 +89,29 @@ class PaymentGatewayController extends Controller
             ],
         ];
 
-        $session = app(SnippeService::class)->createSession($sessionData);
+        $snippe = app(SnippeService::class);
+        $payment = $snippe->createPayment($paymentData);
 
-        if (!$this->isSessionSuccessful($session)) {
+        if (!$this->isPaymentSuccessful($payment)) {
             $transaction->update(['status' => 'failed']);
-            Log::error('Snippe session failed', ['response' => $session]);
+            Log::error('Snippe payment creation failed', ['response' => $payment]);
             return $this->error(
-                $session['message'] ?? 'Failed to create payment session. Please check your Snippe configuration.',
-                $session,
+                $payment['message'] ?? 'Failed to initiate mobile money payment. Please try again.',
+                $payment,
                 502
             );
         }
 
+        $providerRef = $payment['data']['reference'] ?? $payment['reference'] ?? null;
+
         $transaction->update([
-            'provider_reference' => $this->sessionReference($session),
-            'payload' => $session['data'] ?? $session,
+            'provider_reference' => $providerRef,
+            'payload' => $payment['data'] ?? $payment,
         ]);
 
-        return $this->success('Payment initiated.', [
+        return $this->success('Payment initiated. USSD push sent to your phone.', [
             'reference' => $transaction->id,
-            'provider_reference' => $this->sessionReference($session),
-            'checkout_url' => $this->sessionCheckoutUrl($session),
-            'payment_link_url' => $this->sessionPaymentLinkUrl($session),
+            'provider_reference' => $providerRef,
             'amount' => $plan->price,
             'currency' => config('snippe.currency', 'TZS'),
             'status' => 'pending',
@@ -121,27 +119,12 @@ class PaymentGatewayController extends Controller
         ]);
     }
 
-    private function isSessionSuccessful(array $session): bool
+    private function isPaymentSuccessful(array $payment): bool
     {
-        if (!empty($session['status']) && $session['status'] !== 'success') {
+        if (!empty($payment['status']) && $payment['status'] !== 'success') {
             return false;
         }
-        return !empty($session['data']['reference']) || !empty($session['reference']);
-    }
-
-    private function sessionReference(array $session): ?string
-    {
-        return $session['data']['reference'] ?? $session['reference'] ?? null;
-    }
-
-    private function sessionCheckoutUrl(array $session): ?string
-    {
-        return $session['data']['checkout_url'] ?? $session['checkout_url'] ?? null;
-    }
-
-    private function sessionPaymentLinkUrl(array $session): ?string
-    {
-        return $session['data']['payment_link_url'] ?? $session['payment_link_url'] ?? null;
+        return !empty($payment['data']['reference']) || !empty($payment['reference']);
     }
 
     public function callback(Request $request)
@@ -309,22 +292,17 @@ class PaymentGatewayController extends Controller
     {
         try {
             $service = app(SnippeService::class);
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . config('snippe.api_key'),
-                'Accept' => 'application/json',
-            ])->withOptions(['verify' => !app()->environment('local')])
-              ->get($service->baseUrl() . '/api/v1/sessions/' . $transaction->provider_reference);
+            $result = $service->getPaymentStatus($transaction->provider_reference);
 
-            if (!$response->successful()) {
+            if (!$result) {
                 return;
             }
 
-            $data = $response->json();
-            $sessionStatus = $data['data']['status'] ?? $data['status'] ?? null;
+            $paymentStatus = $result['data']['status'] ?? $result['status'] ?? null;
 
-            if (in_array($sessionStatus, ['completed', 'paid', 'successful', 'success'])) {
-                $this->completeTransaction($transaction, $data);
-            } elseif (in_array($sessionStatus, ['failed', 'expired', 'cancelled', 'voided'])) {
+            if (in_array($paymentStatus, ['completed', 'paid', 'successful', 'success'])) {
+                $this->completeTransaction($transaction, $result);
+            } elseif (in_array($paymentStatus, ['failed', 'expired', 'cancelled', 'voided'])) {
                 $transaction->update(['status' => 'failed']);
             }
         } catch (\Exception $e) {
