@@ -78,7 +78,18 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
               color: AppColors.primary,
               child: paymentsAsync.when(
                 loading: () => const LoadingIndicator(),
-                error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(landlordPaymentsProvider)),
+                error: (e, _) {
+                  final message = e.toString();
+                  final isSetupError = message.toLowerCase().contains('kyc') ||
+                      message.toLowerCase().contains('subscription') ||
+                      message.toLowerCase().contains('organization');
+                  return ErrorState(
+                    message: message,
+                    onRetry: () => ref.invalidate(landlordPaymentsProvider),
+                    onAction: isSetupError ? () => context.go('/landlord/subscription') : null,
+                    actionLabel: 'Complete Setup',
+                  );
+                },
                 data: (payments) {
                   final filtered = payments.where((p) {
                     final tenant = (p['tenant']?['full_name'] ?? p['tenant_name'] ?? '').toString().toLowerCase();

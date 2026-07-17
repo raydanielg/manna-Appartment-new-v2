@@ -56,6 +56,8 @@ class SnippeService
 
         if (!empty($data['customer_email'])) {
             $payload['customer']['email'] = $data['customer_email'];
+        } else {
+            $payload['customer']['email'] = 'customer@manna.co.tz';
         }
 
         try {

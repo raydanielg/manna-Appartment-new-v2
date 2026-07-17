@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
@@ -63,24 +62,20 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
         paymentMethod: 'mobile_money',
       );
 
-      final checkoutUrl = result['checkout_url'] as String?;
       final providerReference = result['provider_reference'] as String?;
+      final reference = result['reference'] as String?;
 
-      if (checkoutUrl == null || checkoutUrl.isEmpty) {
-        _showSnack('Imeshindwa kuanzisha malipo. Hakikisha API key ya Snippe imewekwa.');
+      if (providerReference == null && reference == null) {
+        _showSnack('Imeshindwa kuanzisha malipo. Tafadhali jaribu tena.');
         return;
       }
 
-      final uri = Uri.parse(checkoutUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
-
+      // USSD push is sent automatically by Snippe - no browser needed
       setState(() {
         _isPaying = false;
         _showWaiting = true;
       });
-      _startPolling(providerReference ?? result['reference'] as String);
+      _startPolling(providerReference ?? reference!);
     } catch (e) {
       final message = _extractErrorMessage(e);
       _showSnack(message);
@@ -285,32 +280,43 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(
-                width: 56,
-                height: 56,
-                child: CircularProgressIndicator(
-                  strokeWidth: 4,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
+                child: const Icon(Icons.phone_android, color: AppColors.primary, size: 36),
               ),
               const SizedBox(height: 20),
               const Text(
-                'Tunangalia malipo yako...',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                'Subiri USSD kwenye simu yako',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark),
               ),
               const SizedBox(height: 8),
               const Text(
-                'Tafadhali kamilisha malipo kwenye ukurasa wa Snippe. Tutakujulisha otomatiki malipo yakapokewa.',
+                'Ombi la malipo limetumwa kwenye simu yako. Ingiza PIN yako ya mobile money kukamilisha malipo.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, color: AppColors.textLight),
+              ),
+              const SizedBox(height: 20),
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
               ),
               const SizedBox(height: 20),
               TextButton(
                 onPressed: () {
                   _pollTimer?.cancel();
                   setState(() => _showWaiting = false);
+                  _showSnack('Malipo yamekatishwa. Hali ya malipo itaangaliwa baadaye.');
                 },
-                child: const Text('Funga', style: TextStyle(color: AppColors.textLight)),
+                child: const Text('Katisha', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.w600)),
               ),
             ],
           ),

@@ -69,7 +69,18 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
               color: AppColors.primary,
               child: propertiesAsync.when(
                 loading: () => const LoadingIndicator(),
-                error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(propertiesListProvider)),
+                error: (e, _) {
+                  final message = e.toString();
+                  final isSetupError = message.toLowerCase().contains('kyc') ||
+                      message.toLowerCase().contains('subscription') ||
+                      message.toLowerCase().contains('organization');
+                  return ErrorState(
+                    message: message,
+                    onRetry: () => ref.invalidate(propertiesListProvider),
+                    onAction: isSetupError ? () => context.go('/landlord/subscription') : null,
+                    actionLabel: 'Complete Setup',
+                  );
+                },
                 data: (properties) {
                   var filtered = properties.where((p) {
                     final matchesSearch = p.name.toLowerCase().contains(_searchQuery) || (p.address ?? '').toLowerCase().contains(_searchQuery);

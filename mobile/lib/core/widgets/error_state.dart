@@ -18,36 +18,69 @@ class ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isSetupError = message.toLowerCase().contains('kyc') ||
+        message.toLowerCase().contains('subscription') ||
+        message.toLowerCase().contains('organization');
+
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline, size: 56, color: isDark ? Colors.white30 : Colors.grey.shade300),
-            const SizedBox(height: 16),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: (isSetupError ? AppColors.warning : AppColors.error).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isSetupError ? Icons.lock_outline : Icons.error_outline,
+                size: 36,
+                color: isSetupError ? AppColors.warning : AppColors.error,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              isSetupError ? 'Setup Required' : 'Something went wrong',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: isDark ? Colors.white : AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 8),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(color: isDark ? Colors.white70 : AppColors.textLight),
+              style: TextStyle(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textLight),
             ),
-            if (onRetry != null) ...[
-              const SizedBox(height: 20),
+            if (onAction != null) ...[
+              const SizedBox(height: 24),
               ElevatedButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                onPressed: onAction,
+                icon: const Icon(Icons.arrow_forward, size: 18),
+                label: Text(actionLabel),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
               ),
             ],
-            if (onAction != null) ...[
+            if (onRetry != null) ...[
               const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: onAction,
-                child: Text(actionLabel),
+              TextButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Retry'),
               ),
             ],
           ],
         ),
+      ),
       ),
     );
   }

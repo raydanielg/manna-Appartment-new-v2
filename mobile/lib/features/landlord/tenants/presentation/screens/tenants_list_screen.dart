@@ -71,7 +71,18 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
               color: AppColors.primary,
               child: tenantsAsync.when(
                 loading: () => const LoadingIndicator(),
-                error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(tenantsListProvider)),
+                error: (e, _) {
+                  final message = e.toString();
+                  final isSetupError = message.toLowerCase().contains('kyc') ||
+                      message.toLowerCase().contains('subscription') ||
+                      message.toLowerCase().contains('organization');
+                  return ErrorState(
+                    message: message,
+                    onRetry: () => ref.invalidate(tenantsListProvider),
+                    onAction: isSetupError ? () => context.go('/landlord/subscription') : null,
+                    actionLabel: 'Complete Setup',
+                  );
+                },
                 data: (tenants) {
                   final filtered = tenants.where((t) {
                     final name = (t['full_name'] ?? t['name'] ?? '').toString().toLowerCase();

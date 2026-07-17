@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import '../config/app_config.dart';
 import '../storage/secure_storage_service.dart';
+import 'error_interceptor.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 
@@ -60,6 +61,8 @@ class ApiClient {
         error: true,
       ));
     }
+
+    _dio.interceptors.add(ErrorInterceptor());
   }
 
   Future<Response> get(
