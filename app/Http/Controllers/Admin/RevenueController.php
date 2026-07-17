@@ -17,7 +17,7 @@ class RevenueController extends Controller
     public function index(Request $request)
     {
         $payments = Payment::with(['tenant.user', 'organization'])->where('status', 'confirmed')->latest()->paginate(20);
-        $subscriptions = Subscription::with(['organization', 'plan'])->latest()->paginate(20);
+        $subscriptions = Subscription::with(['organization.owner', 'plan'])->latest()->paginate(20);
         return view('admin.revenue.index', compact('payments', 'subscriptions'));
     }
 }

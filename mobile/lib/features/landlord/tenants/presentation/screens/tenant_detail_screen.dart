@@ -156,7 +156,7 @@ class TenantDetailScreen extends ConsumerWidget {
                         child: const Icon(Icons.check, size: 14, color: AppColors.success),
                       ),
                       title: Text(
-                        'TZS ${(payment['amount'] ?? 0).toDouble().toStringAsFixed(0)}',
+                        'TZS ${(payment['amount'] is num ? (payment['amount'] as num) : double.tryParse(payment['amount']?.toString() ?? '0') ?? 0).toDouble().toStringAsFixed(0)}',
                         style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark),
                       ),
                       subtitle: Text(
