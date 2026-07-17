@@ -55,57 +55,70 @@
     </div>
 </div>
 
-{{-- Subscription Cards --}}
+{{-- Subscription Cards (Collapsible) --}}
 <div class="mb-6">
-    <h3 class="text-sm font-semibold text-gray-900 mb-3">Subscriptions</h3>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        @forelse($subscriptions as $sub)
-        <div class="bg-white rounded-xl border overflow-hidden hover:shadow-md transition-shadow">
-            <div class="px-5 py-3 {{ $sub->status === 'active' ? 'bg-emerald-50' : 'bg-gray-50' }} border-b">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full {{ $sub->status === 'active' ? 'bg-emerald-500' : 'bg-gray-400' }}"></span>
-                        <span class="text-xs font-semibold {{ $sub->status === 'active' ? 'text-emerald-700' : 'text-gray-500' }}">{{ ucfirst($sub->status) }}</span>
-                    </div>
-                    <span class="text-[10px] text-gray-400">{{ $sub->created_at ? $sub->created_at->format('d M Y') : '-' }}</span>
-                </div>
+    <button type="button" onclick="toggleSubs()" id="subsToggle" class="w-full bg-white rounded-xl border px-5 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors group">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             </div>
-            <div class="px-5 py-4">
-                <div class="flex items-center justify-between mb-3">
-                    <div>
-                        <p class="text-sm font-bold text-gray-900">{{ $sub->plan->name ?? 'Unknown Plan' }}</p>
-                        <p class="text-[11px] text-gray-500">{{ ucfirst($sub->plan->billing_cycle ?? 'monthly') }}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-lg font-bold text-gray-900">TZS {{ number_format($sub->amount) }}</p>
-                    </div>
-                </div>
-                <div class="space-y-2 pt-3 border-t border-gray-100">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] text-gray-400">Organization</span>
-                        <span class="text-xs font-medium text-gray-700">{{ $sub->organization->business_name ?? '-' }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] text-gray-400">Owner</span>
-                        <span class="text-xs font-medium text-gray-700">{{ $sub->organization->owner->full_name ?? '-' }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] text-gray-400">Period</span>
-                        <span class="text-xs text-gray-600">{{ $sub->start_date ? $sub->start_date->format('d M Y') : '-' }} → {{ $sub->end_date ? $sub->end_date->format('d M Y') : '-' }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-[11px] text-gray-400">Payment Ref</span>
-                        <span class="text-xs font-medium text-gray-700">{{ $sub->payment_reference ?? '-' }}</span>
-                    </div>
-                </div>
+            <div class="text-left">
+                <h3 class="text-sm font-semibold text-gray-900">Subscriptions</h3>
+                <p class="text-[11px] text-gray-400">{{ $subscriptions->total() }} total · Click to expand</p>
             </div>
         </div>
-        @empty
-        <div class="col-span-full bg-white rounded-xl border p-8 text-center text-gray-400 text-xs">No subscriptions yet</div>
-        @endforelse
-    </div>
-    <div class="mt-4 text-xs">
-        {{ $subscriptions->links() }}
+        <svg id="subsChevron" class="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+    </button>
+    <div id="subsContent" class="hidden mt-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @forelse($subscriptions as $sub)
+            <div class="bg-white rounded-xl border overflow-hidden hover:shadow-md transition-shadow">
+                <div class="px-5 py-3 {{ $sub->status === 'active' ? 'bg-emerald-50' : 'bg-gray-50' }} border-b">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full {{ $sub->status === 'active' ? 'bg-emerald-500' : 'bg-gray-400' }}"></span>
+                            <span class="text-xs font-semibold {{ $sub->status === 'active' ? 'text-emerald-700' : 'text-gray-500' }}">{{ ucfirst($sub->status) }}</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400">{{ $sub->created_at ? $sub->created_at->format('d M Y') : '-' }}</span>
+                    </div>
+                </div>
+                <div class="px-5 py-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <p class="text-sm font-bold text-gray-900">{{ $sub->plan->name ?? 'Unknown Plan' }}</p>
+                            <p class="text-[11px] text-gray-500">{{ ucfirst($sub->plan->billing_cycle ?? 'monthly') }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-bold text-gray-900">TZS {{ number_format($sub->amount) }}</p>
+                        </div>
+                    </div>
+                    <div class="space-y-2 pt-3 border-t border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] text-gray-400">Organization</span>
+                            <span class="text-xs font-medium text-gray-700">{{ $sub->organization->business_name ?? '-' }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] text-gray-400">Owner</span>
+                            <span class="text-xs font-medium text-gray-700">{{ $sub->organization->owner->full_name ?? '-' }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] text-gray-400">Period</span>
+                            <span class="text-xs text-gray-600">{{ $sub->start_date ? $sub->start_date->format('d M Y') : '-' }} → {{ $sub->end_date ? $sub->end_date->format('d M Y') : '-' }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] text-gray-400">Payment Ref</span>
+                            <span class="text-xs font-medium text-gray-700">{{ $sub->payment_reference ?? '-' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @empty
+            <div class="col-span-full bg-white rounded-xl border p-8 text-center text-gray-400 text-xs">No subscriptions yet</div>
+            @endforelse
+        </div>
+        <div class="mt-4 text-xs">
+            {{ $subscriptions->links() }}
+        </div>
     </div>
 </div>
 
@@ -163,3 +176,24 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function toggleSubs() {
+    const content = document.getElementById('subsContent');
+    const chevron = document.getElementById('subsChevron');
+    const toggle = document.getElementById('subsToggle');
+    const subtitle = toggle.querySelector('p');
+
+    if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        chevron.style.transform = 'rotate(180deg)';
+        subtitle.textContent = subtitle.textContent.replace('Click to expand', 'Click to collapse');
+    } else {
+        content.classList.add('hidden');
+        chevron.style.transform = 'rotate(0deg)';
+        subtitle.textContent = subtitle.textContent.replace('Click to collapse', 'Click to expand');
+    }
+}
+</script>
+@endpush

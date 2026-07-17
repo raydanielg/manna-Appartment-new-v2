@@ -145,7 +145,7 @@ class TenantDetailScreen extends ConsumerWidget {
             decoration: BoxDecoration(color: isDark ? const Color(0xFF1E293B) : Colors.white, borderRadius: BorderRadius.circular(16)),
             child: Column(
               children: payments.asMap().entries.map((entry) {
-                final payment = entry.value as Map<String, dynamic>;
+                final payment = entry.value is Map<String, dynamic> ? entry.value as Map<String, dynamic> : <String, dynamic>{};
                 final index = entry.key;
                 return Column(
                   children: [
@@ -156,7 +156,7 @@ class TenantDetailScreen extends ConsumerWidget {
                         child: const Icon(Icons.check, size: 14, color: AppColors.success),
                       ),
                       title: Text(
-                        'TZS ${(payment['amount'] is num ? (payment['amount'] as num) : double.tryParse(payment['amount']?.toString() ?? '0') ?? 0).toDouble().toStringAsFixed(0)}',
+                        'TZS ${_parseAmount(payment['amount']).toStringAsFixed(0)}',
                         style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark),
                       ),
                       subtitle: Text(
