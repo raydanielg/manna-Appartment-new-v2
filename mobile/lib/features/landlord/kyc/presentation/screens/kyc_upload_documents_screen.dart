@@ -115,8 +115,36 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
                   style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textLight),
                 ),
                 const SizedBox(height: 24),
+                if (kycState.error != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            kycState.error!,
+                            style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => ref.read(kycProvider.notifier).clearError(),
+                          child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 18),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 TextField(
                   controller: _idController,
+                  onTap: () => ref.read(kycProvider.notifier).clearError(),
                   decoration: InputDecoration(
                     labelText: 'ID / NIDA Number',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -131,15 +159,6 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
                 const SizedBox(height: 12),
                 _buildPhotoCard('Ownership Proof (optional)', _ownershipProof, () => _pickImage(ImageSource.gallery, (f) => setState(() => _ownershipProof = f))),
                 const SizedBox(height: 24),
-                if (kycState.error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Text(
-                      kycState.error!,
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
                 ElevatedButton.icon(
                   onPressed: kycState.isLoading ? null : _submit,
                   icon: kycState.isLoading

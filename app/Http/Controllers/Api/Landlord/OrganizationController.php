@@ -18,12 +18,18 @@ class OrganizationController extends Controller
     public function show()
     {
         $organization = Auth::user()->organization;
+        if (!$organization) {
+            return $this->error('No organization found for this account.', null, 400);
+        }
         return $this->success('Organization retrieved.', $organization);
     }
 
     public function update(Request $request)
     {
         $organization = Auth::user()->organization;
+        if (!$organization) {
+            return $this->error('No organization found for this account.', null, 400);
+        }
         $organization->update($request->only(['business_name']));
         return $this->success('Organization updated.', $organization);
     }
@@ -31,6 +37,9 @@ class OrganizationController extends Controller
     public function usage()
     {
         $organization = Auth::user()->organization;
+        if (!$organization) {
+            return $this->error('No organization found for this account.', null, 400);
+        }
         $plan = optional($organization->subscription)->plan;
 
         return $this->success('Usage retrieved.', [
@@ -89,6 +98,12 @@ class OrganizationController extends Controller
     public function kycStatus()
     {
         $organization = Auth::user()->organization;
+        if (!$organization) {
+            return $this->success('KYC status retrieved.', [
+                'kyc_status' => 'pending',
+                'documents' => null,
+            ]);
+        }
         $kyc = KycDocument::where('organization_id', $organization->id)->first();
 
         return $this->success('KYC status retrieved.', [
