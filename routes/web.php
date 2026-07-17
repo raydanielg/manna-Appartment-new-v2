@@ -75,6 +75,8 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     Route::put('/plans/{id}', [PlanController::class, 'update'])->name('plans.update');
     Route::delete('/plans/{id}', [PlanController::class, 'destroy'])->name('plans.destroy');
     Route::get('/revenue', [RevenueController::class, 'index'])->name('revenue');
+    Route::get('/payment-transactions', [\App\Http\Controllers\Admin\PaymentTransactionController::class, 'index'])->name('payment-transactions');
+    Route::get('/payment-transactions/{id}', [\App\Http\Controllers\Admin\PaymentTransactionController::class, 'show'])->name('payment-transactions.show');
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
     Route::get('/sms-logs', [SmsLogController::class, 'index'])->name('sms_logs');
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
