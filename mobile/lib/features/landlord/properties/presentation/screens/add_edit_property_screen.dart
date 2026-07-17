@@ -228,7 +228,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
@@ -268,7 +268,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
               return Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                     child: Image.file(
                       File(path),
                       width: 96,
@@ -298,7 +298,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
                 height: 96,
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF26334D) : Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: isDark ? Colors.white24 : Colors.grey.shade300),
                 ),
                 child: Column(

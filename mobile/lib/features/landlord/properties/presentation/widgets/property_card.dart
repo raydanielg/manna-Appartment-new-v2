@@ -21,17 +21,11 @@ class PropertyCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         onTap: () => context.push('/landlord/properties/${property.id}'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,7 +33,7 @@ class PropertyCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
                   child: Container(
                     height: 140,
                     width: double.infinity,
@@ -60,7 +54,7 @@ class PropertyCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: isFullyOccupied ? Colors.green : (vacant > 0 ? Colors.orange : Colors.grey),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       isFullyOccupied ? 'Fully Occupied' : (vacant > 0 ? '$vacant Vacant' : 'No Units'),

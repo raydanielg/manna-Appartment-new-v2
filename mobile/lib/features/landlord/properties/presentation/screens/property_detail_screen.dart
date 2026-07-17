@@ -98,7 +98,7 @@ class PropertyDetailScreen extends ConsumerWidget {
         height: 180,
         decoration: BoxDecoration(
           gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: const Center(child: Icon(Icons.apartment, size: 64, color: Colors.white70)),
       );
@@ -108,7 +108,7 @@ class PropertyDetailScreen extends ConsumerWidget {
       child: PageView.builder(
         itemCount: images.length,
         itemBuilder: (context, index) => ClipRRect(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(8),
           child: Image.network(
             images[index],
             fit: BoxFit.cover,

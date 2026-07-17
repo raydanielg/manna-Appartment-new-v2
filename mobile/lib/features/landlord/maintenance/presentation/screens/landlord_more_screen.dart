@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/config/app_config.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
 import '../../../../../features/landlord/subscription/providers/subscription_provider.dart';
 
@@ -24,7 +25,7 @@ class LandlordMoreScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildProfileHeader(context, user?.fullName ?? 'Landlord', user?.phone ?? ''),
+          _buildProfileHeader(context, user?.fullName ?? 'Landlord', user?.phone ?? '', user?.avatar),
           const SizedBox(height: 20),
           planAsync.when(
             loading: () => const SizedBox(),
@@ -33,12 +34,12 @@ class LandlordMoreScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
           _buildSectionTitle(context, 'Management'),
-          _buildMenuItem(context, icon: Icons.apartment, title: 'Properties', subtitle: 'Manage your properties & units', onTap: () => context.push('/landlord/properties')),
-          _buildMenuItem(context, icon: Icons.people, title: 'Tenants', subtitle: 'View and manage tenants', onTap: () => context.push('/landlord/tenants')),
-          _buildMenuItem(context, icon: Icons.description_outlined, title: 'Contracts', subtitle: 'View and create contracts', onTap: () => context.push('/landlord/contracts')),
-          _buildMenuItem(context, icon: Icons.payments, title: 'Payments', subtitle: 'Record and view payments', onTap: () => context.push('/landlord/payments')),
-          _buildMenuItem(context, icon: Icons.sms_outlined, title: 'SMS Broadcast', subtitle: 'Send reminders and messages', onTap: () => context.push('/landlord/sms')),
-          _buildMenuItem(context, icon: Icons.build_outlined, title: 'Maintenance', subtitle: 'Respond to tenant requests', onTap: () => context.push('/landlord/maintenance')),
+          _buildMenuItem(context, icon: Icons.apartment, customIcon: 'assets/icons/propertiesicon.png', title: 'Properties', subtitle: 'Manage your properties & units', onTap: () => context.push('/landlord/properties')),
+          _buildMenuItem(context, icon: Icons.people, customIcon: 'assets/icons/tenantsicon.png', title: 'Tenants', subtitle: 'View and manage tenants', onTap: () => context.push('/landlord/tenants')),
+          _buildMenuItem(context, icon: Icons.description_outlined, customIcon: 'assets/icons/contracts.png', title: 'Contracts', subtitle: 'View and create contracts', onTap: () => context.push('/landlord/contracts')),
+          _buildMenuItem(context, icon: Icons.payments, customIcon: 'assets/icons/incomeicon.png', title: 'Payments', subtitle: 'Record and view payments', onTap: () => context.push('/landlord/payments')),
+          _buildMenuItem(context, icon: Icons.sms_outlined, customIcon: 'assets/icons/sms.png', title: 'SMS Broadcast', subtitle: 'Send reminders and messages', onTap: () => context.push('/landlord/sms')),
+          _buildMenuItem(context, icon: Icons.build_outlined, customIcon: 'assets/icons/maintainance.png', title: 'Maintenance', subtitle: 'Respond to tenant requests', onTap: () => context.push('/landlord/maintenance')),
           if (user?.role == 'super_admin') ...[
             const SizedBox(height: 20),
             _buildSectionTitle(context, 'Admin'),
@@ -116,14 +117,13 @@ class LandlordMoreScreen extends ConsumerWidget {
 
   bool _isLoggingOut = false;
 
-  Widget _buildProfileHeader(BuildContext context, String name, String phone) {
+  Widget _buildProfileHeader(BuildContext context, String name, String phone, String? avatarUrl) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: const LinearGradient(colors: [AppColors.primary, AppColors.info]),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6))],
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
@@ -134,11 +134,20 @@ class LandlordMoreScreen extends ConsumerWidget {
               color: Colors.white.withValues(alpha: 0.25),
               shape: BoxShape.circle,
             ),
-            child: Center(
-              child: Text(
-                name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'L',
-                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: Colors.white),
-              ),
+            child: ClipOval(
+              child: avatarUrl != null && avatarUrl.isNotEmpty
+                  ? Image.network(
+                      avatarUrl.startsWith('http') ? avatarUrl : '${AppConfig.apiBaseUrl.replaceAll(RegExp(r'/api/?$'), '')}/$avatarUrl',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Image.asset('assets/icons/avatar.png'),
+                      ),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Image.asset('assets/icons/avatar.png'),
+                    ),
             ),
           ),
           const SizedBox(width: 16),
@@ -227,6 +236,7 @@ class LandlordMoreScreen extends ConsumerWidget {
   Widget _buildMenuItem(
     BuildContext context, {
     required IconData icon,
+    String? customIcon,
     required String title,
     required String subtitle,
     Color? color,
@@ -238,13 +248,16 @@ class LandlordMoreScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
       ),
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: iconColor.withValues(alpha: isDark ? 0.15 : 0.1), borderRadius: BorderRadius.circular(12)),
-          child: Icon(icon, color: iconColor),
+          decoration: BoxDecoration(color: iconColor.withValues(alpha: isDark ? 0.15 : 0.1), borderRadius: BorderRadius.circular(8)),
+          child: customIcon != null
+              ? Image.asset(customIcon, width: 20, height: 20, errorBuilder: (_, __, ___) => Icon(icon, color: iconColor))
+              : Icon(icon, color: iconColor),
         ),
         title: Text(title, style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: color ?? (isDark ? Colors.white : AppColors.textDark))),
         subtitle: Text(subtitle, style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
