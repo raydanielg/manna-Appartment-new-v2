@@ -24,24 +24,41 @@ class StaffManagementController extends Controller
     {
         $request->validate([
             'full_name' => 'required|string|max:255',
-            'phone' => 'required|string|unique:users,phone',
+            'phone' => 'required|string',
             'permissions_json' => 'required|array',
         ]);
 
+        $user = User::withoutGlobalScope('organization')
+            ->where('phone', $request->phone)
+            ->first();
+
         $password = Str::random(8);
 
-        $staff = User::create([
-            'full_name' => $request->full_name,
-            'phone' => $request->phone,
-            'password' => Hash::make($password),
-            'role' => 'staff',
-            'status' => 'active',
-        ]);
+        if ($user) {
+            if ($user->organization_id && $user->organization_id !== auth()->user()->organization_id) {
+                return $this->error('This phone number is already registered to another organization.', 422);
+            }
 
-        StaffPermission::create([
-            'staff_user_id' => $staff->id,
-            'permissions_json' => $request->permissions_json,
-        ]);
+            $user->update([
+                'role' => 'staff',
+                'organization_id' => auth()->user()->organization_id,
+            ]);
+            $staff = $user;
+        } else {
+            $staff = User::create([
+                'full_name' => $request->full_name,
+                'phone' => $request->phone,
+                'password' => Hash::make($password),
+                'role' => 'staff',
+                'status' => 'active',
+                'organization_id' => auth()->user()->organization_id,
+            ]);
+        }
+
+        StaffPermission::updateOrCreate(
+            ['staff_user_id' => $staff->id],
+            ['permissions_json' => $request->permissions_json]
+        );
 
         // TODO: dispatch SMS with credentials
         return $this->success('Staff created. Credentials sent via SMS.', [

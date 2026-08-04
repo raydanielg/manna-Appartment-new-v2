@@ -28,23 +28,60 @@ class TenantController extends Controller
     {
         $request->validate([
             'full_name' => 'required|string|max:255',
-            'phone' => 'required|string|unique:users,phone',
+            'phone' => 'required|string',
             'unit_id' => 'required|uuid|exists:units,id',
             'id_number' => 'nullable|string',
             'emergency_contact' => 'nullable|string',
             'moved_in_date' => 'required|date',
         ]);
 
+        $user = User::withoutGlobalScope('organization')
+            ->where('phone', $request->phone)
+            ->first();
+
         $password = Str::random(8);
 
-        $user = User::create([
-            'full_name' => $request->full_name,
-            'phone' => $request->phone,
-            'password' => Hash::make($password),
-            'role' => 'tenant',
-            'status' => 'active',
-            'must_change_password' => true,
-        ]);
+        if ($user) {
+            // Check if this unit already has an active tenant
+            $activeTenantInUnit = Tenant::where('unit_id', $request->unit_id)
+                ->where('status', 'active')
+                ->first();
+
+            if ($activeTenantInUnit) {
+                return $this->error('This unit already has an active tenant.', 422);
+            }
+
+            // Check if this user is already active in THIS specific unit
+            $alreadyInThisUnit = Tenant::where('user_id', $user->id)
+                ->where('unit_id', $request->unit_id)
+                ->where('status', 'active')
+                ->first();
+
+            if ($alreadyInThisUnit) {
+                return $this->error('This user is already an active tenant in this unit.', 422);
+            }
+
+            // If user belongs to another organization, we cannot reuse them due to global unique constraint on phone
+            if ($user->organization_id && $user->organization_id !== Auth::user()->organization_id) {
+                return $this->error('This phone number is already registered to another user/organization.', 422);
+            }
+
+            // Update user to ensure they have the tenant role and correct organization if it was null
+            $user->update([
+                'role' => 'tenant',
+                'organization_id' => Auth::user()->organization_id,
+            ]);
+        } else {
+            $user = User::create([
+                'full_name' => $request->full_name,
+                'phone' => $request->phone,
+                'password' => Hash::make($password),
+                'role' => 'tenant',
+                'status' => 'active',
+                'organization_id' => Auth::user()->organization_id,
+                'must_change_password' => true,
+            ]);
+        }
 
         $unit = Unit::findOrFail($request->unit_id);
         $unit->update(['status' => 'occupied']);

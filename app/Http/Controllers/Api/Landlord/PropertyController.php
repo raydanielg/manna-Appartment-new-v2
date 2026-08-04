@@ -104,6 +104,13 @@ class PropertyController extends Controller
     public function destroy($id)
     {
         $property = $this->organizationQuery()->findOrFail($id);
+        
+        // Optionally: Check if there are active tenants before deleting
+        $hasActiveTenants = $property->units()->whereHas('activeTenant')->exists();
+        if ($hasActiveTenants) {
+            return $this->error('Cannot delete property with active tenants. Please move out tenants first.', null, 422);
+        }
+
         $property->delete();
         return $this->success('Property deleted.');
     }

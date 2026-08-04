@@ -48,7 +48,17 @@ class Unit extends Model
 
     public function tenant()
     {
-        return $this->hasOne(Tenant::class, 'unit_id');
+        return $this->hasOne(Tenant::class, 'unit_id')->where('status', 'active');
+    }
+
+    public function activeTenant()
+    {
+        return $this->hasOne(Tenant::class, 'unit_id')->where('status', 'active');
+    }
+
+    public function tenancies()
+    {
+        return $this->hasMany(Tenant::class, 'unit_id');
     }
 
     public function contracts()

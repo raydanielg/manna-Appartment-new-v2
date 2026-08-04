@@ -18,6 +18,7 @@ class LandlordDashboardController extends Controller
     {
         $propertiesCount = Property::count();
         $tenantsCount = Tenant::where('status', 'active')->count();
+        $vacantUnitsCount = \App\Models\Unit::where('status', 'vacant')->count();
 
         $monthIncome = Payment::where('status', 'confirmed')
             ->whereMonth('payment_date', now()->month)
@@ -31,7 +32,6 @@ class LandlordDashboardController extends Controller
         $monthlyIncome = collect();
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
-            $monthKey = $date->format('Y-m');
             $monthLabel = $date->format('M');
 
             $amount = Payment::where('status', 'confirmed')
@@ -45,35 +45,40 @@ class LandlordDashboardController extends Controller
             ]);
         }
 
-        $recentPayments = Payment::with('tenant.user')
+        $recentPayments = Payment::with(['tenant.user', 'tenant.unit'])
             ->where('status', 'confirmed')
             ->latest('payment_date')
             ->limit(3)
             ->get()
             ->map(fn ($p) => [
-                'title' => ($p->tenant?->user?->full_name ?? 'Unknown') . ' paid',
-                'subtitle' => number_format($p->amount, 0, '.', ',') . ' TZS',
+                'type' => 'payment',
+                'title' => ($p->tenant?->user?->full_name ?? 'Unknown') . ' - ' . ($p->tenant?->unit?->name ?? 'N/A'),
+                'subtitle' => number_format($p->amount, 0, '.', ',') . ' TZS (' . ($p->payment_type ?? 'Rent') . ')',
                 'status' => 'success',
+                'date' => $p->payment_date->format('d M, Y'),
             ]);
 
-        $recentMaintenance = MaintenanceRequest::with('tenant.user')
+        $recentMaintenance = MaintenanceRequest::with(['tenant.user', 'unit'])
             ->latest()
             ->limit(2)
             ->get()
             ->map(fn ($m) => [
-                'title' => 'Maintenance request',
+                'type' => 'maintenance',
+                'title' => 'Maintenance: ' . ($m->unit?->name ?? 'N/A'),
                 'subtitle' => $m->tenant?->user?->full_name ?? 'Unknown',
-                'status' => $m->status === 'resolved' ? 'success' : 'warning',
+                'status' => $m->status === 'resolved' ? 'success' : ($m->status === 'pending' ? 'danger' : 'warning'),
+                'date' => $m->created_at->format('d M, Y'),
             ]);
 
         $recentActivity = $recentPayments->concat($recentMaintenance)
-            ->sortByDesc(fn () => now())
+            ->sortByDesc('date')
             ->take(5)
             ->values();
 
         return $this->success('Dashboard data retrieved.', [
             'properties_count' => $propertiesCount,
             'tenants_count' => $tenantsCount,
+            'vacant_units_count' => $vacantUnitsCount,
             'month_income' => (float) $monthIncome,
             'outstanding' => (float) $outstanding,
             'monthly_income' => $monthlyIncome,
