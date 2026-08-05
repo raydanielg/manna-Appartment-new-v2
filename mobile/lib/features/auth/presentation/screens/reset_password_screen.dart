@@ -143,7 +143,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               TextField(
                 controller: _passwordController,
                 obscureText: _obscure,
-                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600),
+                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
                 decoration: _buildInputDecoration(
                   hint: 'Enter new password',
                   suffix: IconButton(
@@ -162,7 +162,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               TextField(
                 controller: _confirmController,
                 obscureText: _obscureConfirm,
-                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600),
+                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
                 onSubmitted: (_) => _resetPassword(),
                 decoration: _buildInputDecoration(
                   hint: 'Confirm new password',
@@ -182,10 +182,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: authState.isLoading ? null : _resetPassword,
+                  onPressed: authState.isLoading ? () {} : _resetPassword,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AuthColors.primary,
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor: AuthColors.primary,
+                    disabledForegroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

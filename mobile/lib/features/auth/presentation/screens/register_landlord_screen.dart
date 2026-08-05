@@ -183,10 +183,12 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: authState.isLoading ? null : _register,
+                    onPressed: authState.isLoading ? () {} : _register,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AuthColors.primary,
                       foregroundColor: Colors.white,
+                      disabledBackgroundColor: AuthColors.primary,
+                      disabledForegroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

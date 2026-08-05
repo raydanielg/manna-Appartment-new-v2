@@ -69,9 +69,10 @@
             </div>
 
             {{-- Submit --}}
-            <button type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center gap-2">
-                <span>Sign In</span>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            <button type="submit" id="btn-login" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center gap-2 disabled:bg-blue-600 disabled:opacity-80 disabled:cursor-not-allowed">
+                <span id="btn-text">Sign In</span>
+                <svg id="login-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                <svg id="login-spinner" class="hidden w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             </button>
         </form>
     </div>
@@ -82,14 +83,24 @@
 </div>
 
 <script>
+    const loginForm = document.querySelector('form');
+    const loginBtn = document.getElementById('btn-login');
+    const loginIcon = document.getElementById('login-icon');
+    const loginSpinner = document.getElementById('login-spinner');
+    const btnText = document.getElementById('btn-text');
     const phoneInput = document.getElementById('phone');
     
+    loginForm.addEventListener('submit', () => {
+        btnText.textContent = 'Signing in...';
+        loginIcon.classList.add('hidden');
+        loginSpinner.classList.remove('hidden');
+        loginBtn.disabled = true;
+    });
+
     phoneInput.addEventListener('input', () => {
         let val = phoneInput.value.replace(/\D/g, '');
         if (val.length > 9) val = val.slice(0, 9);
         phoneInput.value = val;
     });
-
-    // Simple Tanzanian phone formatting as user types if needed, but keeping it flat for now as requested
 </script>
 @endsection

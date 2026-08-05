@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:alt_sms_autofill/alt_sms_autofill.dart';
 import '../../../../core/widgets/auth_background.dart';
 import '../../providers/auth_provider.dart';
 
@@ -17,9 +18,38 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   String _phone = '';
+  String? _comingSms;
+
+  @override
+  void initState() {
+    super.initState();
+    _initSmsListener();
+  }
+
+  Future<void> _initSmsListener() async {
+    try {
+      _comingSms = await AltSmsAutofill().listenForSms;
+      if (_comingSms != null && mounted) {
+        // Extract 6 digit code from SMS body
+        final regExp = RegExp(r'\d{6}');
+        final match = regExp.firstMatch(_comingSms!);
+        if (match != null) {
+          final otp = match.group(0)!;
+          for (int i = 0; i < 6; i++) {
+            _controllers[i].text = otp[i];
+          }
+          // Auto verify after auto-fill
+          _verify();
+        }
+      }
+    } catch (e) {
+      debugPrint('SMS Autofill error: $e');
+    }
+  }
 
   @override
   void dispose() {
+    AltSmsAutofill().unregisterListener();
     for (final c in _controllers) {
       c.dispose();
     }
@@ -187,16 +217,43 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                   );
                 }),
               ),
+              const SizedBox(height: 12),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        valueColor: AlwaysStoppedAnimation<Color>(AuthColors.primary.withValues(alpha: 0.5)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Waiting for SMS code...',
+                      style: GoogleFonts.nunito(
+                        fontSize: 12,
+                        color: const Color(0xFF9CA3AF),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               
-              const SizedBox(height: 40),
+              const SizedBox(height: 28),
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: authState.isLoading ? null : _verify,
+                  onPressed: authState.isLoading ? () {} : _verify,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AuthColors.primary,
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor: AuthColors.primary,
+                    disabledForegroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

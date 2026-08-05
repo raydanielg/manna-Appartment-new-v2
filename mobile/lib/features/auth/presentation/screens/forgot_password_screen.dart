@@ -123,7 +123,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600),
+                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
                 onSubmitted: (_) => _sendOtp(),
                 decoration: InputDecoration(
                   hintText: '7XX XXX XXX',
@@ -154,10 +154,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: authState.isLoading ? null : _sendOtp,
+                  onPressed: authState.isLoading ? () {} : _sendOtp,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AuthColors.primary,
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor: AuthColors.primary,
+                    disabledForegroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

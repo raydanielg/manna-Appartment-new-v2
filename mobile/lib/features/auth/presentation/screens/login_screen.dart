@@ -141,7 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600),
+                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
                 decoration: _buildInputDecoration(
                   hint: '7XX XXX XXX',
                   prefix: Padding(
@@ -157,7 +157,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600),
+                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
                 decoration: _buildInputDecoration(
                   hint: 'Enter your password',
                   suffix: IconButton(
@@ -196,10 +196,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: authState.isLoading ? null : _login,
+                  onPressed: authState.isLoading ? () {} : _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AuthColors.primary,
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor: AuthColors.primary,
+                    disabledForegroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
