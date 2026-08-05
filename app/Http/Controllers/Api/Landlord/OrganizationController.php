@@ -17,7 +17,9 @@ class OrganizationController extends Controller
 
     public function show()
     {
-        $organization = Auth::user()->organization;
+        $user = Auth::user();
+        $organization = Organization::find($user->organization_id);
+        
         if (!$organization) {
             return $this->error('No organization found for this account.', null, 400);
         }
@@ -31,7 +33,9 @@ class OrganizationController extends Controller
         ]);
 
         $user = Auth::user();
-        if ($user->organization_id) {
+        
+        // Check if organization actually exists in DB
+        if ($user->organization_id && Organization::where('id', $user->organization_id)->exists()) {
             return $this->error('User already has an organization.', null, 400);
         }
 
@@ -50,7 +54,9 @@ class OrganizationController extends Controller
 
     public function update(Request $request)
     {
-        $organization = Auth::user()->organization;
+        $user = Auth::user();
+        $organization = Organization::find($user->organization_id);
+
         if (!$organization) {
             return $this->error('No organization found for this account.', null, 400);
         }
@@ -60,7 +66,8 @@ class OrganizationController extends Controller
 
     public function usage()
     {
-        $organization = Auth::user()->organization;
+        $user = Auth::user();
+        $organization = Organization::find($user->organization_id);
         if (!$organization) {
             return $this->error('No organization found for this account.', null, 400);
         }
@@ -87,7 +94,8 @@ class OrganizationController extends Controller
             'ownership_proof' => 'nullable|mimes:jpg,png,pdf|max:5120',
         ]);
 
-        $organization = Auth::user()->organization;
+        $user = Auth::user();
+        $organization = Organization::find($user->organization_id);
 
         if (!$organization) {
             return $this->error('No organization found for this account.', null, 400);
@@ -121,7 +129,8 @@ class OrganizationController extends Controller
 
     public function kycStatus()
     {
-        $organization = Auth::user()->organization;
+        $user = Auth::user();
+        $organization = Organization::find($user->organization_id);
         if (!$organization) {
             return $this->success('KYC status retrieved.', [
                 'kyc_status' => 'pending',
