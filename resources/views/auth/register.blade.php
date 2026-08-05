@@ -3,116 +3,134 @@
 @section('title', 'Register as Landlord - Manna Apartment')
 
 @section('content')
-<div class="w-full max-w-md" style="animation: simpleFadeIn 0.4s ease-out both;">
-    <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-        {{-- Header --}}
-        <div class="bg-gradient-to-br from-emerald-600 to-emerald-700 px-8 py-8 text-center relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10"></div>
-            <div class="absolute bottom-0 left-0 w-24 h-24 bg-gold-400/20 rounded-full -ml-10 -mb-10"></div>
-            <div class="w-20 h-20 mx-auto bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 overflow-hidden">
-                <img src="{{ asset('file_000000001cdc7230acd3b9659475e375.png') }}" alt="Manna Apartment" class="w-16 h-16 object-cover rounded-2xl">
+<div class="w-full max-w-[480px] relative z-10" style="animation: simpleFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        {{-- Logo & Header --}}
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-xl mb-6">
+                <img src="{{ asset('file_000000001cdc7230acd3b9659475e375.png') }}" alt="Manna Apartment" class="w-12 h-12 object-cover rounded-lg">
             </div>
-            <h2 class="text-2xl font-extrabold text-white relative z-10">Register as Landlord</h2>
-            <p class="text-emerald-100 text-sm mt-1 relative z-10">Create your landlord account</p>
+            <h2 class="text-2xl font-extrabold text-gray-900">Create Account</h2>
+            <p class="text-gray-500 text-sm mt-2 font-medium">Join Manna Apartment as a landlord.</p>
         </div>
 
-        {{-- Form --}}
-        <div class="p-8">
-            <form method="POST" action="{{ route('register') }}" class="space-y-5">
-                @csrf
+        <form method="POST" action="{{ route('register') }}" class="space-y-5">
+            @csrf
 
-                <div>
-                    <label for="name" class="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        </div>
-                        <input id="name" type="text" name="name" value="{{ old('name') }}" required autocomplete="name" autofocus
-                            class="w-full pl-11 pr-4 py-2.5 rounded-lg border @error('name') border-red-300 ring-2 ring-red-100 @else border-gray-200 @enderror focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all text-sm"
-                            placeholder="John Doe">
+            {{-- Full Name --}}
+            <div class="space-y-2">
+                <label for="name" class="text-sm font-bold text-gray-700 ml-1">Full Name</label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     </div>
-                    @error('name')
-                        <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>{{ $message }}</p>
-                    @enderror
+                    <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus
+                        class="block w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-semibold"
+                        placeholder="John Doe">
                 </div>
+                @error('name')
+                    <p class="text-xs font-semibold text-red-500 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
 
-                <div>
-                    <label for="phone" class="block text-sm font-semibold text-gray-700 mb-1.5">Phone Number</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none gap-2">
-                            <svg class="w-6 h-4 rounded-sm shadow-sm" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
-                                <rect width="900" height="600" fill="#00a3dd"/>
-                                <path d="M0 600 L900 0 L900 600 Z" fill="#1eb53a"/>
-                                <path d="M0 600 L900 0" stroke="#000" stroke-width="140"/>
-                                <path d="M0 600 L900 0" stroke="#fcd116" stroke-width="100"/>
-                            </svg>
-                            <span class="text-sm text-gray-500 font-medium">+255</span>
-                            <span class="text-gray-300">|</span>
-                        </div>
-                        <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" required autocomplete="tel"
-                            class="w-full pl-[6.5rem] pr-4 py-2.5 rounded-lg border @error('phone') border-red-300 ring-2 ring-red-100 @else border-gray-200 @enderror focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all text-sm tracking-wide"
-                            placeholder="6XX XXX XXX">
+            {{-- Phone Number --}}
+            <div class="space-y-2">
+                <label for="phone" class="text-sm font-bold text-gray-700 ml-1">Phone Number</label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <span class="text-sm font-bold text-gray-400 group-focus-within:text-blue-500 transition-colors">+255</span>
+                        <div class="h-4 w-px bg-gray-200 mx-2 group-focus-within:bg-blue-200"></div>
                     </div>
-                    @error('phone')
-                        <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>{{ $message }}</p>
-                    @enderror
+                    <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" required
+                        maxlength="9"
+                        class="block w-full pl-[4.5rem] pr-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-semibold"
+                        placeholder="7XX XXX XXX">
                 </div>
+                @error('phone')
+                    <p class="text-xs font-semibold text-red-500 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
 
-                <div>
-                    <label for="email" class="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
-                        </div>
-                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email"
-                            class="w-full pl-11 pr-4 py-2.5 rounded-lg border @error('email') border-red-300 ring-2 ring-red-100 @else border-gray-200 @enderror focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all text-sm"
-                            placeholder="you@example.com">
+            {{-- Email --}}
+            <div class="space-y-2">
+                <label for="email" class="text-sm font-bold text-gray-700 ml-1">Email Address</label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
                     </div>
-                    @error('email')
-                        <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>{{ $message }}</p>
-                    @enderror
+                    <input id="email" type="email" name="email" value="{{ old('email') }}" required
+                        class="block w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-semibold"
+                        placeholder="you@example.com">
                 </div>
+                @error('email')
+                    <p class="text-xs font-semibold text-red-500 mt-1 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
 
-                <div>
-                    <label for="password" class="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        </div>
-                        <input id="password" type="password" name="password" required autocomplete="new-password"
-                            class="w-full pl-11 pr-4 py-2.5 rounded-lg border @error('password') border-red-300 ring-2 ring-red-100 @else border-gray-200 @enderror focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all text-sm"
-                            placeholder="Enter your password">
-                    </div>
-                    @error('password')
-                        <p class="mt-1.5 text-sm text-red-600 flex items-center gap-1"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="password-confirm" class="block text-sm font-semibold text-gray-700 mb-1.5">Confirm Password</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        </div>
-                        <input id="password-confirm" type="password" name="password_confirmation" required autocomplete="new-password"
-                            class="w-full pl-11 pr-4 py-2.5 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all text-sm"
-                            placeholder="Confirm your password">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{-- Password --}}
+                <div class="space-y-2">
+                    <label for="password" class="text-sm font-bold text-gray-700 ml-1">Password</label>
+                    <div class="relative group">
+                        <input id="password" type="password" name="password" required
+                            class="block w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-semibold"
+                            placeholder="••••••••">
                     </div>
                 </div>
 
-                <button type="submit" class="w-full py-3 text-sm font-bold text-gray-900 bg-gradient-to-r from-gold-300 to-gold-400 hover:from-gold-400 hover:to-gold-500 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                    Register
-                </button>
-            </form>
+                {{-- Confirm Password --}}
+                <div class="space-y-2">
+                    <label for="password-confirm" class="text-sm font-bold text-gray-700 ml-1">Confirm</label>
+                    <div class="relative group">
+                        <input id="password-confirm" type="password" name="password_confirmation" required
+                            class="block w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-semibold"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+            </div>
+            @error('password')
+                <p class="text-xs font-semibold text-red-500 mt-1 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    {{ $message }}
+                </p>
+            @enderror
 
-            <p class="mt-6 text-center text-sm text-gray-500">
+            {{-- Submit --}}
+            <button type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center gap-2">
+                <span>Create Account</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            </button>
+        </form>
+
+        <div class="mt-8 text-center border-t border-gray-100 pt-6">
+            <p class="text-sm text-gray-500 font-medium">
                 Already have an account?
-                <a href="{{ route('login') }}" class="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">Sign in</a>
+                <a href="{{ route('login') }}" class="font-bold text-blue-600 hover:text-blue-700 ml-1">Sign in</a>
             </p>
         </div>
     </div>
 
-    <p class="mt-6 text-center text-xs text-gray-400">&copy; {{ date('Y') }} Manna Apartment. All rights reserved.</p>
+    <div class="mt-8 text-center">
+        <p class="text-sm text-gray-400 font-medium">&copy; {{ date('Y') }} Manna Apartment. All rights reserved.</p>
+    </div>
 </div>
+
+<script>
+    const phoneInput = document.getElementById('phone');
+    
+    phoneInput.addEventListener('input', () => {
+        let val = phoneInput.value.replace(/\D/g, '');
+        if (val.length > 9) val = val.slice(0, 9);
+        phoneInput.value = val;
+    });
+</script>
 @endsection

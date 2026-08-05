@@ -19,8 +19,7 @@
             theme: {
                 extend: {
                     colors: {
-                        emerald: { 50:'#e6f5f1',100:'#b3e0d4',200:'#80cbc0',300:'#4db5a8',400:'#1a9f8e',500:'#024938',600:'#023d30',700:'#013028',800:'#01241f',900:'#001816' },
-                        gold: { 50:'#fff5e0',100:'#ffe6b3',200:'#ffd680',300:'#ffc64d',400:'#ffb71a',500:'#f9ac00',600:'#d49700',700:'#b07c00',800:'#8c6100',900:'#684600' }
+                        blue: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e40af',900:'#1e3a8a' },
                     }
                 }
             }
@@ -34,12 +33,12 @@
         @keyframes ajaxProgress { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
         .toast-in { animation: toastIn 0.4s cubic-bezier(0.16,1,0.3,1) both; }
         .toast-out { animation: toastOut 0.3s ease-in both; }
-        .ajax-loader { position:fixed; top:0; left:0; right:0; height:3px; background: linear-gradient(90deg, #024938, #f9ac00, #024938); background-size: 200% 100%; animation: ajaxProgress 1s linear infinite; z-index:9999; display:none; }
+        .ajax-loader { position:fixed; top:0; left:0; right:0; height:3px; background: linear-gradient(90deg, #2563eb, #3b82f6, #2563eb); background-size: 200% 100%; animation: ajaxProgress 1s linear infinite; z-index:9999; display:none; }
         .page-transition { animation: simpleFadeIn 0.35s ease-out both; }
         .glass-card { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: #f0f0f0; }
-        ::-webkit-scrollbar-thumb { background: #024938; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 3px; }
     </style>
 </head>
 <body class="font-['Nunito',sans-serif] antialiased text-slate-800 min-h-screen">
@@ -48,11 +47,10 @@
     @include('partials.loading-screen')
 
     {{-- Auth Background --}}
-    <div class="fixed inset-0 z-0 bg-gradient-to-br from-gray-50 via-white to-emerald-50/30">
-        <div class="absolute inset-0" style="background-image: radial-gradient(rgba(2,73,56,0.18) 2px, transparent 2.5px); background-size: 18px 18px;"></div>
-        <div class="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-emerald-500/8 rounded-full blur-3xl"></div>
-        <div class="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-gold-500/8 rounded-full blur-3xl"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-400/5 rounded-full blur-3xl"></div>
+    <div class="fixed inset-0 z-0 bg-white">
+        <div class="absolute inset-0" style="background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 24px 24px;"></div>
+        <div class="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-600/5 rounded-full blur-3xl"></div>
     </div>
 
     {{-- AJAX Progress Bar --}}
