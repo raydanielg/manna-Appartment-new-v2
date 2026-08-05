@@ -10,7 +10,7 @@ return [
             'api_key' => env('NEXTSMS_API_KEY'),
             'from' => env('NEXTSMS_SENDER_ID', 'Manna'),
             'endpoints' => [
-                'send' => '/api/v2/sms/send',
+                'send' => '/api/sms/v2/text/single',
                 'balance' => '/api/v2/balance',
                 'logs' => '/api/v2/logs',
             ],

@@ -60,33 +60,45 @@ class SmsService
         $apiKey = $config['api_key'] ?? '';
         $from = $config['from'] ?? 'Manna';
         $baseUrl = $config['base_url'] ?? 'https://messaging-service.co.tz';
-        $sendEndpoint = $config['endpoints']['send'] ?? '/api/v2/sms/send';
+        $sendEndpoint = $config['endpoints']['send'] ?? '/api/sms/v2/text/single';
 
         if (empty($apiKey)) {
             Log::warning('NextSMS V2 API key not configured.');
             return false;
         }
 
-        $response = Http::withHeaders([
-            'Authorization' => "Bearer {$apiKey}",
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json',
-        ])->post("{$baseUrl}{$sendEndpoint}", [
-            'from' => $from,
-            'to' => $phone,
-            'text' => $message,
-        ]);
+        try {
+            $response = Http::withOptions([
+                'verify' => false,
+                'timeout' => 30,
+            ])->withHeaders([
+                'Authorization' => "Bearer {$apiKey}",
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->post("{$baseUrl}{$sendEndpoint}", [
+                'from' => $from,
+                'to' => $phone,
+                'text' => $message,
+            ]);
 
-        if ($response->successful()) {
-            Log::info("NextSMS V2 sent to {$phone}: {$message}");
-            return true;
+            if ($response->successful()) {
+                Log::info("NextSMS V2 sent to {$phone}: {$message}");
+                return true;
+            }
+
+            Log::error('NextSMS V2 API error: ' . $response->body(), [
+                'phone' => $phone,
+                'status' => $response->status(),
+                'endpoint' => "{$baseUrl}{$sendEndpoint}",
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            Log::error('NextSMS V2 API exception: ' . $e->getMessage(), [
+                'phone' => $phone,
+                'endpoint' => "{$baseUrl}{$sendEndpoint}",
+            ]);
+            return false;
         }
-
-        Log::error('NextSMS V2 API error: ' . $response->body(), [
-            'phone' => $phone,
-            'status' => $response->status(),
-        ]);
-        return false;
     }
 
     public function getBalance(): ?array
@@ -101,7 +113,10 @@ class SmsService
         }
 
         try {
-            $response = Http::withHeaders([
+            $response = Http::withOptions([
+                'verify' => false,
+                'timeout' => 15,
+            ])->withHeaders([
                 'Authorization' => "Bearer {$apiKey}",
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
@@ -131,7 +146,10 @@ class SmsService
         }
 
         try {
-            $response = Http::withHeaders([
+            $response = Http::withOptions([
+                'verify' => false,
+                'timeout' => 15,
+            ])->withHeaders([
                 'Authorization' => "Bearer {$apiKey}",
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
