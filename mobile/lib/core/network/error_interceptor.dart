@@ -3,8 +3,43 @@ import 'package:dio/dio.dart';
 class ErrorInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
+    // Handle network-level errors first (no server response)
+    if (err.response == null) {
+      String message;
+      switch (err.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.receiveTimeout:
+        case DioExceptionType.sendTimeout:
+          message = 'Connection timed out. Please check your internet and try again.';
+          break;
+        case DioExceptionType.connectionError:
+          message = 'Could not connect to server. Please check your internet connection.';
+          break;
+        case DioExceptionType.cancel:
+          message = 'Request was cancelled. Please try again.';
+          break;
+        case DioExceptionType.unknown:
+          message = 'Something went wrong. Please try again.';
+          break;
+        default:
+          message = 'Something went wrong. Please try again.';
+      }
+      err = err.copyWith(error: message);
+      handler.next(err);
+      return;
+    }
+
     String message = 'Something went wrong. Please try again.';
+    final statusCode = err.response?.statusCode;
     final data = err.response?.data;
+
+    // Handle server errors (5xx) with generic message
+    if (statusCode != null && statusCode >= 500) {
+      message = 'Server error. Please try again later.';
+      err = err.copyWith(error: message);
+      handler.next(err);
+      return;
+    }
 
     if (data is Map) {
       if (data['message'] is String && (data['message'] as String).isNotEmpty) {

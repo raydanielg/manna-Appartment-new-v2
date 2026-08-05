@@ -31,15 +31,17 @@ class AuthState {
   bool get isKycApproved => user == null || user!.role != 'landlord' || user!.kycStatus == 'approved';
   bool get isOrganizationActive => user == null || user!.role != 'landlord' || user!.organizationStatus == null || user!.organizationStatus == 'active';
 
+  static final _sentinel = Object();
+
   AuthState copyWith({
-    UserModel? user,
-    bool? isLoading,
-    String? error,
+    Object? user = _sentinel,
+    Object? isLoading = _sentinel,
+    Object? error = _sentinel,
   }) {
     return AuthState(
-      user: user ?? this.user,
-      isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      user: user == _sentinel ? this.user : user as UserModel?,
+      isLoading: isLoading == _sentinel ? this.isLoading : isLoading as bool,
+      error: error == _sentinel ? this.error : error as String?,
     );
   }
 }
@@ -245,20 +247,73 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   String _parseError(dynamic error) {
     if (error is DioException) {
+      // ErrorInterceptor already parsed a user-friendly message into error.error
+      if (error.error is String && (error.error as String).isNotEmpty) {
+        return error.error as String;
+      }
+
+      // Fallback: parse response data directly
       final data = error.response?.data;
       if (data is Map) {
         if (data['errors'] is Map) {
           final errors = data['errors'] as Map;
-          return errors.values
-              .expand((e) => e is List ? e.map((m) => m.toString()) : [e.toString()])
-              .join('\n');
+          final messages = <String>[];
+          errors.forEach((key, value) {
+            if (value is List) {
+              for (final msg in value) {
+                messages.add(msg.toString());
+              }
+            } else if (value is String) {
+              messages.add(value);
+            }
+          });
+          if (messages.isNotEmpty) return messages.join('\n');
         }
-        if (data['message'] != null) return data['message'].toString();
+        if (data['message'] is String && (data['message'] as String).isNotEmpty) {
+          return data['message'];
+        }
+        if (data['error'] is String && (data['error'] as String).isNotEmpty) {
+          return data['error'];
+        }
+      }
+
+      // Network error fallback
+      switch (error.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.receiveTimeout:
+        case DioExceptionType.sendTimeout:
+          return 'Connection timed out. Please check your internet and try again.';
+        case DioExceptionType.connectionError:
+          return 'Could not connect to server. Please check your internet connection.';
+        case DioExceptionType.cancel:
+          return 'Request was cancelled. Please try again.';
+        case DioExceptionType.badCertificate:
+          return 'Security certificate error. Please contact support.';
+        default:
+          break;
+      }
+
+      final statusCode = error.response?.statusCode;
+      if (statusCode != null && statusCode >= 500) {
+        return 'Server error. Please try again later.';
+      }
+      if (statusCode == 401) {
+        return 'Invalid phone number or password.';
+      }
+      if (statusCode == 403) {
+        return 'You do not have permission to perform this action.';
+      }
+      if (statusCode == 404) {
+        return 'Service not found. Please try again later.';
+      }
+      if (statusCode == 422) {
+        return 'The data provided is invalid. Please check your inputs.';
       }
     }
     if (error is Exception) {
-      return error.toString().replaceAll('Exception: ', '');
+      final msg = error.toString().replaceAll('Exception: ', '');
+      if (msg.isNotEmpty && msg != 'null') return msg;
     }
-    return error.toString();
+    return 'Something went wrong. Please try again.';
   }
 }

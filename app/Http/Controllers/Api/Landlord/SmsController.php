@@ -121,13 +121,33 @@ class SmsController extends Controller
 
     public function logs(Request $request)
     {
-        $logs = SmsLog::latest()->paginate($request->get('per_page', 20));
-        return $this->paginated($logs);
+        $filters = $request->only(['from', 'to', 'sentSince', 'sentUntil', 'offset', 'limit', 'reference']);
+        $smsService = app(SmsService::class);
+        $logs = $smsService->getLogs($filters);
+
+        if ($logs === null) {
+            return $this->error('Failed to fetch SMS logs from provider.', null, 502);
+        }
+
+        return $this->success('SMS logs retrieved.', $logs);
     }
 
     public function balance()
     {
+        $smsService = app(SmsService::class);
+        $providerBalance = $smsService->getBalance();
+
         $organization = Auth::user()->organization;
-        return $this->success('SMS balance retrieved.', ['sms_balance' => $organization->sms_balance]);
+
+        if ($providerBalance !== null) {
+            return $this->success('SMS balance retrieved.', [
+                'sms_balance' => $organization->sms_balance,
+                'provider_balance' => $providerBalance,
+            ]);
+        }
+
+        return $this->success('SMS balance retrieved.', [
+            'sms_balance' => $organization->sms_balance,
+        ]);
     }
 }

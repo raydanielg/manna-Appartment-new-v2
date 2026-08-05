@@ -55,6 +55,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       _showError('Enter a valid 9-digit phone number');
       return;
     }
+    ref.read(authProvider.notifier).clearError();
     setState(() => _step1Completed = true);
     _animController.forward();
   }
@@ -186,7 +187,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   Column(
                     children: [
                       TextButton(
-                        onPressed: () => context.go('/auth/forgot-password'),
+                        onPressed: () {
+                          ref.read(authProvider.notifier).clearError();
+                          context.go('/auth/forgot-password');
+                        },
                         child: Text(
                           'Forgot Password?',
                           style: TextStyle(
@@ -220,7 +224,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => context.go('/auth/register-landlord'),
+                            onTap: () {
+                              ref.read(authProvider.notifier).clearError();
+                              context.go('/auth/register-landlord');
+                            },
                             child: const Text(
                               'Register as Landlord',
                               style: TextStyle(

@@ -64,7 +64,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: IconButton(
-                    onPressed: () => context.go('/auth/login'),
+                    onPressed: () {
+                      ref.read(authProvider.notifier).clearError();
+                      context.go('/auth/login');
+                    },
                     icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
                   ),
                 ),
@@ -144,7 +147,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           if (authState.error != null) ...[
                             const SizedBox(height: 16),
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                               decoration: BoxDecoration(
                                 color: AuthColors.errorBg,
                                 borderRadius: BorderRadius.circular(12),
@@ -155,6 +158,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                   const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
                                   const SizedBox(width: 8),
                                   Expanded(child: Text(authState.error!, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13))),
+                                  GestureDetector(
+                                    onTap: () => ref.read(authProvider.notifier).clearError(),
+                                    child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 18),
+                                  ),
                                 ],
                               ),
                             ),
@@ -190,7 +197,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: 20),
                 GestureDetector(
-                  onTap: () => context.go('/auth/login'),
+                  onTap: () {
+                    ref.read(authProvider.notifier).clearError();
+                    context.go('/auth/login');
+                  },
                   child: Text(
                     'Back to Login',
                     style: TextStyle(

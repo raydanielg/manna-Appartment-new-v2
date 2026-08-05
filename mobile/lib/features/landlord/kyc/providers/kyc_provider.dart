@@ -23,17 +23,19 @@ class KycState {
     this.isSubmitted = false,
   });
 
+  static final _sentinel = Object();
+
   KycState copyWith({
-    bool? isLoading,
-    String? error,
-    String? status,
-    bool? isSubmitted,
+    Object? isLoading = _sentinel,
+    Object? error = _sentinel,
+    Object? status = _sentinel,
+    Object? isSubmitted = _sentinel,
   }) {
     return KycState(
-      isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
-      status: status ?? this.status,
-      isSubmitted: isSubmitted ?? this.isSubmitted,
+      isLoading: isLoading == _sentinel ? this.isLoading : isLoading as bool,
+      error: error == _sentinel ? this.error : error as String?,
+      status: status == _sentinel ? this.status : status as String?,
+      isSubmitted: isSubmitted == _sentinel ? this.isSubmitted : isSubmitted as bool,
     );
   }
 }
@@ -84,27 +86,58 @@ class KycNotifier extends StateNotifier<KycState> {
 
   String _parseError(dynamic error) {
     if (error is DioException) {
+      // ErrorInterceptor already parsed a user-friendly message into error.error
+      if (error.error is String && (error.error as String).isNotEmpty) {
+        return error.error as String;
+      }
+
       final data = error.response?.data;
       if (data is Map) {
         if (data['errors'] is Map) {
           final errors = data['errors'] as Map;
-          return errors.values
-              .expand((e) => e is List ? e.map((m) => m.toString()) : [e.toString()])
-              .join('\n');
+          final messages = <String>[];
+          errors.forEach((key, value) {
+            if (value is List) {
+              for (final msg in value) {
+                messages.add(msg.toString());
+              }
+            } else if (value is String) {
+              messages.add(value);
+            }
+          });
+          if (messages.isNotEmpty) return messages.join('\n');
         }
-        if (data['message'] != null) return data['message'].toString();
+        if (data['message'] is String && (data['message'] as String).isNotEmpty) {
+          return data['message'];
+        }
+        if (data['error'] is String && (data['error'] as String).isNotEmpty) {
+          return data['error'];
+        }
       }
-      if (error.type == DioExceptionType.connectionTimeout ||
-          error.type == DioExceptionType.receiveTimeout) {
-        return 'Connection timed out. Please check your internet and try again.';
+
+      // Network error fallback
+      switch (error.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.receiveTimeout:
+        case DioExceptionType.sendTimeout:
+          return 'Connection timed out. Please check your internet and try again.';
+        case DioExceptionType.connectionError:
+          return 'Could not connect to server. Please check your internet connection.';
+        case DioExceptionType.cancel:
+          return 'Request was cancelled. Please try again.';
+        default:
+          break;
       }
-      if (error.type == DioExceptionType.connectionError) {
-        return 'Could not connect to server. Please check your internet connection.';
+
+      final statusCode = error.response?.statusCode;
+      if (statusCode != null && statusCode >= 500) {
+        return 'Server error. Please try again later.';
       }
     }
     if (error is Exception) {
-      return error.toString().replaceAll('Exception: ', '');
+      final msg = error.toString().replaceAll('Exception: ', '');
+      if (msg.isNotEmpty && msg != 'null') return msg;
     }
-    return error.toString();
+    return 'Something went wrong. Please try again.';
   }
 }

@@ -57,38 +57,96 @@ class SmsService
     private function sendViaNextSms(string $phone, string $message): bool
     {
         $config = config('sms.providers.nextsms');
-        $username = $config['username'] ?? '';
-        $password = $config['password'] ?? '';
-        $from = $config['from'] ?? 'MANNA';
-        $url = $config['url'] ?? 'https://messaging-service.co.tz/api/sms/v1/text/single';
+        $apiKey = $config['api_key'] ?? '';
+        $from = $config['from'] ?? 'Manna';
+        $baseUrl = $config['base_url'] ?? 'https://messaging-service.co.tz';
+        $sendEndpoint = $config['endpoints']['send'] ?? '/api/v2/sms/send';
 
-        if (empty($username) || empty($password)) {
-            Log::warning('NextSMS credentials not configured.');
+        if (empty($apiKey)) {
+            Log::warning('NextSMS V2 API key not configured.');
             return false;
         }
 
-        $authToken = base64_encode("{$username}:{$password}");
-
         $response = Http::withHeaders([
-            'Authorization' => "Basic {$authToken}",
+            'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-        ])->post($url, [
+        ])->post("{$baseUrl}{$sendEndpoint}", [
             'from' => $from,
             'to' => $phone,
             'text' => $message,
         ]);
 
         if ($response->successful()) {
-            Log::info("NextSMS sent to {$phone}: {$message}");
+            Log::info("NextSMS V2 sent to {$phone}: {$message}");
             return true;
         }
 
-        Log::error('NextSMS API error: ' . $response->body(), [
+        Log::error('NextSMS V2 API error: ' . $response->body(), [
             'phone' => $phone,
             'status' => $response->status(),
         ]);
         return false;
+    }
+
+    public function getBalance(): ?array
+    {
+        $config = config('sms.providers.nextsms');
+        $apiKey = $config['api_key'] ?? '';
+        $baseUrl = $config['base_url'] ?? 'https://messaging-service.co.tz';
+        $balanceEndpoint = $config['endpoints']['balance'] ?? '/api/v2/balance';
+
+        if (empty($apiKey)) {
+            return null;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$apiKey}",
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->get("{$baseUrl}{$balanceEndpoint}");
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            Log::error('NextSMS V2 balance error: ' . $response->body());
+            return null;
+        } catch (\Exception $e) {
+            Log::error('NextSMS V2 balance exception: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function getLogs(array $filters = []): ?array
+    {
+        $config = config('sms.providers.nextsms');
+        $apiKey = $config['api_key'] ?? '';
+        $baseUrl = $config['base_url'] ?? 'https://messaging-service.co.tz';
+        $logsEndpoint = $config['endpoints']['logs'] ?? '/api/v2/logs';
+
+        if (empty($apiKey)) {
+            return null;
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$apiKey}",
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->get("{$baseUrl}{$logsEndpoint}", $filters);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            Log::error('NextSMS V2 logs error: ' . $response->body());
+            return null;
+        } catch (\Exception $e) {
+            Log::error('NextSMS V2 logs exception: ' . $e->getMessage());
+            return null;
+        }
     }
 
     private function sendViaBeem(string $phone, string $message): bool
@@ -110,7 +168,7 @@ class SmsService
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
         ])->post($baseUrl, [
-            'sender_id' => config('sms.sender_id', 'MANNA'),
+            'sender_id' => config('sms.sender_id', 'Manna'),
             'mobile' => $phone,
             'message' => $message,
         ]);
