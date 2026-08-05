@@ -43,6 +43,29 @@ class LoginController extends Controller
         return 'phone';
     }
 
+    protected function credentials(\Illuminate\Http\Request $request)
+    {
+        $phone = $request->input('phone');
+        
+        // Remove any non-digits
+        $phone = preg_replace('/\D/', '', $phone);
+        
+        // If it starts with 0, replace with 255
+        if (str_starts_with($phone, '0')) {
+            $phone = '255' . substr($phone, 1);
+        }
+        
+        // If it's exactly 9 digits, prepend 255
+        if (strlen($phone) === 9) {
+            $phone = '255' . $phone;
+        }
+
+        return [
+            'phone' => $phone,
+            'password' => $request->input('password'),
+        ];
+    }
+
     protected function redirectTo()
     {
         if (auth()->user()->role === 'super_admin') {
