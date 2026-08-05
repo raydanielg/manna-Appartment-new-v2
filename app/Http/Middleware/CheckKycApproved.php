@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Setting;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -12,6 +13,12 @@ class CheckKycApproved
         $user = $request->user();
 
         if ($user->isSuperAdmin() || $user->isTenant()) {
+            return $next($request);
+        }
+
+        // Check global setting
+        $kycMandatory = Setting::get('kyc_mandatory', 'on') === 'on';
+        if (!$kycMandatory) {
             return $next($request);
         }
 

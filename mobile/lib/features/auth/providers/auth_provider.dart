@@ -59,6 +59,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> checkAuth() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
+      // Fetch app settings first
+      try {
+        final settings = await _repository.getAppSettings();
+        final kycMandatory = settings['kyc_mandatory'] != 'off'; // Default to true if not set or 'on'
+        state = state.copyWith(kycMandatory: kycMandatory);
+      } catch (e) {
+        _logger.w('Failed to fetch app settings: $e');
+      }
+
       final token = await _repository.getToken();
       if (token == null || token.isEmpty) {
         state = state.copyWith(isLoading: false);
@@ -157,7 +166,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState();
   }
 
+  Future<void> refreshSettings() async {
+    try {
+      final settings = await _repository.getAppSettings();
+      final kycMandatory = settings['kyc_mandatory'] != 'off';
+      state = state.copyWith(kycMandatory: kycMandatory);
+    } catch (e) {
+      _logger.w('Failed to refresh settings: $e');
+    }
+  }
+
   Future<void> refreshUserFromServer() async {
+    await refreshSettings();
     try {
       final kycData = await _repository.getKycStatus();
       final kycStatus = kycData?['kyc_status'];
@@ -173,6 +193,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> refreshFullProfile() async {
+    await refreshSettings();
     try {
       final data = await _repository.getProfile();
       final user = state.user;
