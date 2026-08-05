@@ -51,171 +51,168 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      body: AuthBackground(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 20),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
 
-                // Back button
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    onPressed: () {
-                      ref.read(authProvider.notifier).clearError();
-                      context.go('/auth/login');
-                    },
-                    icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                  ),
+              // Back button
+              IconButton(
+                onPressed: () {
+                  ref.read(authProvider.notifier).clearError();
+                  context.go('/auth/login');
+                },
+                icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827), size: 22),
+                padding: EdgeInsets.zero,
+                alignment: Alignment.centerLeft,
+                constraints: const BoxConstraints(),
+              ),
+
+              const SizedBox(height: 32),
+              Text(
+                'Forgot Password',
+                style: GoogleFonts.nunito(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF111827),
                 ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Enter your phone number to receive a verification code.',
+                style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  color: const Color(0xFF6B7280),
+                ),
+              ),
+              const SizedBox(height: 32),
 
-                // Icon
+              if (authState.error != null) ...[
                 Container(
-                  width: 72,
-                  height: 72,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 2),
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFFECACA)),
                   ),
-                  child: const Icon(Icons.lock_reset_rounded, size: 36, color: Colors.white),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Forgot Password',
-                  style: GoogleFonts.nunito(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    shadows: [Shadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 8)],
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Enter your phone number and we\'ll\nsend you a verification code',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.8),
-                    height: 1.5,
-                    shadows: [Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6)],
-                  ),
-                ),
-                const SizedBox(height: 28),
-
-                // Card
-                AuthCard(
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: AuthBackground.isDarkMode,
-                    builder: (context, isDark, _) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Phone Number', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AuthColors.label)),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                            autofocus: true,
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 1.5, color: AuthColors.text),
-                            onSubmitted: (_) => _sendOtp(),
-                            decoration: InputDecoration(
-                              hintText: '7XX XXX XXX',
-                              hintStyle: TextStyle(color: AuthColors.hintText, letterSpacing: 1.5),
-                              prefixIcon: Container(
-                                margin: const EdgeInsets.only(right: 6, left: 10, top: 12, bottom: 12),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text('+255', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AuthColors.text)),
-                                    const SizedBox(width: 4),
-                                    Container(width: 1, height: 22, color: AuthColors.inputBorder),
-                                  ],
-                                ),
-                              ),
-                              filled: true,
-                              fillColor: AuthColors.input,
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AuthColors.inputBorder)),
-                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5)),
-                              contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                          ),
-                          if (authState.error != null) ...[
-                            const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: AuthColors.errorBg,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AuthColors.errorBorder),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
-                                  const SizedBox(width: 8),
-                                  Expanded(child: Text(authState.error!, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13))),
-                                  GestureDetector(
-                                    onTap: () => ref.read(authProvider.notifier).clearError(),
-                                    child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 18),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 52,
-                            child: ElevatedButton(
-                              onPressed: authState.isLoading ? null : _sendOtp,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2563EB),
-                                foregroundColor: Colors.white,
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                              ),
-                              child: authState.isLoading
-                                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
-                                  : const Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.send_rounded, size: 20),
-                                        SizedBox(width: 8),
-                                        Text('Send OTP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                                      ],
-                                    ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          authState.error!,
+                          style: GoogleFonts.nunito(color: const Color(0xFFB91C1C), fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => ref.read(authProvider.notifier).clearError(),
+                        child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 16),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 20),
-                GestureDetector(
+              ],
+
+              _buildLabel('Phone Number'),
+              TextField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600),
+                onSubmitted: (_) => _sendOtp(),
+                decoration: InputDecoration(
+                  hintText: '7XX XXX XXX',
+                  hintStyle: GoogleFonts.nunito(color: const Color(0xFF9CA3AF), fontSize: 14),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 12, right: 8),
+                    child: Text(
+                      '+255',
+                      style: GoogleFonts.nunito(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF374151),
+                      ),
+                    ),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: AuthColors.primary, width: 1.5)),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: authState.isLoading ? null : _sendOtp,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AuthColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: authState.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          'Send Code',
+                          style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+              Center(
+                child: GestureDetector(
                   onTap: () {
                     ref.read(authProvider.notifier).clearError();
                     context.go('/auth/login');
                   },
                   child: Text(
-                    'Back to Login',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
+                    'Back to Sign In',
+                    style: GoogleFonts.nunito(
+                      color: AuthColors.primary,
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      decoration: TextDecoration.underline,
-                      shadows: [Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6)],
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
-              ],
-            ),
+              ),
+              const SizedBox(height: 40),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        text,
+        style: GoogleFonts.nunito(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF374151),
         ),
       ),
     );

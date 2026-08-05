@@ -75,168 +75,174 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
     _phone = query['phone'] ?? '';
 
     return Scaffold(
-      body: AuthBackground(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 20),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
 
-                // Back button
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    onPressed: () {
-                      ref.read(authProvider.notifier).clearError();
-                      context.go('/auth/forgot-password');
-                    },
-                    icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                  ),
+              // Back button
+              IconButton(
+                onPressed: () {
+                  ref.read(authProvider.notifier).clearError();
+                  context.go('/auth/forgot-password');
+                },
+                icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827), size: 22),
+                padding: EdgeInsets.zero,
+                alignment: Alignment.centerLeft,
+                constraints: const BoxConstraints(),
+              ),
+
+              const SizedBox(height: 32),
+              Text(
+                'Verify OTP',
+                style: GoogleFonts.nunito(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF111827),
                 ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _phone.isNotEmpty
+                    ? 'Enter the 6-digit code we sent to +$_phone'
+                    : 'Enter the 6-digit code sent to your phone.',
+                style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  color: const Color(0xFF6B7280),
+                ),
+              ),
+              const SizedBox(height: 40),
 
-                // Icon
+              if (authState.error != null) ...[
                 Container(
-                  width: 72,
-                  height: 72,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 2),
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFFECACA)),
                   ),
-                  child: const Icon(Icons.sms_rounded, size: 36, color: Colors.white),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Verify OTP',
-                  style: GoogleFonts.nunito(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    shadows: [Shadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 8)],
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  _phone.isNotEmpty
-                      ? 'Enter the 6-digit code sent to\n+$_phone'
-                      : 'Enter the 6-digit code sent to your phone',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.8),
-                    height: 1.5,
-                    shadows: [Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6)],
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          authState.error!,
+                          style: GoogleFonts.nunito(color: const Color(0xFFB91C1C), fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => ref.read(authProvider.notifier).clearError(),
+                        child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 16),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 28),
-
-                // Card
-                AuthCard(
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: AuthBackground.isDarkMode,
-                    builder: (context, isDark, _) {
-                      return Column(
-                        children: [
-                          // OTP boxes
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: List.generate(6, (index) {
-                              return SizedBox(
-                                width: 44,
-                                height: 56,
-                                child: TextField(
-                                  controller: _controllers[index],
-                                  focusNode: _focusNodes[index],
-                                  keyboardType: TextInputType.number,
-                                  textAlign: TextAlign.center,
-                                  maxLength: 1,
-                                  autofocus: index == 0,
-                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AuthColors.text),
-                                  decoration: InputDecoration(
-                                    counterText: '',
-                                    filled: true,
-                                    fillColor: AuthColors.input,
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AuthColors.inputBorder)),
-                                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5)),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  onChanged: (value) => _onOtpChanged(index, value),
-                                ),
-                              );
-                            }),
-                          ),
-                          if (authState.error != null) ...[
-                            const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: AuthColors.errorBg,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AuthColors.errorBorder),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
-                                  const SizedBox(width: 8),
-                                  Expanded(child: Text(authState.error!, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13))),
-                                  GestureDetector(
-                                    onTap: () => ref.read(authProvider.notifier).clearError(),
-                                    child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 18),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 52,
-                            child: ElevatedButton(
-                              onPressed: authState.isLoading ? null : _verify,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2563EB),
-                                foregroundColor: Colors.white,
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                              ),
-                              child: authState.isLoading
-                                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
-                                  : const Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.check_circle_rounded, size: 20),
-                                        SizedBox(width: 8),
-                                        Text('Verify', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                                      ],
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          GestureDetector(
-                            onTap: () {
-                              ref.read(authProvider.notifier).clearError();
-                              context.go('/auth/forgot-password');
-                            },
-                            child: Text(
-                              'Didn\'t receive code? Resend',
-                              style: TextStyle(
-                                color: AuthColors.textSecondary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
               ],
-            ),
+
+              // OTP boxes
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(6, (index) {
+                  return SizedBox(
+                    width: 44,
+                    height: 52,
+                    child: TextField(
+                      controller: _controllers[index],
+                      focusNode: _focusNodes[index],
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      maxLength: 1,
+                      autofocus: index == 0,
+                      style: GoogleFonts.nunito(
+                        fontSize: 22, 
+                        fontWeight: FontWeight.w800, 
+                        color: const Color(0xFF111827),
+                      ),
+                      decoration: InputDecoration(
+                        counterText: '',
+                        filled: true,
+                        fillColor: const Color(0xFFF9FAFB),
+                        contentPadding: EdgeInsets.zero,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8), 
+                          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8), 
+                          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8), 
+                          borderSide: BorderSide(color: AuthColors.primary, width: 1.5),
+                        ),
+                      ),
+                      onChanged: (value) => _onOtpChanged(index, value),
+                    ),
+                  );
+                }),
+              ),
+              
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: authState.isLoading ? null : _verify,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AuthColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: authState.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          'Verify Code',
+                          style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Center(
+                child: GestureDetector(
+                  onTap: () {
+                    ref.read(authProvider.notifier).clearError();
+                    context.go('/auth/forgot-password');
+                  },
+                  child: RichText(
+                    text: TextSpan(
+                      text: "Didn't receive code? ",
+                      style: GoogleFonts.nunito(color: const Color(0xFF6B7280), fontSize: 14),
+                      children: [
+                        TextSpan(
+                          text: 'Resend',
+                          style: GoogleFonts.nunito(
+                            color: AuthColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),

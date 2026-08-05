@@ -31,17 +31,15 @@ class AuthState {
   bool get isKycApproved => user == null || user!.role != 'landlord' || user!.kycStatus == 'approved';
   bool get isOrganizationActive => user == null || user!.role != 'landlord' || user!.organizationStatus == null || user!.organizationStatus == 'active';
 
-  static final _sentinel = Object();
-
   AuthState copyWith({
-    Object? user = _sentinel,
-    Object? isLoading = _sentinel,
-    Object? error = _sentinel,
+    UserModel? user,
+    bool? isLoading,
+    String? error,
   }) {
     return AuthState(
-      user: user == _sentinel ? this.user : user as UserModel?,
-      isLoading: isLoading == _sentinel ? this.isLoading : isLoading as bool,
-      error: error == _sentinel ? this.error : error as String?,
+      user: user ?? this.user,
+      isLoading: isLoading ?? this.isLoading,
+      error: error == '' ? null : (error ?? this.error),
     );
   }
 }
@@ -242,7 +240,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   void clearError() {
-    state = state.copyWith(error: null);
+    state = state.copyWith(error: '');
   }
 
   String _parseError(dynamic error) {

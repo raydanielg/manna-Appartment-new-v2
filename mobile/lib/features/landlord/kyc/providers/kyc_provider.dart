@@ -23,19 +23,17 @@ class KycState {
     this.isSubmitted = false,
   });
 
-  static final _sentinel = Object();
-
   KycState copyWith({
-    Object? isLoading = _sentinel,
-    Object? error = _sentinel,
-    Object? status = _sentinel,
-    Object? isSubmitted = _sentinel,
+    bool? isLoading,
+    String? error,
+    String? status,
+    bool? isSubmitted,
   }) {
     return KycState(
-      isLoading: isLoading == _sentinel ? this.isLoading : isLoading as bool,
-      error: error == _sentinel ? this.error : error as String?,
-      status: status == _sentinel ? this.status : status as String?,
-      isSubmitted: isSubmitted == _sentinel ? this.isSubmitted : isSubmitted as bool,
+      isLoading: isLoading ?? this.isLoading,
+      error: error == '' ? null : (error ?? this.error),
+      status: status ?? this.status,
+      isSubmitted: isSubmitted ?? this.isSubmitted,
     );
   }
 }
@@ -45,7 +43,7 @@ class KycNotifier extends StateNotifier<KycState> {
 
   KycNotifier(this._repository) : super(const KycState());
 
-  void clearError() => state = state.copyWith(error: null);
+  void clearError() => state = state.copyWith(error: '');
 
   Future<bool> checkStatus() async {
     state = state.copyWith(isLoading: true, error: null);
