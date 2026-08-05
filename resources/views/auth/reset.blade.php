@@ -3,67 +3,71 @@
 @section('title', 'Reset Password - Manna Apartment')
 
 @section('content')
-<div class="w-full max-w-[420px] relative z-10" style="animation: simpleFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;">
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+<div class="w-full max-w-[440px] relative z-10" style="animation: simpleFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;">
+    {{-- Decorative Background Elements --}}
+    <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 rounded-full blur-3xl opacity-50 -z-10"></div>
+    <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-50 -z-10"></div>
+
+    <div class="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-2xl shadow-blue-100/50 border border-white p-10">
         {{-- Logo & Header --}}
         <div class="text-center mb-10">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-xl mb-6">
-                <img src="{{ asset('file_000000001cdc7230acd3b9659475e375.png') }}" alt="Manna Apartment" class="w-12 h-12 object-cover rounded-lg">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-tr from-blue-600 to-blue-400 rounded-3xl mb-8 shadow-lg shadow-blue-200 rotate-3 hover:rotate-0 transition-transform duration-500">
+                <img src="{{ asset('file_000000001cdc7230acd3b9659475e375.png') }}" alt="Manna Apartment" class="w-14 h-14 object-cover rounded-2xl">
             </div>
-            <h2 class="text-2xl font-extrabold text-gray-900">Reset Password</h2>
-            <p class="text-gray-500 text-sm mt-2 font-medium">Set a new secure password for your account.</p>
+            <h2 class="text-3xl font-black text-gray-900 tracking-tight">Set Password</h2>
+            <p class="text-gray-500 text-sm mt-3 font-semibold tracking-wide uppercase opacity-70">Secure Update</p>
         </div>
 
-        <div id="alert-success" class="hidden mb-6 p-4 rounded-xl bg-blue-50 text-blue-700 text-sm border border-blue-100 font-bold flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div id="alert-success" class="hidden mb-8 p-5 rounded-2xl bg-blue-50/50 text-blue-700 text-sm border border-blue-100 font-bold flex items-center gap-3 backdrop-blur-sm">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span></span>
         </div>
 
-        <form id="reset-form" method="POST" action="{{ route('password.update.reset') }}" class="space-y-6">
+        <form id="reset-form" method="POST" action="{{ route('password.update.reset') }}" class="space-y-7">
             @csrf
             <input type="hidden" id="phone" name="phone" value="{{ $phone }}">
             <input type="hidden" id="otp" name="otp" value="{{ $otp }}">
 
             {{-- New Password --}}
-            <div class="space-y-2">
-                <label for="password" class="text-sm font-bold text-gray-700 ml-1">New Password</label>
+            <div class="space-y-2.5">
+                <label for="password" class="text-[13px] font-black text-gray-400 uppercase tracking-widest ml-1">New Password</label>
                 <div class="relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <svg class="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                     </div>
                     <input id="password" type="password" name="password" required autofocus
-                        class="block w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-semibold"
+                        class="block w-full pl-12 pr-4 py-4 bg-gray-50/50 border-2 border-gray-100 text-gray-900 text-base rounded-2xl focus:ring-4 focus:ring-blue-50 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold shadow-sm placeholder:text-gray-300"
                         placeholder="••••••••">
                 </div>
-                <p id="password-error" class="hidden text-xs font-semibold text-red-500 mt-1 flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p id="password-error" class="hidden text-xs font-bold text-red-500 mt-2 ml-1 flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span></span>
                 </p>
             </div>
 
             {{-- Confirm Password --}}
-            <div class="space-y-2">
-                <label for="password-confirm" class="text-sm font-bold text-gray-700 ml-1">Confirm Password</label>
+            <div class="space-y-2.5">
+                <label for="password-confirm" class="text-[13px] font-black text-gray-400 uppercase tracking-widest ml-1">Confirm Password</label>
                 <div class="relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <svg class="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                     </div>
                     <input id="password-confirm" type="password" name="password_confirmation" required
-                        class="block w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all font-semibold"
+                        class="block w-full pl-12 pr-4 py-4 bg-gray-50/50 border-2 border-gray-100 text-gray-900 text-base rounded-2xl focus:ring-4 focus:ring-blue-50 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold shadow-sm placeholder:text-gray-300"
                         placeholder="••••••••">
                 </div>
             </div>
 
             {{-- Submit --}}
-            <button id="btn-reset" type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center gap-2 disabled:bg-blue-600 disabled:opacity-80 disabled:cursor-not-allowed">
-                <span>Update Password</span>
-                <svg id="spinner" class="hidden w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <button id="btn-reset" type="submit" class="w-full py-4.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-lg font-black rounded-2xl shadow-xl shadow-blue-200 transition-all hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-80 disabled:cursor-not-allowed">
+                <span id="btn-text">Update Password</span>
+                <svg id="spinner" class="hidden w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             </button>
         </form>
     </div>
 
-    <div class="mt-8 text-center">
-        <p class="text-sm text-gray-400 font-medium">&copy; {{ date('Y') }} Manna Apartment. All rights reserved.</p>
+    <div class="mt-10 text-center">
+        <p class="text-sm text-gray-400 font-black tracking-widest uppercase opacity-50">&copy; {{ date('Y') }} Manna Apartment</p>
     </div>
 </div>
 
@@ -75,12 +79,19 @@
     const spinner = document.getElementById('spinner');
     const passwordError = document.getElementById('password-error');
     const alertSuccess = document.getElementById('alert-success');
+    const btnText = document.getElementById('btn-text');
 
     function showError(msg) {
         passwordError.querySelector('span').textContent = msg;
         passwordError.classList.remove('hidden');
+        passwordInput.classList.add('border-red-300', 'ring-4', 'ring-red-50');
+        passwordInput.classList.remove('border-gray-100');
     }
-    function hideError() { passwordError.classList.add('hidden'); }
+    function hideError() { 
+        passwordError.classList.add('hidden');
+        passwordInput.classList.remove('border-red-300', 'ring-4', 'ring-red-50');
+        passwordInput.classList.add('border-gray-100');
+    }
 
     resetForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -97,7 +108,7 @@
             return;
         }
 
-        btnReset.querySelector('span').textContent = 'Updating...';
+        btnText.textContent = 'Updating...';
         spinner.classList.remove('hidden');
         btnReset.disabled = true;
 
@@ -128,9 +139,14 @@
         } catch (err) {
             showError('Network error. Please try again.');
         } finally {
-            btnReset.querySelector('span').textContent = 'Update Password';
-            spinner.classList.add('hidden');
-            btnReset.disabled = false;
+            if (alertSuccess.classList.contains('hidden')) {
+                btnText.textContent = 'Update Password';
+                spinner.classList.add('hidden');
+                btnReset.disabled = false;
+            } else {
+                btnText.textContent = 'Updated!';
+                spinner.classList.add('hidden');
+            }
         }
     });
 </script>

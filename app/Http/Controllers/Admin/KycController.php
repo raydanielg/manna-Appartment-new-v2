@@ -54,10 +54,10 @@ class KycController extends Controller
 
     private function notifyKycDecision($userId, $status)
     {
-        $title = 'KYC ' . ucfirst($status);
+        $title = $status === 'approved' ? 'KYC Verification Successful' : 'KYC Verification Update';
         $body = $status === 'approved'
-            ? 'Congratulations! Your KYC has been approved. You can now access your dashboard.'
-            : 'Your KYC was rejected. Please check your documents and resubmit.';
+            ? 'Hongera! Taarifa zako za KYC zimethibitishwa. Sasa unaweza kuanza kutumia mfumo wa Manna Apartment kikamilifu.'
+            : 'Samahani, maombi yako ya KYC hayajakidhi vigezo. Tafadhali kagua nyaraka zako na utume tena maombi mapya.';
 
         AppNotification::create([
             'user_id' => $userId,

@@ -19,27 +19,31 @@ class AuthState {
   final UserModel? user;
   final bool isLoading;
   final String? error;
+  final bool kycMandatory;
 
   const AuthState({
     this.user,
     this.isLoading = false,
     this.error,
+    this.kycMandatory = true,
   });
 
   bool get isAuthenticated => user != null;
   String? get role => user?.role;
-  bool get isKycApproved => user == null || user!.role != 'landlord' || user!.kycStatus == 'approved';
+  bool get isKycApproved => user == null || user!.role != 'landlord' || user!.kycStatus == 'approved' || !kycMandatory;
   bool get isOrganizationActive => user == null || user!.role != 'landlord' || user!.organizationStatus == null || user!.organizationStatus == 'active';
 
   AuthState copyWith({
     UserModel? user,
     bool? isLoading,
     String? error,
+    bool? kycMandatory,
   }) {
     return AuthState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
       error: error == '' ? null : (error ?? this.error),
+      kycMandatory: kycMandatory ?? this.kycMandatory,
     );
   }
 }

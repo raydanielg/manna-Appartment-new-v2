@@ -89,6 +89,13 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
     );
 
     if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nyaraka zako zimepokelewa! Tutazikagua na kukupa majibu ndani ya muda mfupi.'),
+          backgroundColor: Color(0xFF2563EB),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       context.go('/landlord/kyc/under-review');
     }
   }

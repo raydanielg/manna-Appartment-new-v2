@@ -100,13 +100,13 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen>
                         color: Color(0xFFEFF6FF),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.history_toggle_off_rounded, size: 64, color: Color(0xFF2563EB)),
+                      child: const Icon(Icons.access_time_filled_rounded, size: 64, color: Color(0xFF2563EB)),
                     ),
                   ),
                 ),
                 const SizedBox(height: 40),
                 Text(
-                  'Under Review',
+                  'Mchakato wa Uhakiki',
                   style: GoogleFonts.nunito(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
@@ -115,11 +115,32 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Your KYC documents have been submitted successfully. Our team will review them and get back to you within 24 hours. You can check the status periodically.',
+                  'Tumepokea nyaraka zako na kwa sasa tunazifanyia kazi. Uhakiki huu unachukua chini ya masaa 24. Utapata taarifa (notification) pindi mchakato utakapokamilika.',
                   style: GoogleFonts.nunito(
                     fontSize: 15,
                     color: const Color(0xFF4B5563),
                     height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline_rounded, color: Color(0xFF2563EB), size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'You will receive a notification once the review is complete.',
+                          style: GoogleFonts.nunito(fontSize: 13, color: const Color(0xFF374151), fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const Spacer(),

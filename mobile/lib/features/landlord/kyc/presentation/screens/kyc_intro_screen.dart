@@ -31,6 +31,11 @@ class _KycIntroScreenState extends ConsumerState<KycIntroScreen> {
       return;
     }
 
+    if (user != null && user.kycStatus == 'pending') {
+      context.go('/landlord/kyc/under-review');
+      return;
+    }
+
     if (user != null && user.organizationId == null) {
       context.go('/landlord/kyc/organization-setup');
       return;

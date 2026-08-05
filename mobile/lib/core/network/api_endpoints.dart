@@ -7,6 +7,7 @@ class ApiEndpoints {
   static const String resetPassword = '/auth/reset-password';
   static const String refreshToken = '/auth/refresh-token';
   static const String me = '/auth/me';
+  static const String appSettings = '/app-settings';
 
   // Landlord
   static const String landlordDashboard = '/landlord/dashboard';

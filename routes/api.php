@@ -77,6 +77,7 @@ Route::prefix('v1')->group(function () {
 
     // Public auth
     Route::post('/auth/login', [LoginController::class, 'login']);
+    Route::get('/app-settings', [\App\Http\Controllers\Api\AppSettingController::class, 'index']);
     Route::post('/auth/register-landlord', [RegisterLandlordController::class, 'register']);
     Route::post('/auth/forgot-password', [ForgotPasswordController::class, 'forgot']);
     Route::post('/auth/verify-otp', [ForgotPasswordController::class, 'verifyOtp']);
