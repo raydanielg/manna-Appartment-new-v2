@@ -239,6 +239,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> createOrganization(String businessName) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final data = await _repository.createOrganization(businessName);
+      final user = state.user;
+      if (user != null) {
+        final updated = user.copyWith(
+          businessName: data['business_name']?.toString() ?? businessName,
+          organizationId: data['id']?.toString() ?? user.organizationId,
+          organizationStatus: data['status']?.toString() ?? 'active',
+        );
+        state = state.copyWith(user: updated, isLoading: false);
+        await SecureStorageService.setUserData(jsonEncode(updated.toJson()));
+      }
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: _parseError(e));
+      return false;
+    }
+  }
+
   void clearError() {
     state = state.copyWith(error: '');
   }

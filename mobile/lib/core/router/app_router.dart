@@ -28,6 +28,7 @@ import '../../features/landlord/kyc/presentation/screens/kyc_intro_screen.dart';
 import '../../features/landlord/kyc/presentation/screens/kyc_status_screen.dart';
 import '../../features/landlord/kyc/presentation/screens/kyc_upload_documents_screen.dart';
 import '../../features/landlord/kyc/presentation/screens/kyc_verified_screen.dart';
+import '../../features/landlord/kyc/presentation/screens/organization_setup_screen.dart';
 import '../../features/landlord/maintenance/presentation/screens/landlord_more_screen.dart';
 import '../../features/landlord/maintenance/presentation/screens/maintenance_detail_screen.dart';
 import '../../features/landlord/maintenance/presentation/screens/maintenance_requests_screen.dart';
@@ -100,6 +101,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/landlord/kyc/upload', builder: (context, state) => const KycUploadDocumentsScreen()),
       GoRoute(path: '/landlord/kyc/under-review', builder: (context, state) => const KycStatusScreen()),
       GoRoute(path: '/landlord/kyc/verified', builder: (context, state) => const KycVerifiedScreen()),
+      GoRoute(path: '/landlord/kyc/organization-setup', builder: (context, state) => const OrganizationSetupScreen()),
 
       // Landlord routes
       ShellRoute(

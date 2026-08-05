@@ -40,4 +40,5 @@ class ApiEndpoints {
   static const String profile = '/profile';
   static const String changePassword = '/profile/change-password';
   static const String registerFcmToken = '/device-tokens';
+  static const String landlordOrganization = '/landlord/organization';
 }

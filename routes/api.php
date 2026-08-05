@@ -134,8 +134,8 @@ Route::prefix('v1')->group(function () {
 
         // Landlord (mobile only)
         Route::middleware(['ensure.platform:mobile', 'role:landlord'])->prefix('landlord')->group(function () {
-            // Onboarding & account status (accessible before KYC/approval)
             Route::get('/organization', [LandlordOrganizationController::class, 'show']);
+            Route::post('/organization', [LandlordOrganizationController::class, 'store']);
             Route::patch('/organization', [LandlordOrganizationController::class, 'update']);
             Route::get('/organization/usage', [LandlordOrganizationController::class, 'usage']);
             Route::post('/kyc/submit', [LandlordOrganizationController::class, 'submitKyc']);

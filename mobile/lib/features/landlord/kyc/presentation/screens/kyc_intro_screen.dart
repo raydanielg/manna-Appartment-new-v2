@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
 
 class KycIntroScreen extends ConsumerStatefulWidget {
@@ -22,13 +21,21 @@ class _KycIntroScreenState extends ConsumerState<KycIntroScreen> {
   }
 
   Future<void> _checkStatus() async {
-    await ref.read(authProvider.notifier).refreshUserFromServer();
+    await ref.read(authProvider.notifier).refreshFullProfile();
     if (!mounted) return;
     final authState = ref.read(authProvider);
+    final user = authState.user;
+
     if (authState.isKycApproved) {
       context.go('/landlord/home');
       return;
     }
+
+    if (user != null && user.organizationId == null) {
+      context.go('/landlord/kyc/organization-setup');
+      return;
+    }
+
     setState(() => _isChecking = false);
   }
 
@@ -38,26 +45,23 @@ class _KycIntroScreenState extends ConsumerState<KycIntroScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = ref.watch(authProvider).user;
 
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+          backgroundColor: Colors.white,
           elevation: 0,
           automaticallyImplyLeading: false,
           actions: [
             IconButton(
-              icon: const Icon(Icons.settings),
-              color: AppColors.primary,
+              icon: const Icon(Icons.settings_outlined, color: Color(0xFF111827)),
               onPressed: () => context.go('/settings'),
             ),
             IconButton(
-              icon: const Icon(Icons.logout),
-              color: AppColors.primary,
+              icon: const Icon(Icons.logout_rounded, color: Color(0xFF111827)),
               onPressed: () async {
                 await ref.read(authProvider.notifier).logout();
                 if (context.mounted) context.go('/auth/login');
@@ -67,44 +71,62 @@ class _KycIntroScreenState extends ConsumerState<KycIntroScreen> {
         ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: _isChecking
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB)))
                 : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.verified_user_outlined, size: 80, color: AppColors.primary),
-                const SizedBox(height: 24),
-                Text(
-                  'KYC Verification Required',
-                  style: GoogleFonts.nunito(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : AppColors.textDark,
+                const SizedBox(height: 40),
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.verified_user_rounded, size: 64, color: Color(0xFF2563EB)),
                   ),
-                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
+                Text(
+                  'Verification Required',
+                  style: GoogleFonts.nunito(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF111827),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Your account "${user?.businessName ?? user?.fullName ?? ''}" is pending verification. Tap the button below to start the verification process.',
+                  'Your account "${user?.businessName ?? user?.fullName ?? ''}" is pending verification. To access your landlord dashboard, we need to verify your identity.',
                   style: GoogleFonts.nunito(
-                    fontSize: 14,
-                    color: isDark ? Colors.white70 : AppColors.textLight,
+                    fontSize: 15,
+                    color: const Color(0xFF4B5563),
+                    height: 1.5,
                   ),
-                  textAlign: TextAlign.center,
+                ),
+                const Spacer(),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _startVerification,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Start Verification',
+                      style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 40),
-                ElevatedButton.icon(
-                  onPressed: _startVerification,
-                  icon: const Icon(Icons.verified_user),
-                  label: const Text('Verify'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
               ],
             ),
           ),

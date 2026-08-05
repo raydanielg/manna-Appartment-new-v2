@@ -132,4 +132,12 @@ class AuthRepository {
   Future<void> registerFcmToken(String token) async {
     await _client.post(ApiEndpoints.registerFcmToken, data: {'token': token, 'platform': 'android'});
   }
+
+  Future<Map<String, dynamic>> createOrganization(String businessName) async {
+    final response = await _client.post(
+      ApiEndpoints.landlordOrganization,
+      data: {'business_name': businessName},
+    );
+    return response.data['data'] ?? response.data;
+  }
 }

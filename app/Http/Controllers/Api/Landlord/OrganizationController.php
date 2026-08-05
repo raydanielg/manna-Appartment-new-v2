@@ -24,6 +24,30 @@ class OrganizationController extends Controller
         return $this->success('Organization retrieved.', $organization);
     }
 
+    public function store(Request $request)
+    {
+        $request->validate([
+            'business_name' => 'required|string|max:255',
+        ]);
+
+        $user = Auth::user();
+        if ($user->organization_id) {
+            return $this->error('User already has an organization.', null, 400);
+        }
+
+        $organization = Organization::create([
+            'business_name' => $request->business_name,
+            'kyc_status' => 'pending',
+            'sms_balance' => 0,
+            'status' => 'active',
+            'owner_user_id' => $user->id,
+        ]);
+
+        $user->update(['organization_id' => $organization->id]);
+
+        return $this->success('Organization created successfully.', $organization, 201);
+    }
+
     public function update(Request $request)
     {
         $organization = Auth::user()->organization;

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../providers/kyc_provider.dart';
 
 class KycUploadDocumentsScreen extends ConsumerStatefulWidget {
@@ -30,28 +29,40 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
   }
 
   Widget _buildPhotoCard(String label, File? file, VoidCallback onTap) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 140,
+        height: 120,
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade100,
+          color: const Color(0xFFF9FAFB),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: file != null ? AppColors.primary : Colors.grey.shade300),
+          border: Border.all(color: file != null ? const Color(0xFF2563EB) : const Color(0xFFE5E7EB)),
         ),
         child: file == null
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.camera_alt_outlined, size: 32, color: AppColors.primary),
+                  const Icon(Icons.add_a_photo_outlined, size: 28, color: Color(0xFF6B7280)),
                   const SizedBox(height: 8),
-                  Text(label, style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white70 : AppColors.textLight)),
+                  Text(label, style: GoogleFonts.nunito(fontSize: 13, color: const Color(0xFF6B7280), fontWeight: FontWeight.w600)),
                 ],
               )
-            : ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.file(file, fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+            : Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(file, fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                      child: const Icon(Icons.check_circle, size: 20, color: Color(0xFF2563EB)),
+                    ),
+                  ),
+                ],
               ),
       ),
     );
@@ -60,7 +71,11 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
   Future<void> _submit() async {
     if (_idController.text.trim().isEmpty || _idFront == null || _idBack == null || _selfie == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in your ID number and all required photos.')),
+        const SnackBar(
+          content: Text('Please fill in your ID number and all required photos.'),
+          backgroundColor: Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
@@ -86,99 +101,159 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final kycState = ref.watch(kycProvider);
 
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+          backgroundColor: Colors.white,
           elevation: 0,
-          automaticallyImplyLeading: false,
-          title: Text('KYC Verification', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827)),
+            onPressed: () => context.go('/landlord/kyc'),
+          ),
+          title: Text('Verification', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF111827))),
         ),
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 20),
                 Text(
-                  'Submit your documents',
-                  style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark),
+                  'Submit documents',
+                  style: GoogleFonts.nunito(fontSize: 24, fontWeight: FontWeight.w800, color: const Color(0xFF111827)),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'We need to verify your identity before you can access the dashboard.',
-                  style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textLight),
+                  'Please provide your identification details for account verification.',
+                  style: GoogleFonts.nunito(fontSize: 14, color: const Color(0xFF6B7280)),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
                 if (kycState.error != null) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                      color: const Color(0xFFFEF2F2),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+                      border: Border.all(color: const Color(0xFFFECACA)),
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            kycState.error!,
-                            style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13, fontWeight: FontWeight.w500),
+                        Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                kycState.error!,
+                                style: GoogleFonts.nunito(color: const Color(0xFFB91C1C), fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => ref.read(kycProvider.notifier).clearError(),
+                              child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 18),
+                            ),
+                          ],
+                        ),
+                        if (kycState.error!.contains('No organization found')) ...[
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () => context.go('/landlord/kyc/organization-setup'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2563EB),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: Text('Resolve Now', style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.bold)),
+                            ),
                           ),
-                        ),
-                        GestureDetector(
-                          onTap: () => ref.read(kycProvider.notifier).clearError(),
-                          child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 18),
-                        ),
+                        ],
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                 ],
+
+                _buildLabel('ID / NIDA Number'),
                 TextField(
                   controller: _idController,
+                  style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
                   onTap: () => ref.read(kycProvider.notifier).clearError(),
                   decoration: InputDecoration(
-                    labelText: 'ID / NIDA Number',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    hintText: 'Enter your ID number',
+                    hintStyle: GoogleFonts.nunito(color: const Color(0xFF9CA3AF), fontSize: 14),
+                    filled: true,
+                    fillColor: const Color(0xFFF9FAFB),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5)),
                   ),
                 ),
-                const SizedBox(height: 20),
-                _buildPhotoCard('ID Front', _idFront, () => _pickImage(ImageSource.camera, (f) => setState(() => _idFront = f))),
-                const SizedBox(height: 12),
-                _buildPhotoCard('ID Back', _idBack, () => _pickImage(ImageSource.camera, (f) => setState(() => _idBack = f))),
-                const SizedBox(height: 12),
-                _buildPhotoCard('Selfie', _selfie, () => _pickImage(ImageSource.camera, (f) => setState(() => _selfie = f))),
-                const SizedBox(height: 12),
-                _buildPhotoCard('Ownership Proof (optional)', _ownershipProof, () => _pickImage(ImageSource.gallery, (f) => setState(() => _ownershipProof = f))),
                 const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: kycState.isLoading ? null : _submit,
-                  icon: kycState.isLoading
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.upload_file),
-                  label: Text(kycState.isLoading ? 'Submitting...' : 'Submit KYC'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
+
+                _buildLabel('Required Documents'),
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.2,
+                  children: [
+                    _buildPhotoCard('ID Front', _idFront, () => _pickImage(ImageSource.camera, (f) => setState(() => _idFront = f))),
+                    _buildPhotoCard('ID Back', _idBack, () => _pickImage(ImageSource.camera, (f) => setState(() => _idBack = f))),
+                    _buildPhotoCard('Selfie Photo', _selfie, () => _pickImage(ImageSource.camera, (f) => setState(() => _selfie = f))),
+                    _buildPhotoCard('Ownership Proof', _ownershipProof, () => _pickImage(ImageSource.gallery, (f) => setState(() => _ownershipProof = f))),
+                  ],
+                ),
+                
+                const SizedBox(height: 40),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: kycState.isLoading ? () {} : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2563EB),
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: const Color(0xFF2563EB),
+                      disabledForegroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: kycState.isLoading
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : Text('Submit Verification', style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
                 ),
-                const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed: kycState.isLoading ? null : () => context.go('/landlord/kyc'),
-                  child: const Text('Cancel'),
-                ),
+                const SizedBox(height: 40),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        text,
+        style: GoogleFonts.nunito(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF374151),
         ),
       ),
     );
