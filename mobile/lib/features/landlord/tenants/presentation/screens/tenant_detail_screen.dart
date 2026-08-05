@@ -28,6 +28,12 @@ class TenantDetailScreen extends ConsumerWidget {
             if (context.canPop()) context.pop();
           },
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: AppColors.error),
+            onPressed: () => _confirmDelete(context, ref, id),
+          ),
+        ],
       ),
       body: tenantAsync.when(
         loading: () => const LoadingIndicator(),
@@ -81,7 +87,8 @@ class TenantDetailScreen extends ConsumerWidget {
   double _parseAmount(dynamic value) {
     if (value == null) return 0;
     if (value is num) return value.toDouble();
-    return double.tryParse(value.toString()) ?? 0;
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
   }
 
   Widget _buildInfoCard(BuildContext context, Map<String, dynamic> tenant) {
@@ -179,9 +186,9 @@ class TenantDetailScreen extends ConsumerWidget {
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () => context.push('/landlord/contracts/create'),
-                icon: const Icon(Icons.description),
-                label: const Text('Contract'),
+                onPressed: () => _showEditDialog(context, ref, id, tenant),
+                icon: const Icon(Icons.edit),
+                label: const Text('Edit'),
               ),
             ),
             const SizedBox(width: 12),
@@ -227,6 +234,118 @@ class TenantDetailScreen extends ConsumerWidget {
               }
             },
             child: const Text('Move Out', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditDialog(BuildContext context, WidgetRef ref, String id, Map<String, dynamic> tenant) {
+    final nameController = TextEditingController(text: tenant['full_name'] ?? tenant['user']?['full_name'] ?? '');
+    final phoneController = TextEditingController(text: tenant['phone'] ?? tenant['user']?['phone'] ?? '');
+    final emailController = TextEditingController(text: tenant['email'] ?? tenant['user']?['email'] ?? '');
+    final idNumberController = TextEditingController(text: tenant['id_number'] ?? '');
+    final emergencyController = TextEditingController(text: tenant['emergency_contact'] ?? '');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Tenant'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Full Name'),
+                ),
+                TextField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(labelText: 'Phone'),
+                ),
+                TextField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+                TextField(
+                  controller: idNumberController,
+                  decoration: const InputDecoration(labelText: 'ID Number'),
+                ),
+                TextField(
+                  controller: emergencyController,
+                  decoration: const InputDecoration(labelText: 'Emergency Contact'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await ref.read(tenantsRepositoryProvider).updateTenant(id, {
+                    'full_name': nameController.text.trim(),
+                    'phone': phoneController.text.trim(),
+                    'email': emailController.text.trim(),
+                    'id_number': idNumberController.text.trim(),
+                    'emergency_contact': emergencyController.text.trim(),
+                  });
+                  ref.invalidate(tenantDetailProvider(id));
+                  ref.invalidate(tenantsListProvider);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Tenant updated'), backgroundColor: AppColors.success),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+                    );
+                  }
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Tenant'),
+        content: const Text('Are you sure you want to delete this tenant? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await ref.read(tenantsRepositoryProvider).deleteTenant(id);
+                ref.invalidate(tenantsListProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Tenant deleted'), backgroundColor: AppColors.success),
+                  );
+                  if (context.canPop()) context.pop();
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+                  );
+                }
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),

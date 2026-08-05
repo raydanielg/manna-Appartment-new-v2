@@ -317,12 +317,14 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
     final isOverpayment = preview['is_overpayment'] == true;
     final monthCovered = preview['month_covered'] as String? ?? '';
     final overdueDate = preview['overdue_date'] as String? ?? '';
-    final remainder = (preview['remainder'] is num)
-        ? (preview['remainder'] as num).toDouble()
-        : double.tryParse(preview['remainder']?.toString() ?? '0') ?? 0;
-    final rentAmount = (preview['rent_amount'] is num)
-        ? (preview['rent_amount'] as num).toDouble()
-        : double.tryParse(preview['rent_amount']?.toString() ?? '0') ?? 0;
+    final rawRemainder = preview['remainder'];
+    final remainder = (rawRemainder is num)
+        ? (rawRemainder as num).toDouble()
+        : double.tryParse(rawRemainder?.toString() ?? '0') ?? 0.0;
+    final rawRent = preview['rent_amount'];
+    final rentAmount = (rawRent is num)
+        ? (rawRent as num).toDouble()
+        : double.tryParse(rawRent?.toString() ?? '0') ?? 0.0;
 
     if (monthsCount == 0) {
       return Container(

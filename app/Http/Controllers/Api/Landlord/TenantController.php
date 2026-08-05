@@ -173,9 +173,35 @@ class TenantController extends Controller
 
     public function update(Request $request, $id)
     {
+        $request->validate([
+            'full_name' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'id_number' => 'nullable|string|max:255',
+            'emergency_contact' => 'nullable|string|max:255',
+            'status' => 'nullable|in:active,moved_out',
+        ]);
+
         $tenant = Tenant::findOrFail($id);
         $tenant->update($request->only(['id_number', 'emergency_contact', 'status']));
-        return $this->success('Tenant updated.', $tenant);
+
+        if ($tenant->user) {
+            $userData = [];
+            if ($request->filled('full_name')) {
+                $userData['full_name'] = $request->full_name;
+            }
+            if ($request->filled('phone')) {
+                $userData['phone'] = $request->phone;
+            }
+            if ($request->filled('email')) {
+                $userData['email'] = $request->email;
+            }
+            if (!empty($userData)) {
+                $tenant->user->update($userData);
+            }
+        }
+
+        return $this->success('Tenant updated.', $tenant->load(['user', 'unit.property']));
     }
 
     public function moveOut($id)

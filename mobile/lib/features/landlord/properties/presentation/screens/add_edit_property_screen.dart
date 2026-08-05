@@ -11,7 +11,8 @@ import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/properties_provider.dart';
 
 class AddEditPropertyScreen extends ConsumerStatefulWidget {
-  const AddEditPropertyScreen({super.key});
+  final String? propertyId;
+  const AddEditPropertyScreen({super.key, this.propertyId});
 
   @override
   ConsumerState<AddEditPropertyScreen> createState() => _AddEditPropertyScreenState();
@@ -26,8 +27,43 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
   final _picker = ImagePicker();
   String _type = 'apartment';
   bool _isLoading = false;
+  bool _isEditMode = false;
+  bool _isDataLoaded = false;
   List<String> _imagePaths = [];
   final Map<String, String> _fieldErrors = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _isEditMode = widget.propertyId != null && widget.propertyId!.isNotEmpty;
+    if (_isEditMode) {
+      _loadPropertyData();
+    }
+  }
+
+  Future<void> _loadPropertyData() async {
+    setState(() => _isLoading = true);
+    try {
+      final repo = ref.read(propertiesRepositoryProvider);
+      final property = await repo.getProperty(widget.propertyId!);
+      _nameController.text = property.name;
+      _addressController.text = property.address ?? '';
+      _locationController.text = '';
+      _descriptionController.text = property.description ?? '';
+      _type = property.type ?? 'apartment';
+      if (mounted) setState(() {
+        _isDataLoaded = true;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load property: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -97,24 +133,46 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
     });
     try {
       final repo = ref.read(propertiesRepositoryProvider);
-      await repo.createProperty(
-        name: _nameController.text.trim(),
-        address: _addressController.text.trim(),
-        location: _locationController.text.trim(),
-        type: _type,
-        description: _descriptionController.text.trim(),
-        imagePaths: _imagePaths,
-      );
-      ref.invalidate(propertiesListProvider);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Property created successfully'),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-          ),
+      if (_isEditMode) {
+        await repo.updateProperty(widget.propertyId!, {
+          'name': _nameController.text.trim(),
+          'address': _addressController.text.trim(),
+          'type': _type,
+          if (_locationController.text.trim().isNotEmpty) 'location': _locationController.text.trim(),
+          if (_descriptionController.text.trim().isNotEmpty) 'description': _descriptionController.text.trim(),
+        });
+        ref.invalidate(propertiesListProvider);
+        ref.invalidate(propertyDetailProvider(widget.propertyId!));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Property updated successfully'),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          context.pop();
+        }
+      } else {
+        await repo.createProperty(
+          name: _nameController.text.trim(),
+          address: _addressController.text.trim(),
+          location: _locationController.text.trim(),
+          type: _type,
+          description: _descriptionController.text.trim(),
+          imagePaths: _imagePaths,
         );
-        context.pop();
+        ref.invalidate(propertiesListProvider);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Property created successfully'),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          context.pop();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -138,7 +196,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Add Property', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(_isEditMode ? 'Edit Property' : 'Add Property', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -153,6 +211,10 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_isLoading && _isEditMode && !_isDataLoaded) ...[
+                const SizedBox(height: 16),
+                const Center(child: CircularProgressIndicator()),
+              ],
               _buildHeader(context),
               const SizedBox(height: 24),
               AppTextField(
@@ -204,13 +266,15 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
                 controller: _descriptionController,
                 maxLines: 3,
               ),
-              const SizedBox(height: 24),
-              Text('Property Photos', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-              const SizedBox(height: 10),
-              _buildImagePicker(context),
+              if (!_isEditMode) ...[
+                const SizedBox(height: 24),
+                Text('Property Photos', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                const SizedBox(height: 10),
+                _buildImagePicker(context),
+              ],
               const SizedBox(height: 24),
               PrimaryButton(
-                text: 'Save Property',
+                text: _isEditMode ? 'Update Property' : 'Save Property',
                 isLoading: _isLoading,
                 onPressed: _submit,
               ),
@@ -242,9 +306,9 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Add Property', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
+                Text(_isEditMode ? 'Edit Property' : 'Add Property', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
                 const SizedBox(height: 4),
-                Text('Fill in the details below to register your property.', style: GoogleFonts.nunito(fontSize: 12, color: Colors.white70)),
+                Text(_isEditMode ? 'Update the details of your property.' : 'Fill in the details below to register your property.', style: GoogleFonts.nunito(fontSize: 12, color: Colors.white70)),
               ],
             ),
           ),

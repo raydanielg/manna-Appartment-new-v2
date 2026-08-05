@@ -26,17 +26,22 @@ class CurrentPlanScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final planAsync = ref.watch(currentPlanProvider);
     final freeTrialState = ref.watch(freeTrialNotifierProvider);
     final isTrialLoading = freeTrialState.isLoading;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Current Plan'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+        title: Text(
+          'Subscription',
+          style: GoogleFonts.nunito(fontWeight: FontWeight.w800, color: const Color(0xFF111827), fontSize: 18),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827)),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -47,101 +52,120 @@ class CurrentPlanScreen extends ConsumerWidget {
         ),
       ),
       body: planAsync.when(
-        loading: () => const LoadingIndicator(),
+        loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
         error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(currentPlanProvider)),
         data: (plan) {
           final hasActivePlan = plan.isNotEmpty && _isActive(plan);
           final planName = plan['plan']?['name'] ?? plan['plan_name'] ?? 'No Plan';
           final price = (plan['plan']?['price'] ?? plan['price'] ?? 0);
-          final priceFormatted = (price is num ? price.toDouble() : double.tryParse(price.toString()) ?? 0).toStringAsFixed(0);
+          final priceFormatted = (price is num
+                  ? price.toDouble()
+                  : double.tryParse(price.toString()) ?? 0.0)
+              .toStringAsFixed(0);
           final billingCycle = plan['plan']?['billing_cycle'] ?? plan['billing_cycle'] ?? 'monthly';
           final endDate = plan['end_date'];
           final isTrial = planName.toLowerCase().contains('trial') || billingCycle == 'trial';
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 20),
+                Text(
+                  'Your current plan',
+                  style: GoogleFonts.nunito(fontSize: 24, fontWeight: FontWeight.w800, color: const Color(0xFF111827)),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Manage your subscription and billing details below.',
+                  style: GoogleFonts.nunito(fontSize: 14, color: const Color(0xFF6B7280)),
+                ),
+                const SizedBox(height: 32),
+                
+                // Active Plan Card
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
+                    color: const Color(0xFFF9FAFB),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            child: Text(
-                              hasActivePlan ? planName : 'No Active Plan',
-                              style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white),
-                            ),
+                          Text(
+                            hasActivePlan ? planName : 'No Active Plan',
+                            style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF111827)),
                           ),
                           if (hasActivePlan)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
+                                color: const Color(0xFFDCFCE7),
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: Text(
-                                'Active',
-                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white),
+                              child: const Text(
+                                'ACTIVE',
+                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.black, color: Color(0xFF166534), letterSpacing: 0.5),
                               ),
                             ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       if (hasActivePlan) ...[
                         Text(
-                          isTrial ? 'Free Trial' : 'TZS $priceFormatted/${billingCycle.replaceAll('ly', '')}',
-                          style: const TextStyle(fontSize: 16, color: Colors.white70),
+                          isTrial ? 'Free Trial Period' : 'TZS $priceFormatted / ${billingCycle.toLowerCase()}',
+                          style: GoogleFonts.nunito(fontSize: 15, color: const Color(0xFF374151), fontWeight: FontWeight.w600),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         Text(
-                          isTrial ? 'Expires on $endDate' : 'Renews on $endDate',
-                          style: const TextStyle(fontSize: 12, color: Colors.white60),
+                          isTrial ? 'Expires on: $endDate' : 'Next renewal: $endDate',
+                          style: GoogleFonts.nunito(fontSize: 12, color: const Color(0xFF6B7280), fontWeight: FontWeight.w600),
                         ),
                       ] else ...[
                         Text(
-                          'Your subscription is inactive. Choose a plan or start a free trial.',
-                          style: const TextStyle(fontSize: 14, color: Colors.white70),
+                          'Your account is currently inactive. Subscribe to a plan to start managing your properties.',
+                          style: GoogleFonts.nunito(fontSize: 14, color: const Color(0xFF4B5563), height: 1.4),
                         ),
                       ],
                     ],
                   ),
                 ),
+                
                 const SizedBox(height: 24),
+                
                 if (!hasActivePlan || isTrial) ...[
+                  // Free Trial Option
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      color: const Color(0xFFEFF6FF),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.card_giftcard, color: AppColors.primary),
+                            const Icon(Icons.auto_awesome_rounded, color: Color(0xFF2563EB), size: 20),
                             const SizedBox(width: 8),
                             Text(
-                              'Free Trial',
-                              style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark),
+                              'Start Free Trial',
+                              style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF1D4ED8)),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Enjoy full access for 3 days at no cost. No payment required.',
-                          style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white70 : AppColors.textLight),
+                          'Try all premium features for 3 days at no cost.',
+                          style: GoogleFonts.nunito(fontSize: 13, color: const Color(0xFF2563EB).withValues(alpha: 0.8), fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 16),
                         if (freeTrialState.hasError)
@@ -149,38 +173,68 @@ class CurrentPlanScreen extends ConsumerWidget {
                             padding: const EdgeInsets.only(bottom: 12),
                             child: Text(
                               freeTrialState.error.toString(),
-                              style: const TextStyle(color: Colors.red, fontSize: 12),
+                              style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
                             ),
                           ),
-                        PrimaryButton(
-                          text: isTrialLoading ? 'Activating...' : 'Activate Free Trial',
-                          icon: isTrialLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.bolt),
-                          onPressed: isTrialLoading
-                              ? null
-                              : () async {
-                                  final success = await ref.read(freeTrialNotifierProvider.notifier).activate();
-                                  if (success && context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Free trial activated! You can now use the dashboard.'), backgroundColor: AppColors.primary),
-                                    );
-                                    context.go('/landlord/home');
-                                  }
-                                },
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: ElevatedButton(
+                            onPressed: isTrialLoading ? () {} : () async {
+                              final success = await ref.read(freeTrialNotifierProvider.notifier).activate();
+                              if (success && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Free trial activated! Enjoy the dashboard.'), backgroundColor: Color(0xFF2563EB), behavior: SnackBarBehavior.floating),
+                                );
+                                context.go('/landlord/home');
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2563EB),
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: const Color(0xFF2563EB),
+                              disabledForegroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            child: isTrialLoading 
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : Text('Activate Trial', style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 14)),
+                          ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
                 ],
-                PrimaryButton(
-                  text: hasActivePlan ? 'Change Plan' : 'Choose Plan',
-                  icon: const Icon(Icons.arrow_upward),
-                  onPressed: () => context.push('/landlord/subscription/plans'),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () => context.push('/landlord/subscription/plans'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: hasActivePlan ? Colors.white : const Color(0xFF2563EB),
+                      foregroundColor: hasActivePlan ? const Color(0xFF2563EB) : Colors.white,
+                      elevation: 0,
+                      side: hasActivePlan ? const BorderSide(color: Color(0xFF2563EB), width: 1.5) : BorderSide.none,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: Text(
+                      hasActivePlan ? 'Change My Plan' : 'View Subscriptions',
+                      style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 32),
-                Text('Subscription History', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+
+                const SizedBox(height: 40),
+                Text(
+                  'Billing History',
+                  style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF111827)),
+                ),
                 const SizedBox(height: 12),
                 _buildHistoryList(context, ref),
+                const SizedBox(height: 40),
               ],
             ),
           );
@@ -190,51 +244,64 @@ class CurrentPlanScreen extends ConsumerWidget {
   }
 
   Widget _buildHistoryList(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final invoicesAsync = ref.watch(subscriptionInvoicesProvider);
     return invoicesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Text('Could not load history.', style: TextStyle(color: isDark ? Colors.white70 : AppColors.textLight)),
+      loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
+      error: (e, _) => Text('Could not load history.', style: GoogleFonts.nunito(color: const Color(0xFF6B7280))),
       data: (invoices) {
         if (invoices.isEmpty) {
           return Container(
-            padding: const EdgeInsets.all(16),
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
-            child: Text('No subscription history yet.', style: TextStyle(color: isDark ? Colors.white70 : AppColors.textLight)),
+            child: Text(
+              'No billing history yet.',
+              style: GoogleFonts.nunito(color: const Color(0xFF6B7280), fontWeight: FontWeight.w600, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
           );
         }
         return Column(
           children: invoices.map((invoice) {
             final planName = invoice['plan']?['name'] ?? 'Subscription';
             final amount = invoice['amount'] ?? 0;
-            final amountFormatted = (amount is num ? amount.toDouble() : double.tryParse(amount.toString()) ?? 0).toStringAsFixed(0);
+            final amountDouble = (amount is num
+                ? amount.toDouble()
+                : double.tryParse(amount.toString()) ?? 0.0);
+            final amountFormatted = amountDouble.toStringAsFixed(0);
             final status = invoice['status']?.toString() ?? 'unknown';
             final paid = status == 'active' || status == 'paid';
             final date = invoice['created_at']?.toString() ?? '';
-            final reference = invoice['payment_reference']?.toString() ?? '';
             return Container(
-              margin: const EdgeInsets.only(bottom: 8),
+              margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                leading: CircleAvatar(
-                  backgroundColor: paid ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-                  child: Icon(paid ? Icons.check : Icons.pending, size: 18, color: paid ? Colors.green : Colors.red),
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: paid ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(paid ? Icons.check_rounded : Icons.priority_high_rounded, size: 18, color: paid ? const Color(0xFF166534) : const Color(0xFFB91C1C)),
                 ),
-                title: Text(planName, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                title: Text(planName, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: const Color(0xFF111827))),
                 subtitle: Text(
-                  '${date.isNotEmpty ? date.substring(0, 10) : '-'} • ${reference.isNotEmpty ? 'Ref: $reference' : 'No reference'}',
-                  style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textLight),
+                  date.isNotEmpty ? date.substring(0, 10) : '-',
+                  style: GoogleFonts.nunito(fontSize: 12, color: const Color(0xFF6B7280), fontWeight: FontWeight.w600),
                 ),
                 trailing: Text(
                   amountFormatted == '0' ? 'FREE' : 'TZS $amountFormatted',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
+                  style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w900, color: const Color(0xFF111827)),
                 ),
                 onTap: () => context.push('/landlord/subscription/invoice', extra: invoice),
               ),

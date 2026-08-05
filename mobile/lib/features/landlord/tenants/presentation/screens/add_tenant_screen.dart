@@ -10,7 +10,8 @@ import '../../providers/tenants_provider.dart';
 import '../../../units/providers/units_provider.dart';
 
 class AddTenantScreen extends ConsumerStatefulWidget {
-  const AddTenantScreen({super.key});
+  final String? tenantId;
+  const AddTenantScreen({super.key, this.tenantId});
 
   @override
   ConsumerState<AddTenantScreen> createState() => _AddTenantScreenState();
@@ -26,6 +27,45 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
   String? _selectedUnitId;
   DateTime _moveInDate = DateTime.now();
   bool _isLoading = false;
+  bool _isEditMode = false;
+  bool _isDataLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isEditMode = widget.tenantId != null && widget.tenantId!.isNotEmpty;
+    if (_isEditMode) {
+      _loadTenantData();
+    }
+  }
+
+  Future<void> _loadTenantData() async {
+    setState(() => _isLoading = true);
+    try {
+      final repo = ref.read(tenantsRepositoryProvider);
+      final tenant = await repo.getTenant(widget.tenantId!);
+      _nameController.text = tenant['full_name'] ?? tenant['user']?['full_name'] ?? '';
+      _phoneController.text = tenant['phone'] ?? tenant['user']?['phone'] ?? '';
+      _emailController.text = tenant['email'] ?? tenant['user']?['email'] ?? '';
+      _idNumberController.text = tenant['id_number'] ?? '';
+      _emergencyController.text = tenant['emergency_contact'] ?? '';
+      _selectedUnitId = tenant['unit']?['id']?.toString();
+      if (tenant['moved_in_date'] != null) {
+        _moveInDate = DateTime.tryParse(tenant['moved_in_date'].toString()) ?? DateTime.now();
+      }
+      if (mounted) setState(() {
+        _isDataLoaded = true;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load tenant: $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -58,7 +98,7 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
     setState(() => _isLoading = true);
     try {
       final repo = ref.read(tenantsRepositoryProvider);
-      await repo.createTenant({
+      final data = {
         'full_name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'email': _emailController.text.trim(),
@@ -66,13 +106,26 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
         'emergency_contact': _emergencyController.text.trim(),
         'unit_id': _selectedUnitId,
         'moved_in_date': DateFormat('yyyy-MM-dd').format(_moveInDate),
-      });
-      ref.invalidate(tenantsListProvider);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tenant added. SMS sent with login credentials.'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
-        );
-        context.pop();
+      };
+      if (_isEditMode) {
+        await repo.updateTenant(widget.tenantId!, data);
+        ref.invalidate(tenantsListProvider);
+        ref.invalidate(tenantDetailProvider(widget.tenantId!));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tenant updated successfully'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
+          );
+          context.pop();
+        }
+      } else {
+        await repo.createTenant(data);
+        ref.invalidate(tenantsListProvider);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tenant added. SMS sent with login credentials.'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
+          );
+          context.pop();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -92,7 +145,7 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Add Tenant', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(_isEditMode ? 'Edit Tenant' : 'Add Tenant', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -116,6 +169,10 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
               AppTextField(label: 'ID Number', hint: 'optional', controller: _idNumberController),
               const SizedBox(height: 16),
               AppTextField(label: 'Emergency Contact', hint: 'optional', controller: _emergencyController),
+              if (_isLoading && _isEditMode && !_isDataLoaded) ...[
+                const SizedBox(height: 16),
+                const Center(child: CircularProgressIndicator()),
+              ],
               const SizedBox(height: 16),
               Text('Unit', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
               const SizedBox(height: 8),
@@ -161,7 +218,7 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              PrimaryButton(text: 'Save Tenant', isLoading: _isLoading, onPressed: _submit),
+              PrimaryButton(text: _isEditMode ? 'Update Tenant' : 'Save Tenant', isLoading: _isLoading, onPressed: _submit),
             ],
           ),
         ),

@@ -31,6 +31,7 @@ class PropertyModel {
 
   factory PropertyModel.fromJson(Map<String, dynamic> json) {
     final rawImages = json['images'];
+    final revenue = json['monthly_revenue'];
     return PropertyModel(
       id: json['id'] ?? json['uuid'] ?? '',
       name: json['name'] ?? json['business_name'] ?? 'Property',
@@ -43,7 +44,9 @@ class PropertyModel {
       description: json['description'],
       imageUrl: json['image_url'],
       images: rawImages is List ? rawImages.map((e) => e.toString()).toList() : [],
-      monthlyRevenue: (json['monthly_revenue'] ?? 0).toDouble(),
+      monthlyRevenue: (revenue is num
+          ? revenue.toDouble()
+          : double.tryParse(revenue?.toString() ?? '0') ?? 0.0),
       createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at']) : null,
     );
   }

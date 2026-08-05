@@ -45,7 +45,10 @@ class PaymentDetailScreen extends ConsumerWidget {
         loading: () => const LoadingIndicator(),
         error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(paymentDetailProvider(id))),
         data: (payment) {
-          final amount = payment['amount'] is num ? (payment['amount'] as num).toDouble() : double.tryParse(payment['amount']?.toString() ?? '0') ?? 0;
+          final rawAmount = payment['amount'];
+          final amount = (rawAmount is num
+              ? rawAmount.toDouble()
+              : double.tryParse(rawAmount?.toString() ?? '0') ?? 0.0);
           final tenant = payment['tenant'];
           final contract = payment['contract'];
           final type = (payment['payment_type'] ?? 'rent').toString();
@@ -189,53 +192,118 @@ class PaymentDetailScreen extends ConsumerWidget {
   void _showEditDialog(BuildContext context, WidgetRef ref, String id, Map<String, dynamic> payment) {
     final amountController = TextEditingController(text: (payment['amount'] ?? '').toString());
     final notesController = TextEditingController(text: (payment['notes'] ?? '').toString());
+    final referenceController = TextEditingController(text: (payment['reference_number'] ?? '').toString());
+    final monthController = TextEditingController(text: (payment['month_covered'] ?? '').toString());
+    String paymentType = (payment['payment_type'] ?? 'rent').toString();
+    String method = (payment['method'] ?? 'cash').toString();
+    DateTime paymentDate = payment['payment_date'] != null
+        ? (DateTime.tryParse(payment['payment_date'].toString()) ?? DateTime.now())
+        : DateTime.now();
+
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Payment'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: amountController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Amount'),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Edit Payment'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: amountController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Amount (TZS)'),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: paymentType,
+                      decoration: const InputDecoration(labelText: 'Payment Type'),
+                      items: const [
+                        DropdownMenuItem(value: 'rent', child: Text('Rent')),
+                        DropdownMenuItem(value: 'water', child: Text('Water')),
+                        DropdownMenuItem(value: 'electricity', child: Text('Electricity')),
+                        DropdownMenuItem(value: 'other', child: Text('Other')),
+                      ],
+                      onChanged: (v) => setDialogState(() => paymentType = v ?? 'rent'),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: method,
+                      decoration: const InputDecoration(labelText: 'Method'),
+                      items: const [
+                        DropdownMenuItem(value: 'cash', child: Text('Cash')),
+                        DropdownMenuItem(value: 'mobile_money', child: Text('Mobile Money')),
+                        DropdownMenuItem(value: 'bank_transfer', child: Text('Bank Transfer')),
+                        DropdownMenuItem(value: 'cheque', child: Text('Cheque')),
+                      ],
+                      onChanged: (v) => setDialogState(() => method = v ?? 'cash'),
+                    ),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: paymentDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (picked != null) setDialogState(() => paymentDate = picked);
+                      },
+                      child: InputDecorator(
+                        decoration: const InputDecoration(labelText: 'Payment Date'),
+                        child: Text(DateFormat('dd MMM yyyy').format(paymentDate)),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: referenceController,
+                      decoration: const InputDecoration(labelText: 'Reference Number'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: notesController,
+                      decoration: const InputDecoration(labelText: 'Notes'),
+                    ),
+                  ],
+                ),
               ),
-              TextField(
-                controller: notesController,
-                decoration: const InputDecoration(labelText: 'Notes'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await ref.read(paymentsRepositoryProvider).updatePayment(id, {
-                    'amount': double.tryParse(amountController.text) ?? payment['amount'],
-                    'notes': notesController.text.trim(),
-                  });
-                  ref.invalidate(paymentDetailProvider(id));
-                  ref.invalidate(landlordPaymentsProvider);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Payment updated'), backgroundColor: AppColors.success),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
-                    );
-                  }
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    try {
+                      await ref.read(paymentsRepositoryProvider).updatePayment(id, {
+                        'amount': double.tryParse(amountController.text) ?? payment['amount'],
+                        'payment_type': paymentType,
+                        'method': method,
+                        'reference_number': referenceController.text.trim(),
+                        'payment_date': DateFormat('yyyy-MM-dd').format(paymentDate),
+                        'month_covered': monthController.text.trim(),
+                        'notes': notesController.text.trim(),
+                      });
+                      ref.invalidate(paymentDetailProvider(id));
+                      ref.invalidate(landlordPaymentsProvider);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Payment updated'), backgroundColor: AppColors.success),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

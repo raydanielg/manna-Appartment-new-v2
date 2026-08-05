@@ -44,9 +44,15 @@ class TenantHomeScreen extends ConsumerWidget {
                   data: (data) {
                     final unit = data['unit'] as Map<String, dynamic>?;
                     final contract = data['contract'] as Map<String, dynamic>?;
-                    final balance = (data['balance'] is num ? (data['balance'] as num) : double.tryParse(data['balance']?.toString() ?? '0') ?? 0).toDouble();
-                    final totalPaid = (data['total_paid'] is num ? (data['total_paid'] as num) : double.tryParse(data['total_paid']?.toString() ?? '0') ?? 0).toDouble();
-                    final rentAmount = (contract?['rent_amount'] is num ? (contract?['rent_amount'] as num) : double.tryParse(contract?['rent_amount']?.toString() ?? '0') ?? 0).toDouble();
+                    final balance = (data['balance'] is num
+                        ? (data['balance'] as num).toDouble()
+                        : double.tryParse(data['balance']?.toString() ?? '0') ?? 0.0);
+                    final totalPaid = (data['total_paid'] is num
+                        ? (data['total_paid'] as num).toDouble()
+                        : double.tryParse(data['total_paid']?.toString() ?? '0') ?? 0.0);
+                    final rentAmount = (contract?['rent_amount'] is num
+                        ? (contract?['rent_amount'] as num).toDouble()
+                        : double.tryParse(contract?['rent_amount']?.toString() ?? '0') ?? 0.0);
                     final recentPayments = data['recent_payments'] as List? ?? [];
                     final maintenanceRequests = data['maintenance_requests'] as List? ?? [];
 
@@ -105,7 +111,7 @@ class TenantHomeScreen extends ConsumerWidget {
           height: 44,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF059669), Color(0xFF047857)],
+              colors: [Color(0xFF2563EB), Color(0xFF1E40AF)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

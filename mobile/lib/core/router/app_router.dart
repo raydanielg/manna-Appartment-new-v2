@@ -109,10 +109,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(path: '/landlord/home', builder: (context, state) => const LandlordHomeScreen()),
           GoRoute(path: '/landlord/properties', builder: (context, state) => const PropertiesListScreen()),
-          GoRoute(path: '/landlord/properties/add', builder: (context, state) => const AddEditPropertyScreen()),
+          GoRoute(path: '/landlord/properties/add', builder: (context, state) => AddEditPropertyScreen(propertyId: state.uri.queryParameters['id'] ?? '')),
           GoRoute(path: '/landlord/properties/:id', builder: (context, state) => const PropertyDetailScreen()),
           GoRoute(path: '/landlord/tenants', builder: (context, state) => const TenantsListScreen()),
-          GoRoute(path: '/landlord/tenants/add', builder: (context, state) => const AddTenantScreen()),
+          GoRoute(path: '/landlord/tenants/add', builder: (context, state) => AddTenantScreen(tenantId: state.uri.queryParameters['id'])),
           GoRoute(path: '/landlord/tenants/:id', builder: (context, state) => const TenantDetailScreen()),
           GoRoute(path: '/landlord/tenants/:id/move-out', builder: (context, state) => const MoveOutScreen()),
           GoRoute(path: '/landlord/units', builder: (context, state) => const UnitsListScreen()),

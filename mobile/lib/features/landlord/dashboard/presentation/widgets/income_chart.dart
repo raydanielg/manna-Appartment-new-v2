@@ -9,7 +9,8 @@ class IncomeChart extends StatelessWidget {
   double _parseAmount(dynamic v) {
     if (v == null) return 0;
     if (v is num) return v.toDouble();
-    return double.tryParse(v.toString()) ?? 0;
+    if (v is String) return double.tryParse(v) ?? 0.0;
+    return 0.0;
   }
 
   String _formatAmount(double amount) {
@@ -51,7 +52,7 @@ class IncomeChart extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF059669).withValues(alpha: 0.1),
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -59,7 +60,7 @@ class IncomeChart extends StatelessWidget {
                     style: GoogleFonts.nunito(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF059669),
+                      color: const Color(0xFF2563EB),
                     ),
                   ),
                 ),
@@ -115,7 +116,7 @@ class IncomeChart extends StatelessWidget {
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
                   color: isHighest
-                      ? const Color(0xFF059669)
+                      ? const Color(0xFF2563EB)
                       : (isDark ? Colors.white54 : AppColors.textLight),
                 ),
               ),
@@ -128,8 +129,8 @@ class IncomeChart extends StatelessWidget {
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: isHighest
-                        ? [const Color(0xFF059669), const Color(0xFF34D399)]
-                        : [const Color(0xFF059669).withValues(alpha: 0.5), const Color(0xFF34D399).withValues(alpha: 0.5)],
+                        ? [const Color(0xFF2563EB), const Color(0xFF60A5FA)]
+                        : [const Color(0xFF2563EB).withValues(alpha: 0.5), const Color(0xFF60A5FA).withValues(alpha: 0.5)],
                   ),
                   borderRadius: BorderRadius.circular(6),
                 ),

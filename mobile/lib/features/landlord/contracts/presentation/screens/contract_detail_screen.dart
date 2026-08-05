@@ -148,7 +148,8 @@ class ContractDetailScreen extends ConsumerWidget {
   double _parseAmount(dynamic value) {
     if (value == null) return 0;
     if (value is num) return value.toDouble();
-    return double.tryParse(value.toString()) ?? 0;
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
   }
 
   Widget _buildSection(BuildContext context, String label, String value, IconData icon) {

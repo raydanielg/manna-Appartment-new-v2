@@ -76,13 +76,13 @@ class RecentActivityList extends StatelessWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: isSuccess
-                          ? const Color(0xFF059669).withValues(alpha: 0.1)
+                          ? const Color(0xFF2563EB).withValues(alpha: 0.1)
                           : const Color(0xFFF59E0B).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       isSuccess ? Icons.check_circle_outline : Icons.build_outlined,
-                      color: isSuccess ? const Color(0xFF059669) : const Color(0xFFF59E0B),
+                      color: isSuccess ? const Color(0xFF2563EB) : const Color(0xFFF59E0B),
                       size: 18,
                     ),
                   ),

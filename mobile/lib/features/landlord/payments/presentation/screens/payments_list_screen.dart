@@ -105,7 +105,58 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
                   return ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: filtered.length,
-                    itemBuilder: (context, index) => _PaymentCard(payment: filtered[index]),
+                    itemBuilder: (context, index) {
+                      final payment = filtered[index];
+                      return Dismissible(
+                        key: Key(payment['id']?.toString() ?? index.toString()),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 24),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: AppColors.error,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        confirmDismiss: (direction) async {
+                          return await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Payment'),
+                              content: const Text('Are you sure you want to delete this payment record?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        onDismissed: (direction) async {
+                          try {
+                            await ref.read(paymentsRepositoryProvider).deletePayment(payment['id'].toString());
+                            ref.invalidate(landlordPaymentsProvider);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Payment deleted'), backgroundColor: AppColors.success),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+                              );
+                              ref.invalidate(landlordPaymentsProvider);
+                            }
+                          }
+                        },
+                        child: _PaymentCard(payment: payment),
+                      );
+                    },
                   );
                 },
               ),
@@ -194,7 +245,8 @@ class _PaymentCard extends StatelessWidget {
   double _parseAmount(dynamic value) {
     if (value == null) return 0;
     if (value is num) return value.toDouble();
-    return double.tryParse(value.toString()) ?? 0;
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
   }
 
   IconData _iconForType(String type) {

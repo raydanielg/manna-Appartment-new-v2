@@ -25,7 +25,11 @@ class PropertyDetailScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            onPressed: () => context.push('/landlord/properties/add?id='),
+            onPressed: () => context.push('/landlord/properties/add?id=$id'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: AppColors.error),
+            onPressed: () => _confirmDelete(context, ref, id),
           ),
         ],
       ),
@@ -66,12 +70,25 @@ class PropertyDetailScreen extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => context.push('/landlord/properties/add?id='),
+                      onPressed: () => context.push('/landlord/properties/add?id=${property.id}'),
                       icon: const Icon(Icons.edit),
                       label: const Text('Edit'),
                     ),
                   ),
                   const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _confirmDelete(context, ref, property.id),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Delete'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () => context.push('/landlord/units?propertyId=${property.id}'),
@@ -85,6 +102,41 @@ class PropertyDetailScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Property'),
+        content: const Text('Are you sure you want to delete this property? This will also affect all units under it. This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await ref.read(propertiesRepositoryProvider).deleteProperty(id);
+                ref.invalidate(propertiesListProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Property deleted'), backgroundColor: AppColors.success),
+                  );
+                  if (context.canPop()) context.pop();
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+                  );
+                }
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
       ),
     );
   }

@@ -27,7 +27,7 @@ class SummaryCards extends StatelessWidget {
         sub: 'Active tenants',
         icon: Icons.people_alt_outlined,
         customIcon: 'assets/icons/tenantsicon.png',
-        color: const Color(0xFF059669),
+        color: const Color(0xFF2563EB),
       ),
       _Item(
         label: 'Income',
@@ -59,7 +59,9 @@ class SummaryCards extends StatelessWidget {
   }
 
   String _formatAmount(dynamic amount) {
-    final n = (amount is num) ? amount.toDouble() : double.tryParse('$amount') ?? 0.0;
+    final n = (amount is num)
+        ? amount.toDouble()
+        : double.tryParse(amount?.toString() ?? '0') ?? 0.0;
     if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
     if (n >= 1000) return '${(n / 1000).toStringAsFixed(0)}K';
     return n.toStringAsFixed(0);

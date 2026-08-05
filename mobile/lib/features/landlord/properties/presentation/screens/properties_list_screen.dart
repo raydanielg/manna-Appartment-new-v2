@@ -109,7 +109,58 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
                   return ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: filtered.length,
-                    itemBuilder: (context, index) => PropertyCard(property: filtered[index]),
+                    itemBuilder: (context, index) {
+                      final property = filtered[index];
+                      return Dismissible(
+                        key: Key(property.id),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 24),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: AppColors.error,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        confirmDismiss: (direction) async {
+                          return await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Property'),
+                              content: const Text('Are you sure you want to delete this property? This will also affect all units under it.'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        onDismissed: (direction) async {
+                          try {
+                            await ref.read(propertiesRepositoryProvider).deleteProperty(property.id);
+                            ref.invalidate(propertiesListProvider);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Property deleted'), backgroundColor: AppColors.success),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+                              );
+                              ref.invalidate(propertiesListProvider);
+                            }
+                          }
+                        },
+                        child: PropertyCard(property: property),
+                      );
+                    },
                   );
                 },
               ),

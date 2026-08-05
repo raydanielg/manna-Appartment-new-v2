@@ -19,7 +19,9 @@ class InvoiceDetailScreen extends StatelessWidget {
     final plan = invoice['plan'] ?? {};
     final planName = plan['name']?.toString() ?? 'Subscription';
     final amount = invoice['amount'] ?? 0;
-    final amountDouble = (amount is num ? amount.toDouble() : double.tryParse(amount.toString()) ?? 0);
+    final amountDouble = (amount is num
+        ? amount.toDouble()
+        : double.tryParse(amount.toString()) ?? 0.0);
     final amountFormatted = amountDouble.toStringAsFixed(0);
     final status = invoice['status']?.toString() ?? 'unknown';
     final paid = status == 'active' || status == 'paid';

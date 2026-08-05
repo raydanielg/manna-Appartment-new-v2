@@ -22,55 +22,68 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final tenantsAsync = ref.watch(tenantsListProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Tenants', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+        title: Text(
+          'Tenants',
+          style: GoogleFonts.nunito(fontWeight: FontWeight.w800, color: const Color(0xFF111827), fontSize: 20),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827)),
           onPressed: () {
             if (context.canPop()) context.pop();
           },
         ),
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
             child: TextField(
               onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
+              style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600),
               decoration: InputDecoration(
-                hintText: 'Search tenants...',
-                hintStyle: GoogleFonts.nunito(fontSize: 14),
-                prefixIcon: const Icon(Icons.search),
+                hintText: 'Search by name or phone...',
+                hintStyle: GoogleFonts.nunito(fontSize: 14, color: const Color(0xFF9CA3AF)),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF6B7280), size: 20),
                 filled: true,
-                fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                fillColor: const Color(0xFFF3F4F6),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5)),
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                _buildFilterChip('All', 'all'),
-                const SizedBox(width: 8),
-                _buildFilterChip('Active', 'active'),
-                const SizedBox(width: 8),
-                _buildFilterChip('Moved Out', 'moved_out'),
-              ],
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip('All Tenants', 'all'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Active', 'active'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Moved Out', 'moved_out'),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async => ref.invalidate(tenantsListProvider),
-              color: AppColors.primary,
+              color: const Color(0xFF2563EB),
               child: tenantsAsync.when(
-                loading: () => const LoadingIndicator(),
+                loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
                 error: (e, _) {
                   final message = e.toString();
                   final isSetupError = message.toLowerCase().contains('kyc') ||
@@ -85,8 +98,9 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
                 },
                 data: (tenants) {
                   final filtered = tenants.where((t) {
-                    final name = (t['user']?['full_name'] ?? t['full_name'] ?? '').toString().toLowerCase();
-                    final phone = (t['user']?['phone'] ?? t['phone'] ?? '').toString().toLowerCase();
+                    final userData = t['user'] as Map<String, dynamic>?;
+                    final name = (userData?['full_name'] ?? userData?['name'] ?? t['full_name'] ?? t['name'] ?? '').toString().toLowerCase();
+                    final phone = (userData?['phone'] ?? t['phone'] ?? '').toString().toLowerCase();
                     final matchesSearch = name.contains(_searchQuery) || phone.contains(_searchQuery);
                     final status = (t['status'] ?? 'active').toString();
                     final matchesStatus = _filterStatus == 'all' || status == _filterStatus;
@@ -97,9 +111,61 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
                     return const EmptyState(message: 'No tenants found. Add your first tenant.', icon: Icons.people_outline);
                   }
                   return ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                     itemCount: filtered.length,
-                    itemBuilder: (context, index) => TenantCard(tenant: filtered[index]),
+                    itemBuilder: (context, index) {
+                      final tenant = filtered[index];
+                      final tenantId = tenant['id']?.toString() ?? '';
+                      return Dismissible(
+                        key: Key(tenantId.isNotEmpty ? tenantId : index.toString()),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 24),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: AppColors.error,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        confirmDismiss: (direction) async {
+                          return await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Tenant'),
+                              content: const Text('Are you sure you want to delete this tenant? This action cannot be undone.'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        onDismissed: (direction) async {
+                          try {
+                            await ref.read(tenantsRepositoryProvider).deleteTenant(tenantId);
+                            ref.invalidate(tenantsListProvider);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Tenant deleted'), backgroundColor: AppColors.success),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+                              );
+                              ref.invalidate(tenantsListProvider);
+                            }
+                          }
+                        },
+                        child: TenantCard(tenant: tenant),
+                      );
+                    },
                   );
                 },
               ),
@@ -109,9 +175,11 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/landlord/tenants/add'),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.person_add),
-        label: const Text('Add'),
+        backgroundColor: const Color(0xFF2563EB),
+        foregroundColor: Colors.white,
+        elevation: 4,
+        icon: const Icon(Icons.person_add_rounded),
+        label: Text('Add Tenant', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
       ),
     );
   }
@@ -119,10 +187,18 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
   Widget _buildFilterChip(String label, String value) {
     final isSelected = _filterStatus == value;
     return ChoiceChip(
-      label: Text(label, style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: isSelected ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : AppColors.textLight))),
+      label: Text(label),
+      labelStyle: GoogleFonts.nunito(
+        fontSize: 13, 
+        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600, 
+        color: isSelected ? Colors.white : const Color(0xFF6B7280)
+      ),
       selected: isSelected,
-      selectedColor: AppColors.primary,
-      backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white,
+      selectedColor: const Color(0xFF2563EB),
+      backgroundColor: const Color(0xFFF3F4F6),
+      borderSide: BorderSide.none,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      showCheckmark: false,
       onSelected: (_) => setState(() => _filterStatus = value),
     );
   }
