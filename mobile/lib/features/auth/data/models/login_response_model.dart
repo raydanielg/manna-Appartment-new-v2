@@ -32,6 +32,7 @@ class UserModel {
   final String? businessName;
   final int? smsBalance;
   final String? avatar;
+  final bool mustChangePassword;
 
   UserModel({
     required this.id,
@@ -47,6 +48,7 @@ class UserModel {
     this.businessName,
     this.smsBalance,
     this.avatar,
+    this.mustChangePassword = false,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -65,6 +67,7 @@ class UserModel {
       businessName: org is Map ? org['business_name'] : null,
       smsBalance: org is Map ? (org['sms_balance'] is int ? org['sms_balance'] : (org['sms_balance'] != null ? int.tryParse(org['sms_balance'].toString()) : null)) : null,
       avatar: json['avatar']?.toString(),
+      mustChangePassword: json['must_change_password'] == true,
     );
   }
 
@@ -82,6 +85,7 @@ class UserModel {
     String? businessName,
     int? smsBalance,
     String? avatar,
+    bool? mustChangePassword,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -97,6 +101,7 @@ class UserModel {
       businessName: businessName ?? this.businessName,
       smsBalance: smsBalance ?? this.smsBalance,
       avatar: avatar ?? this.avatar,
+      mustChangePassword: mustChangePassword ?? this.mustChangePassword,
     );
   }
 
@@ -114,5 +119,6 @@ class UserModel {
         'business_name': businessName,
         'sms_balance': smsBalance,
         'avatar': avatar,
+        'must_change_password': mustChangePassword,
       };
 }

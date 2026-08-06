@@ -58,6 +58,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     ref.listen(authProvider, (previous, next) {
       if (next.isAuthenticated) {
+        if (next.user?.mustChangePassword == true) {
+          context.go('/tenant/profile/change-password');
+          return;
+        }
         final route = switch (next.role) {
           'super_admin' => '/admin/landlords',
           'landlord' => '/landlord/home',

@@ -10,12 +10,17 @@ class RouteGuard {
     final isKycRoute = loc.startsWith('/landlord/kyc');
     final isSettingsRoute = loc.startsWith('/settings');
     final isBannedRoute = loc == '/banned';
+    final isChangePasswordRoute = loc == '/tenant/profile/change-password';
     final isPublicRoute = loc == '/splash' || loc == '/onboarding' || isSettingsRoute || loc == '/notifications' || isBannedRoute;
 
     if (isPublicRoute) return null;
     if (!isAuthenticated && !isAuthRoute) return '/auth/login';
     if (isAuthenticated && isAuthRoute) {
+      if (authState.user?.mustChangePassword == true) return '/tenant/profile/change-password';
       return authState.role == 'landlord' ? '/landlord/home' : '/tenant/home';
+    }
+    if (isAuthenticated && authState.user?.mustChangePassword == true && !isChangePasswordRoute) {
+      return '/tenant/profile/change-password';
     }
     if (isAuthenticated && !authState.isOrganizationActive && !isBannedRoute) {
       return '/banned';

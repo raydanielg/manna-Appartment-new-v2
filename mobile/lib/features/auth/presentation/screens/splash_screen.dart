@@ -69,6 +69,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         context.go('/banned');
         return;
       }
+      if (refreshed.user?.mustChangePassword == true) {
+        context.go('/tenant/profile/change-password');
+        return;
+      }
       final route = refreshed.role == 'landlord'
           ? (refreshed.isKycApproved ? '/landlord/home' : '/landlord/kyc')
           : '/tenant/home';
