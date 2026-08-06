@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/error_state.dart';
-import '../../../../../core/widgets/loading_indicator.dart';
 import '../../providers/subscription_provider.dart';
 import '../widgets/plan_card.dart';
 
@@ -17,17 +17,22 @@ class SubscriptionPlansScreen extends ConsumerStatefulWidget {
 class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScreen> {
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final plansAsync = ref.watch(subscriptionPlansProvider);
     final currentPlanAsync = ref.watch(currentPlanProvider);
     final currentPlanId = currentPlanAsync.maybeWhen(data: (d) => d['plan_id'], orElse: () => null);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Subscription Plans'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: false,
+        title: Text(
+          'Subscription Plans',
+          style: GoogleFonts.nunito(fontWeight: FontWeight.w800, color: AppColors.textDark, fontSize: 18),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textDark),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -38,10 +43,10 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
         ),
       ),
       body: plansAsync.when(
-        loading: () => const LoadingIndicator(),
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
         error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(subscriptionPlansProvider)),
         data: (plans) => ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           itemCount: plans.length,
           itemBuilder: (context, index) {
             final plan = plans[index];
@@ -62,7 +67,7 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
       final success = await ref.read(freeTrialNotifierProvider.notifier).activate();
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Free trial activated!'), backgroundColor: AppColors.primary),
+          const SnackBar(content: Text('Free trial activated!'), backgroundColor: AppColors.primary, behavior: SnackBarBehavior.floating),
         );
         context.go('/landlord/home');
       }

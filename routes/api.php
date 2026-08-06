@@ -241,6 +241,7 @@ Route::prefix('v1')->group(function () {
 
         // Payment gateway (authenticated initiate/verify; callback stays public)
         Route::post('/payments-gateway/initiate', [PaymentGatewayController::class, 'initiate']);
+        Route::post('/payments-gateway/checkout', [PaymentGatewayController::class, 'initiateCheckout']);
         Route::get('/payments-gateway/verify/{ref}', [PaymentGatewayController::class, 'verify']);
     });
 

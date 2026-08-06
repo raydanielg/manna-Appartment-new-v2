@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
-import '../../../../../core/widgets/primary_button.dart';
 
 class PlanCard extends StatelessWidget {
   final Map<String, dynamic> plan;
@@ -11,7 +10,6 @@ class PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final features = (plan['features_json'] as List<dynamic>? ?? (plan['features'] as List<dynamic>? ?? []));
     final billingCycle = plan['billing_cycle']?.toString() ?? 'monthly';
     final isTrial = billingCycle == 'trial';
@@ -22,39 +20,54 @@ class PlanCard extends StatelessWidget {
     final unitLimit = plan['unit_limit'] ?? 0;
     final smsIncluded = plan['sms_included'] ?? 0;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: isCurrent
-          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: const BorderSide(color: AppColors.primary, width: 2))
-          : RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isCurrent ? AppColors.primary : const Color(0xFFE5E7EB),
+          width: isCurrent ? 2 : 1,
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(22),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(plan['name'] ?? 'Plan', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
+                Text(
+                  plan['name'] ?? 'Plan',
+                  style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                ),
                 if (isCurrent)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
-                    child: const Text('CURRENT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.success)),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDCFCE7),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'CURRENT',
+                      style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w900, color: const Color(0xFF166534), letterSpacing: 0.5),
+                    ),
                   ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               isTrial ? 'Free Trial' : 'TZS ${price.toStringAsFixed(0)}/${billingCycle.replaceAll('ly', '')}',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.primary),
+              style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primary),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade50,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -65,17 +78,34 @@ class PlanCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             ...features.map((f) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(children: [
-                const Icon(Icons.check_circle, size: 16, color: AppColors.success),
+                const Icon(Icons.check_circle_rounded, size: 16, color: AppColors.primary),
                 const SizedBox(width: 8),
-                Expanded(child: Text(f.toString(), style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : AppColors.textDark))),
+                Expanded(child: Text(f.toString(), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark))),
               ]),
             )),
-            const SizedBox(height: 16),
-            if (!isCurrent) PrimaryButton(text: isTrial ? 'Start Free Trial' : 'Select Plan', onPressed: onSelect ?? () {}),
+            const SizedBox(height: 18),
+            if (!isCurrent)
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: onSelect,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: Text(
+                    isTrial ? 'Start Free Trial' : 'Select Plan',
+                    style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -90,12 +120,11 @@ class _LimitItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+        Text(value, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark)),
         const SizedBox(height: 2),
-        Text(label, style: TextStyle(fontSize: 10, color: isDark ? Colors.white60 : AppColors.textLight)),
+        Text(label, style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textLight)),
       ],
     );
   }

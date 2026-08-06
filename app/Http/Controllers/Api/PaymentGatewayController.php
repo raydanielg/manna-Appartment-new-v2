@@ -124,6 +124,116 @@ class PaymentGatewayController extends Controller
         ]);
     }
 
+    public function initiateCheckout(Request $request)
+    {
+        $request->validate([
+            'type' => 'required|in:subscription,payment',
+            'id' => 'required|uuid',
+            'phone' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+        $organization = $user->organization;
+
+        if (!$organization) {
+            return $this->error('No organization associated with this account.', null, 400);
+        }
+
+        if ($request->type !== 'subscription') {
+            return $this->error('Only subscription checkout is supported.', null, 400);
+        }
+
+        try {
+            $plan = SubscriptionPlan::findOrFail($request->id);
+
+            if (!$plan->status || $plan->status !== 'active') {
+                return $this->error('Selected subscription plan is not active.', null, 400);
+            }
+
+            $transaction = PaymentTransaction::create([
+                'organization_id' => $organization->id,
+                'user_id' => $user->id,
+                'type' => 'subscription',
+                'reference_id' => $plan->id,
+                'provider' => 'snippe',
+                'amount' => $plan->price,
+                'currency' => config('snippe.currency', 'TZS'),
+                'status' => 'pending',
+                'phone' => app(SnippeService::class)->formatPhone($request->phone),
+                'payment_method' => 'mobile_money',
+            ]);
+
+            $snippe = app(SnippeService::class);
+
+            $sessionData = [
+                'amount' => (int) $plan->price,
+                'currency' => config('snippe.currency', 'TZS'),
+                'phone' => $request->phone,
+                'customer_name' => $user->full_name,
+                'customer_email' => $user->email,
+                'description' => "Subscription: {$plan->name}",
+                'metadata' => [
+                    'transaction_id' => $transaction->id,
+                    'organization_id' => $organization->id,
+                    'plan_id' => $plan->id,
+                    'type' => 'subscription',
+                ],
+                'redirect_url' => config('snippe.redirect_url'),
+            ];
+
+            $session = $snippe->createSession($sessionData);
+
+            if (!empty($session['status']) && $session['status'] === 'error') {
+                $transaction->update(['status' => 'failed']);
+                Log::error('Snippe checkout session failed', ['response' => $session]);
+                return $this->error(
+                    $session['message'] ?? 'Failed to create checkout session. Please try again.',
+                    $session,
+                    502
+                );
+            }
+
+            $checkoutUrl = $session['data']['checkout_url']
+                ?? $session['data']['url']
+                ?? $session['data']['session_url']
+                ?? $session['checkout_url']
+                ?? $session['url']
+                ?? null;
+
+            $providerRef = $session['data']['reference']
+                ?? $session['data']['session_id']
+                ?? $session['data']['id']
+                ?? $session['reference']
+                ?? null;
+
+            if (!$checkoutUrl) {
+                $transaction->update(['status' => 'failed']);
+                Log::error('Snippe session response missing checkout URL', ['response' => $session]);
+                return $this->error('Checkout URL not found in provider response. Please try again.', null, 502);
+            }
+
+            $transaction->update([
+                'provider_reference' => $providerRef,
+                'payload' => $session['data'] ?? $session,
+            ]);
+
+            return $this->success('Checkout session created.', [
+                'reference' => $transaction->id,
+                'provider_reference' => $providerRef,
+                'checkout_url' => $checkoutUrl,
+                'amount' => $plan->price,
+                'currency' => config('snippe.currency', 'TZS'),
+                'status' => 'pending',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Checkout initiation failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return $this->error('Checkout could not be initiated: ' . $e->getMessage(), null, 500);
+        }
+    }
+
     private function isPaymentSuccessful(array $payment): bool
     {
         if (!empty($payment['status']) && $payment['status'] !== 'success') {
