@@ -11,11 +11,18 @@ import '../../../../../core/widgets/primary_button.dart';
 import '../../../../../core/widgets/status_badge.dart';
 import '../../providers/contracts_provider.dart';
 
-class ContractDetailScreen extends ConsumerWidget {
+class ContractDetailScreen extends ConsumerStatefulWidget {
   const ContractDetailScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ContractDetailScreen> createState() => _ContractDetailScreenState();
+}
+
+class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
+  bool _isPdfLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     final id = GoRouterState.of(context).pathParameters['id'] ?? '';
     final contractAsync = ref.watch(contractDetailProvider(id));
 
@@ -84,6 +91,7 @@ class ContractDetailScreen extends ConsumerWidget {
                       child: PrimaryButton(
                         text: 'View PDF',
                         icon: const Icon(Icons.picture_as_pdf, size: 18),
+                        isLoading: _isPdfLoading,
                         onPressed: () => _downloadAndOpen(context, ref, id),
                       ),
                     ),
@@ -222,15 +230,18 @@ class ContractDetailScreen extends ConsumerWidget {
   }
 
   Future<void> _downloadAndOpen(BuildContext context, WidgetRef ref, String id) async {
+    setState(() => _isPdfLoading = true);
     try {
       final path = await ref.read(contractsRepositoryProvider).downloadPdf(id);
       await OpenFilex.open(path);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open PDF: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text('Could not open PDF: $e'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isPdfLoading = false);
     }
   }
 

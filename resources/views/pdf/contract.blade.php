@@ -29,7 +29,6 @@
         <div class="row"><span class="label">Landlord:</span> {{ $contract->organization?->business_name ?? 'Manna Apartment' }}</div>
         <div class="row"><span class="label">Tenant:</span> {{ $contract->tenant?->user?->full_name ?? 'N/A' }}</div>
         <div class="row"><span class="label">Phone:</span> {{ $contract->tenant?->user?->phone ?? 'N/A' }}</div>
-        <div class="row"><span class="label">ID Number:</span> {{ $contract->tenant?->id_number ?? 'N/A' }}</div>
     </div>
 
     <div class="section">
@@ -48,15 +47,19 @@
 
     <div class="section">
         <div class="section-title">4. Rent</div>
-        <div class="row"><span class="label">Monthly Rent:</span> TZS {{ number_format($contract->rent_amount, 2) }}</div>
-        <div class="row"><span class="label">Deposit:</span> TZS {{ number_format($contract->deposit_amount ?? 0, 2) }}</div>
+        <div class="row"><span class="label">Monthly Rent:</span> TZS {{ number_format($contract->rent_amount, 0) }}</div>
+        <div class="row"><span class="label">Deposit:</span> TZS {{ number_format($contract->deposit_amount ?? 0, 0) }}</div>
     </div>
 
     <div class="section">
         <div class="section-title">5. Terms and Conditions</div>
+        @if($contract->contract_type === 'manual' && $contract->template_content)
+        <p class="terms" style="white-space: pre-wrap;">{{ $contract->template_content }}</p>
+        @else
         <p class="terms">
-            The tenant agrees to pay rent on or before the due date each month. The tenant shall keep the property and unit in good condition and comply with all house rules. The landlord may terminate this agreement for non-payment, breach of terms, or misuse of the property. The deposit shall be refunded at move-out after inspection, minus any damages or unpaid dues.
+            The Tenant shall pay the monthly rent on or before the 5th day of each calendar month. Late payment shall attract a penalty as determined by the Landlord. The Tenant shall use the premises for residential purposes only and shall not sub-let, assign, or transfer any part of the premises without prior written consent of the Landlord. The Tenant shall maintain the premises in good and clean condition and shall be responsible for any damage caused by negligence or misuse, excluding normal wear and tear. The Landlord shall be responsible for structural repairs, plumbing, electrical, and other major maintenance. Either party may terminate this agreement by giving one (1) month written notice. Upon termination, the Tenant shall hand over the premises in the same condition, fair wear and tear excepted. The security deposit shall be refunded after deduction of any outstanding rent or damage costs.
         </p>
+        @endif
     </div>
 
     @if($signatureBase64)
