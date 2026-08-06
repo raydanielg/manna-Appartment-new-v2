@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/maintenance_provider.dart';
 
@@ -27,7 +28,7 @@ class _SubmitMaintenanceScreenState extends ConsumerState<SubmitMaintenanceScree
   Future<void> _submit() async {
     if (_descriptionController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please describe the issue'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(context.tr('please_describe_issue')), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -39,7 +40,7 @@ class _SubmitMaintenanceScreenState extends ConsumerState<SubmitMaintenanceScree
       });
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Maintenance request submitted'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text(context.tr('maintenance_submitted')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
         );
         ref.invalidate(myMaintenanceRequestsProvider);
         context.pop();
@@ -48,7 +49,7 @@ class _SubmitMaintenanceScreenState extends ConsumerState<SubmitMaintenanceScree
       if (context.mounted) {
         String msg = 'Failed: $e';
         if (e is DioException && e.response?.statusCode == 404) {
-          msg = 'No unit assigned. Please contact your landlord to set up your tenancy before submitting maintenance requests.';
+          msg = context.tr('no_unit_assigned_msg');
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
@@ -64,7 +65,7 @@ class _SubmitMaintenanceScreenState extends ConsumerState<SubmitMaintenanceScree
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Submit Maintenance', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('submit_maintenance'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
       ),
       body: SingleChildScrollView(
@@ -96,9 +97,9 @@ class _SubmitMaintenanceScreenState extends ConsumerState<SubmitMaintenanceScree
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Report an Issue', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                        Text(context.tr('report_issue'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textDark)),
                         const SizedBox(height: 2),
-                        Text('Describe the problem and submit', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
+                        Text(context.tr('describe_problem'), style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
                       ],
                     ),
                   ),
@@ -106,7 +107,7 @@ class _SubmitMaintenanceScreenState extends ConsumerState<SubmitMaintenanceScree
               ),
             ),
             const SizedBox(height: 24),
-            Text('Description', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+            Text(context.tr('description'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
@@ -120,7 +121,7 @@ class _SubmitMaintenanceScreenState extends ConsumerState<SubmitMaintenanceScree
                 minLines: 4,
                 style: GoogleFonts.nunito(fontSize: 14, color: AppColors.textDark, height: 1.5),
                 decoration: InputDecoration(
-                  hintText: 'e.g. The kitchen tap is leaking and water is pooling on the floor...',
+                  hintText: context.tr('describe_issue_hint'),
                   hintStyle: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(16),
@@ -129,7 +130,7 @@ class _SubmitMaintenanceScreenState extends ConsumerState<SubmitMaintenanceScree
             ),
             const SizedBox(height: 28),
             PrimaryButton(
-              text: 'Submit Request',
+              text: context.tr('submit_request'),
               isLoading: _isLoading,
               onPressed: _submit,
             ),

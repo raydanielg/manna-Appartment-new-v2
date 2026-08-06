@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/localization/locale_provider.dart';
 
 class LanguageToggleScreen extends ConsumerWidget {
@@ -21,7 +22,7 @@ class LanguageToggleScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Language', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('language'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -36,7 +37,7 @@ class LanguageToggleScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Text('Select Language', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white60 : AppColors.textLight)),
+          Text(context.tr('select_language'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white60 : AppColors.textLight)),
           const SizedBox(height: 12),
           ...languages.map((lang) {
             final selected = locale.languageCode == lang['code'];
@@ -64,7 +65,7 @@ class LanguageToggleScreen extends ConsumerWidget {
                   await ref.read(localeProvider.notifier).setLocale(lang['code']!);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Language changed to ${lang['name']}'), backgroundColor: AppColors.success),
+                      SnackBar(content: Text('${context.tr('language_changed')} ${lang['name']}'), backgroundColor: AppColors.success),
                     );
                   }
                 },

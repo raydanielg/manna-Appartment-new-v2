@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/status_badge.dart';
@@ -20,7 +21,7 @@ class UnitDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text('Unit Details'),
+        title: Text(context.tr('unit_details')),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
         actions: [
           IconButton(
@@ -51,27 +52,27 @@ class UnitDetailScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(unit['name'] ?? unit['unit_number'] ?? 'Unit', style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
+                    Text(unit['name'] ?? unit['unit_number'] ?? context.tr('unit'), style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
                     const SizedBox(height: 8),
-                    Text('TZS ${unit['monthly_rent'] ?? 0}/month', style: const TextStyle(fontSize: 16, color: Colors.white70)),
+                    Text('TZS ${unit['monthly_rent'] ?? 0}/${context.tr('month')}', style: const TextStyle(fontSize: 16, color: Colors.white70)),
                     const SizedBox(height: 12),
                     StatusBadge(status: unit['status'] ?? 'vacant'),
                   ],
                 ),
               ),
               const SizedBox(height: 20),
-              _buildInfoRow(context, Icons.category_outlined, 'Type', unit['type'] ?? 'N/A'),
-              _buildInfoRow(context, Icons.square_foot, 'Size', '${unit['size'] ?? 'N/A'} sqm'),
-              _buildInfoRow(context, Icons.bed, 'Bedrooms', '${unit['bedrooms'] ?? 0}'),
-              _buildInfoRow(context, Icons.bathtub, 'Bathrooms', '${unit['bathrooms'] ?? 0}'),
+              _buildInfoRow(context, Icons.category_outlined, context.tr('type'), unit['type'] ?? 'N/A'),
+              _buildInfoRow(context, Icons.square_foot, context.tr('size'), '${unit['size'] ?? 'N/A'} sqm'),
+              _buildInfoRow(context, Icons.bed, context.tr('bedrooms'), '${unit['bedrooms'] ?? 0}'),
+              _buildInfoRow(context, Icons.bathtub, context.tr('bathrooms'), '${unit['bathrooms'] ?? 0}'),
               if (unit['tenant'] != null) ...[
                 const SizedBox(height: 20),
-                Text('Current Tenant', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                Text(context.tr('current_tenant'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
                 const SizedBox(height: 8),
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.person, color: AppColors.info),
-                    title: Text(unit['tenant']['full_name'] ?? 'Unknown'),
+                    title: Text(unit['tenant']['full_name'] ?? context.tr('unknown')),
                     subtitle: Text(unit['tenant']['phone'] ?? ''),
                   ),
                 ),
@@ -83,7 +84,7 @@ class UnitDetailScreen extends ConsumerWidget {
                     child: ElevatedButton.icon(
                       onPressed: () => context.push('/landlord/units/add?id=$id'),
                       icon: const Icon(Icons.edit),
-                      label: const Text('Edit'),
+                      label: Text(context.tr('edit')),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -92,7 +93,7 @@ class UnitDetailScreen extends ConsumerWidget {
                       onPressed: () => _confirmDelete(context, ref, id),
                       style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
                       icon: const Icon(Icons.delete_outline),
-                      label: const Text('Delete'),
+                      label: Text(context.tr('delete')),
                     ),
                   ),
                 ],
@@ -108,10 +109,10 @@ class UnitDetailScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Unit'),
-        content: const Text('Are you sure you want to delete this unit? This action cannot be undone.'),
+        title: Text(context.tr('delete_unit')),
+        content: Text(context.tr('confirm_delete_unit')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('cancel'))),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -120,7 +121,7 @@ class UnitDetailScreen extends ConsumerWidget {
                 ref.invalidate(unitsListProvider(null));
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Unit deleted'), backgroundColor: AppColors.success),
+                    SnackBar(content: Text(context.tr('unit_deleted')), backgroundColor: AppColors.success),
                   );
                   if (context.canPop()) context.pop();
                 }
@@ -132,7 +133,7 @@ class UnitDetailScreen extends ConsumerWidget {
                 }
               }
             },
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),

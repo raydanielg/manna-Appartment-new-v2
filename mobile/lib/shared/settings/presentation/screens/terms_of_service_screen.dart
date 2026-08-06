@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class TermsOfServiceScreen extends StatelessWidget {
   const TermsOfServiceScreen({super.key});
@@ -56,7 +57,7 @@ class TermsOfServiceScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: isDark ? AppColors.darkBackground : const Color(0xFFF3F4F6),
         elevation: 0,
-        title: Text('Terms of Service', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('terms_of_service'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -90,12 +91,12 @@ class TermsOfServiceScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Manna Apartment',
+                    context.tr('app_name'),
                     style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Terms of Service',
+                    context.tr('terms_of_service'),
                     style: GoogleFonts.nunito(fontSize: 14, color: AppColors.primary, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 8),

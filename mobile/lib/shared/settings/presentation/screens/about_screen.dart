@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -14,7 +15,7 @@ class AboutScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
         elevation: 0,
-        title: Text('About', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('about'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -39,30 +40,30 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Manna Apartment',
+              context.tr('app_name'),
               style: GoogleFonts.nunito(fontSize: 24, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark),
             ),
             const SizedBox(height: 8),
             Text(
-              'Version 1.0.0',
+              '${context.tr('version')} 3.1.0+5',
               style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textLight),
             ),
             const SizedBox(height: 32),
             _buildCard(
               context,
               children: [
-                _buildInfoRow(context, 'Company', 'Manna Apartment Ltd'),
+                _buildInfoRow(context, context.tr('company'), 'Manna Apartment Ltd'),
                 const Divider(height: 1),
-                _buildInfoRow(context, 'Website', 'www.mannaapartment.co.tz'),
+                _buildInfoRow(context, context.tr('website'), 'www.mannaapartment.co.tz'),
                 const Divider(height: 1),
-                _buildInfoRow(context, 'Email', 'support@mannaapartment.co.tz'),
+                _buildInfoRow(context, context.tr('email'), 'support@mannaapartment.co.tz'),
                 const Divider(height: 1),
-                _buildInfoRow(context, 'Phone', '+255 700 000 000'),
+                _buildInfoRow(context, context.tr('phone'), '+255 700 000 000'),
               ],
             ),
             const SizedBox(height: 24),
             Text(
-              'Manna Apartment helps landlords manage properties, tenants, payments, and maintenance with ease. Built for the Tanzanian market.',
+              context.tr('about_description'),
               style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textLight),
               textAlign: TextAlign.center,
             ),

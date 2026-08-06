@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -19,7 +20,7 @@ class MyMaintenanceRequestsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(title: Text('My Requests', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      appBar: AppBar(title: Text(context.tr('my_maintenance_requests'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(myMaintenanceRequestsProvider),
         color: AppColors.primary,
@@ -40,9 +41,9 @@ class MyMaintenanceRequestsScreen extends ConsumerWidget {
                         child: const Icon(Icons.build_outlined, size: 36, color: AppColors.textLight),
                       ),
                       const SizedBox(height: 20),
-                      Text('No Requests Yet', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                      Text(context.tr('no_requests_yet'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
                       const SizedBox(height: 8),
-                      Text('Maintenance requests will appear here once your landlord sets up your tenancy.', textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
+                      Text(context.tr('no_requests_desc'), textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
                     ],
                   ),
                 ),
@@ -51,7 +52,7 @@ class MyMaintenanceRequestsScreen extends ConsumerWidget {
             return ErrorState(message: e.toString(), onRetry: () => ref.invalidate(myMaintenanceRequestsProvider));
           },
           data: (requests) => requests.isEmpty
-              ? const EmptyState(message: 'No maintenance requests yet.', icon: Icons.build_outlined)
+              ? EmptyState(message: context.tr('no_maintenance_yet'), icon: Icons.build_outlined)
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: requests.length,
@@ -87,7 +88,7 @@ class MyMaintenanceRequestsScreen extends ConsumerWidget {
                             ],
                             if (req['created_at'] != null) ...[
                               const SizedBox(height: 8),
-                              Text('Submitted: ${req['created_at']}', style: TextStyle(fontSize: 11, color: AppColors.textLight)),
+                              Text('${context.tr('submitted')}: ${req['created_at']}', style: TextStyle(fontSize: 11, color: AppColors.textLight)),
                             ],
                           ],
                         ),
@@ -101,7 +102,7 @@ class MyMaintenanceRequestsScreen extends ConsumerWidget {
         onPressed: () => context.push('/tenant/maintenance/submit'),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add),
-        label: const Text('New Request'),
+        label: Text(context.tr('new_request')),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/auth_background.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -27,7 +28,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _login() async {
     if (_phoneController.text.trim().isEmpty || _passwordController.text.isEmpty) {
-      _showError('Please enter both phone and password');
+      _showError(context.tr('enter_phone_password'));
       return;
     }
     var phone = _phoneController.text.trim().replaceAll(RegExp(r'\D'), '');
@@ -102,7 +103,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 32),
               
               Text(
-                'Sign in',
+                context.tr('sign_in_title'),
                 style: GoogleFonts.nunito(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
@@ -111,7 +112,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Enter your details to sign in to your account.',
+                context.tr('sign_in_subtitle'),
                 style: GoogleFonts.nunito(
                   fontSize: 14,
                   color: const Color(0xFF6B7280),
@@ -148,7 +149,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ],
 
               // Phone Field
-              _buildLabel('Phone Number'),
+              _buildLabel(context.tr('phone_number')),
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
@@ -164,13 +165,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 20),
 
               // Password Field
-              _buildLabel('Password'),
+              _buildLabel(context.tr('password')),
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
                 decoration: _buildInputDecoration(
-                  hint: 'Enter your password',
+                  hint: context.tr('enter_password'),
                   suffix: IconButton(
                     icon: Icon(
                       _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -191,7 +192,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     context.go('/auth/forgot-password');
                   },
                   child: Text(
-                    'Forgot Password?',
+                    context.tr('forgot_password'),
                     style: GoogleFonts.nunito(
                       color: AuthColors.primary,
                       fontSize: 13,
@@ -228,7 +229,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         )
                       : Text(
-                          'Sign In',
+                          context.tr('sign_in'),
                           style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                 ),
@@ -240,7 +241,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have an account? ",
+                      context.tr('dont_have_account') + ' ',
                       style: GoogleFonts.nunito(color: const Color(0xFF6B7280), fontSize: 14),
                     ),
                     GestureDetector(
@@ -249,7 +250,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         context.go('/auth/register-landlord');
                       },
                       child: Text(
-                        'Create account',
+                        context.tr('create_account'),
                         style: GoogleFonts.nunito(
                           color: AuthColors.primary,
                           fontSize: 14,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -29,19 +30,19 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Properties', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('properties'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () {
           if (context.canPop()) context.pop();
         }),
         actions: [
           IconButton(
             icon: Icon(_showVacantOnly ? Icons.filter_alt : Icons.filter_alt_outlined),
-            tooltip: 'Vacant only',
+            tooltip: context.tr('vacant_only'),
             onPressed: () => setState(() => _showVacantOnly = !_showVacantOnly),
           ),
           IconButton(
             icon: Icon(_isGrid ? Icons.view_list : Icons.grid_view),
-            tooltip: _isGrid ? 'List view' : 'Grid view',
+            tooltip: _isGrid ? context.tr('list_view') : context.tr('grid_view'),
             onPressed: () => setState(() => _isGrid = !_isGrid),
           ),
         ],
@@ -53,7 +54,7 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
             child: TextField(
               onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
               decoration: InputDecoration(
-                hintText: 'Search properties...',
+                hintText: context.tr('search_properties'),
                 hintStyle: GoogleFonts.nunito(fontSize: 14),
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
@@ -77,7 +78,7 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
                     message: message,
                     onRetry: () => ref.invalidate(propertiesListProvider),
                     onAction: isSetupError ? () => context.go('/landlord/subscription') : null,
-                    actionLabel: 'Complete Setup',
+                    actionLabel: context.tr('complete_setup'),
                   );
                 },
                 data: (properties) {
@@ -88,7 +89,7 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
                   }).toList();
 
                   if (filtered.isEmpty) {
-                    return const EmptyState(message: 'No properties found. Add your first property.');
+                    return EmptyState(message: context.tr('no_properties_found'));
                   }
 
                   if (_isGrid) {
@@ -127,13 +128,13 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
                           return await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Delete Property'),
-                              content: const Text('Are you sure you want to delete this property? This will also affect all units under it.'),
+                              title: Text(context.tr('delete_property')),
+                              content: Text(context.tr('confirm_delete_property')),
                               actions: [
-                                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                                TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.tr('cancel'))),
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, true),
-                                  child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+                                  child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
                                 ),
                               ],
                             ),
@@ -145,7 +146,7 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
                             ref.invalidate(propertiesListProvider);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Property deleted'), backgroundColor: AppColors.success),
+                                SnackBar(content: Text(context.tr('property_deleted')), backgroundColor: AppColors.success),
                               );
                             }
                           } catch (e) {
@@ -171,7 +172,7 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
         onPressed: () => context.push('/landlord/properties/add'),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add),
-        label: const Text('Add'),
+        label: Text(context.tr('add')),
       ),
     );
   }

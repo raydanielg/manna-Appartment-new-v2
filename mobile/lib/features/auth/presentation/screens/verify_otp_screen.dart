@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/auth_background.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 
 class VerifyOtpScreen extends ConsumerStatefulWidget {
@@ -48,7 +49,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   Future<void> _verify() async {
     final otp = _getOtp();
     if (otp.length != 6) {
-      _showError('Enter the complete 6-digit code');
+      _showError(context.tr('enter_complete_6_digit'));
       return;
     }
     final success =
@@ -98,7 +99,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
 
               const SizedBox(height: 32),
               Text(
-                'Verify OTP',
+                context.tr('verify_otp_title'),
                 style: GoogleFonts.nunito(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
@@ -108,8 +109,8 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
               const SizedBox(height: 8),
               Text(
                 _phone.isNotEmpty
-                    ? 'Enter the 6-digit code we sent to +$_phone'
-                    : 'Enter the 6-digit code sent to your phone.',
+                    ? '${context.tr('enter_6_digit_code_to')} +$_phone'
+                    : context.tr('enter_6_digit_code'),
                 style: GoogleFonts.nunito(
                   fontSize: 14,
                   color: const Color(0xFF6B7280),
@@ -213,7 +214,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                           ),
                         )
                       : Text(
-                          'Verify Code',
+                          context.tr('verify_code'),
                           style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                 ),
@@ -227,11 +228,11 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                   },
                   child: RichText(
                     text: TextSpan(
-                      text: "Didn't receive code? ",
+                      text: context.tr('didnt_receive_code') + ' ',
                       style: GoogleFonts.nunito(color: const Color(0xFF6B7280), fontSize: 14),
                       children: [
                         TextSpan(
-                          text: 'Resend',
+                          text: context.tr('resend'),
                           style: GoogleFonts.nunito(
                             color: AuthColors.primary,
                             fontWeight: FontWeight.bold,

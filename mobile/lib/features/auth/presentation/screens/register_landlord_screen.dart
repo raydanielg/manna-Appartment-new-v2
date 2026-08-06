@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/auth_background.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 
 class RegisterLandlordScreen extends ConsumerStatefulWidget {
@@ -84,7 +85,7 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
 
                 const SizedBox(height: 32),
                 Text(
-                  'Create Account',
+                  context.tr('create_account_title'),
                   style: GoogleFonts.nunito(
                     fontSize: 26,
                     fontWeight: FontWeight.w800,
@@ -93,7 +94,7 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Join Manna Apartment as a landlord.',
+                  context.tr('join_as_landlord'),
                   style: GoogleFonts.nunito(
                     fontSize: 14,
                     color: const Color(0xFF6B7280),
@@ -129,51 +130,51 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                   const SizedBox(height: 20),
                 ],
 
-                _buildLabel('Full Name'),
+                _buildLabel(context.tr('full_name')),
                 _buildField(
                   controller: _nameController,
-                  hint: 'Enter your full name',
+                  hint: context.tr('enter_full_name'),
                   icon: Icons.person_outline_rounded,
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Name is required' : null,
+                  validator: (v) => v == null || v.trim().isEmpty ? context.tr('name_required') : null,
                 ),
                 
                 const SizedBox(height: 16),
-                _buildLabel('Phone Number'),
+                _buildLabel(context.tr('phone_number')),
                 _buildPhoneField(),
 
                 const SizedBox(height: 16),
-                _buildLabel('Business Name'),
+                _buildLabel(context.tr('business_name')),
                 _buildField(
                   controller: _businessController,
-                  hint: 'Enter your business name',
+                  hint: context.tr('enter_business_name'),
                   icon: Icons.business_center_outlined,
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Business name is required' : null,
+                  validator: (v) => v == null || v.trim().isEmpty ? context.tr('business_name_required') : null,
                 ),
 
                 const SizedBox(height: 16),
-                _buildLabel('Password'),
+                _buildLabel(context.tr('password')),
                 _buildPasswordField(
                   controller: _passwordController,
                   obscure: _obscure,
-                  hint: 'Create a password',
+                  hint: context.tr('enter_password'),
                   toggle: () => setState(() => _obscure = !_obscure),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Password is required';
-                    if (v.length < 6) return 'Min 6 characters';
+                    if (v == null || v.isEmpty) return context.tr('password_required');
+                    if (v.length < 6) return context.tr('min_6_chars');
                     return null;
                   },
                 ),
 
                 const SizedBox(height: 16),
-                _buildLabel('Confirm Password'),
+                _buildLabel(context.tr('confirm_password')),
                 _buildPasswordField(
                   controller: _confirmController,
                   obscure: _obscureConfirm,
-                  hint: 'Confirm your password',
+                  hint: context.tr('confirm_your_password'),
                   toggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Required';
-                    if (v != _passwordController.text) return 'Passwords do not match';
+                    if (v == null || v.isEmpty) return context.tr('required_field');
+                    if (v != _passwordController.text) return context.tr('passwords_not_match');
                     return null;
                   },
                 ),
@@ -204,7 +205,7 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                             ),
                           )
                         : Text(
-                            'Create Account',
+                            context.tr('create_account'),
                             style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold),
                           ),
                   ),
@@ -216,7 +217,7 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account? ',
+                        context.tr('already_have_account') + ' ',
                         style: GoogleFonts.nunito(color: const Color(0xFF6B7280), fontSize: 14),
                       ),
                       GestureDetector(
@@ -225,7 +226,7 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                           context.go('/auth/login');
                         },
                         child: Text(
-                          'Sign In',
+                          context.tr('sign_in'),
                           style: GoogleFonts.nunito(
                             color: AuthColors.primary,
                             fontSize: 14,
@@ -290,8 +291,8 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
       controller: _phoneController,
       keyboardType: TextInputType.phone,
       validator: (v) {
-        if (v == null || v.trim().isEmpty) return 'Phone number is required';
-        if (!RegExp(r'^[0-9]{9}$').hasMatch(v.trim())) return 'Enter a valid 9-digit number';
+        if (v == null || v.trim().isEmpty) return context.tr('phone_number_required');
+        if (!RegExp(r'^[0-9]{9}$').hasMatch(v.trim())) return context.tr('valid_9_digit_number');
         return null;
       },
       style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
@@ -339,7 +340,7 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
         suffixIcon: TextButton(
           onPressed: toggle,
           child: Text(
-            obscure ? 'Show' : 'Hide',
+            obscure ? context.tr('show') : context.tr('hide'),
             style: GoogleFonts.nunito(
               color: AuthColors.primary,
               fontWeight: FontWeight.bold,

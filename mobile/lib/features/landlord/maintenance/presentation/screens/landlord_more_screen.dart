@@ -20,13 +20,13 @@ class LandlordMoreScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('More', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('more'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         automaticallyImplyLeading: false,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildProfileHeader(context, user?.fullName ?? 'Landlord', user?.phone ?? '', user?.avatar),
+          _buildProfileHeader(context, user?.fullName ?? context.tr('landlord'), user?.phone ?? '', user?.avatar),
           const SizedBox(height: 20),
           planAsync.when(
             loading: () => const SizedBox(),
@@ -35,27 +35,27 @@ class LandlordMoreScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
           _buildSectionTitle(context, context.tr('management')),
-          _buildMenuItem(context, icon: Icons.apartment, customIcon: 'assets/icons/propertiesicon.png', title: context.tr('properties'), subtitle: 'Manage your properties & units', onTap: () => context.push('/landlord/properties')),
-          _buildMenuItem(context, icon: Icons.people, customIcon: 'assets/icons/tenantsicon.png', title: context.tr('tenants'), subtitle: 'View and manage tenants', onTap: () => context.push('/landlord/tenants')),
-          _buildMenuItem(context, icon: Icons.description_outlined, customIcon: 'assets/icons/contracts.png', title: context.tr('contracts'), subtitle: 'View and create contracts', onTap: () => context.push('/landlord/contracts')),
-          _buildMenuItem(context, icon: Icons.payments, customIcon: 'assets/icons/incomeicon.png', title: context.tr('payments'), subtitle: 'Record and view payments', onTap: () => context.push('/landlord/payments')),
-          _buildMenuItem(context, icon: Icons.sms_outlined, customIcon: 'assets/icons/sms.png', title: context.tr('sms_broadcast'), subtitle: 'Send reminders and messages', onTap: () => context.push('/landlord/sms')),
-          _buildMenuItem(context, icon: Icons.build_outlined, customIcon: 'assets/icons/maintainance.png', title: context.tr('maintenance'), subtitle: 'Respond to tenant requests', onTap: () => context.push('/landlord/maintenance')),
+          _buildMenuItem(context, icon: Icons.apartment, customIcon: 'assets/icons/propertiesicon.png', title: context.tr('properties'), subtitle: context.tr('manage_properties'), onTap: () => context.push('/landlord/properties')),
+          _buildMenuItem(context, icon: Icons.people, customIcon: 'assets/icons/tenantsicon.png', title: context.tr('tenants'), subtitle: context.tr('view_tenants'), onTap: () => context.push('/landlord/tenants')),
+          _buildMenuItem(context, icon: Icons.description_outlined, customIcon: 'assets/icons/contracts.png', title: context.tr('contracts'), subtitle: context.tr('view_contracts'), onTap: () => context.push('/landlord/contracts')),
+          _buildMenuItem(context, icon: Icons.payments, customIcon: 'assets/icons/incomeicon.png', title: context.tr('payments'), subtitle: context.tr('record_view_payments'), onTap: () => context.push('/landlord/payments')),
+          _buildMenuItem(context, icon: Icons.sms_outlined, customIcon: 'assets/icons/sms.png', title: context.tr('sms_broadcast'), subtitle: context.tr('send_reminders'), onTap: () => context.push('/landlord/sms')),
+          _buildMenuItem(context, icon: Icons.build_outlined, customIcon: 'assets/icons/maintainance.png', title: context.tr('maintenance'), subtitle: context.tr('respond_requests'), onTap: () => context.push('/landlord/maintenance')),
           if (user?.role == 'super_admin') ...[
             const SizedBox(height: 20),
-            _buildSectionTitle(context, 'Admin'),
-            _buildMenuItem(context, icon: Icons.admin_panel_settings, title: 'Manage Landlords', subtitle: 'View all owners & organizations', onTap: () => context.push('/admin/landlords')),
+            _buildSectionTitle(context, context.tr('admin')),
+            _buildMenuItem(context, icon: Icons.admin_panel_settings, title: context.tr('manage_landlords'), subtitle: context.tr('view_all_owners'), onTap: () => context.push('/admin/landlords')),
           ],
           const SizedBox(height: 20),
           _buildSectionTitle(context, context.tr('account')),
-          _buildMenuItem(context, icon: Icons.subscriptions_outlined, title: context.tr('subscription'), subtitle: 'View and manage your plan', onTap: () => context.push('/landlord/subscription')),
-          _buildMenuItem(context, icon: Icons.settings_outlined, title: context.tr('settings'), subtitle: 'App preferences', onTap: () => context.push('/settings')),
-          _buildMenuItem(context, icon: Icons.help_outline, title: context.tr('how_to_use'), subtitle: 'Quick guide for landlords', onTap: () => context.push('/landlord/help')),
+          _buildMenuItem(context, icon: Icons.subscriptions_outlined, title: context.tr('subscription'), subtitle: context.tr('current_plan'), onTap: () => context.push('/landlord/subscription')),
+          _buildMenuItem(context, icon: Icons.settings_outlined, title: context.tr('settings'), subtitle: context.tr('app_preferences'), onTap: () => context.push('/settings')),
+          _buildMenuItem(context, icon: Icons.help_outline, title: context.tr('how_to_use'), subtitle: context.tr('help_subtitle'), onTap: () => context.push('/landlord/help')),
           _buildMenuItem(
             context,
             icon: Icons.logout,
             title: context.tr('logout'),
-            subtitle: 'Sign out of your account',
+            subtitle: context.tr('sign_out_account'),
             color: AppColors.error,
             onTap: () => _showLogoutConfirmation(context, ref),
           ),
@@ -77,15 +77,15 @@ class LandlordMoreScreen extends ConsumerWidget {
                 decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.1), shape: BoxShape.circle),
                 child: const Icon(Icons.logout, color: AppColors.error, size: 32),
               ),
-              title: Text('Logout', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800)),
-              content: Text('Are you sure you want to sign out of your account?', textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 14, color: AppColors.textLight)),
+              title: Text(context.tr('logout'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800)),
+              content: Text(context.tr('confirm_logout'), textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 14, color: AppColors.textLight)),
               actionsAlignment: MainAxisAlignment.center,
               actions: [
                 SizedBox(
                   width: 120,
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(dialogContext),
-                    child: Text('Cancel', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                    child: Text(context.tr('cancel'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
                   ),
                 ),
                 SizedBox(
@@ -105,7 +105,7 @@ class LandlordMoreScreen extends ConsumerWidget {
                     },
                     child: _isLoggingOut
                         ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text('Logout', style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: Colors.white)),
+                        : Text(context.tr('logout'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                 ),
               ],
@@ -204,7 +204,7 @@ class LandlordMoreScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Current Plan', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+                  Text(context.tr('current_plan'), style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
                   Text(planName, style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
                 ],
               ),
@@ -213,7 +213,7 @@ class LandlordMoreScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(color: isActive ? AppColors.success.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
               child: Text(
-                isActive ? 'Active' : 'Inactive',
+                isActive ? context.tr('active') : context.tr('inactive'),
                 style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w800, color: isActive ? AppColors.success : Colors.red),
               ),
             ),

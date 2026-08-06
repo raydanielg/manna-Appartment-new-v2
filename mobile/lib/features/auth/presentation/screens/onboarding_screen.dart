@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/storage/local_cache_service.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -19,30 +20,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  final List<_OnboardingData> _pages = [
-    _OnboardingData(
-      image: 'assets/images/managepropers.jpg',
-      title: 'Manage Your Properties',
-      description:
-          'Easily manage all your properties, units, and tenants in one place. Track payments, contracts, and maintenance requests effortlessly.',
-    ),
-    _OnboardingData(
-      image: 'assets/images/trackpayemnts.jpg',
-      title: 'Track Payments',
-      description:
-          'Record rent payments, monitor outstanding balances, and generate financial reports. Stay on top of your income with real-time updates.',
-    ),
-    _OnboardingData(
-      image: 'assets/images/connectwithtenent.jpg',
-      title: 'Connect with Tenants',
-      description:
-          'Send SMS broadcasts, manage maintenance requests, and keep your tenants happy. Build stronger landlord-tenant relationships.',
-    ),
-  ];
+  final List<_OnboardingData> _pages = [];
 
   @override
   void initState() {
     super.initState();
+    // Pages are built in build() where context.tr() is available
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 900),
       vsync: this,
@@ -104,6 +87,25 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_pages.isEmpty) {
+      _pages.addAll([
+        _OnboardingData(
+          image: 'assets/images/managepropers.jpg',
+          title: context.tr('onboarding_title_1'),
+          description: context.tr('onboarding_desc_1'),
+        ),
+        _OnboardingData(
+          image: 'assets/images/trackpayemnts.jpg',
+          title: context.tr('onboarding_title_2'),
+          description: context.tr('onboarding_desc_2'),
+        ),
+        _OnboardingData(
+          image: 'assets/images/connectwithtenent.jpg',
+          title: context.tr('onboarding_title_3'),
+          description: context.tr('onboarding_desc_3'),
+        ),
+      ]);
+    }
     final isLastPage = _currentPage == _pages.length - 1;
 
     return Scaffold(
@@ -129,9 +131,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.white70,
                 ),
-                child: const Text(
-                  'Skip',
-                  style: TextStyle(
+                child: Text(
+                  context.tr('skip'),
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -198,7 +200,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              isLastPage ? 'Get Started' : 'Continue',
+                              isLastPage ? context.tr('get_started') : context.tr('continue'),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,

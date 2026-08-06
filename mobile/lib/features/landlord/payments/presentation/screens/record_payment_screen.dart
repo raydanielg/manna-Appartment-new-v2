@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/payments_provider.dart';
@@ -97,7 +98,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
     final amount = double.tryParse(_amountController.text) ?? 0;
     if (_selectedTenantId == null || _selectedContractId == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select tenant and enter amount'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(context.tr('please_select_tenant_amount'), style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.error),
       );
       return;
     }
@@ -121,8 +122,8 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
         final monthsCount = overpayment?['months_count'];
         final isOverpayment = overpayment?['is_overpayment'] == true;
         final msg = isOverpayment && monthsCount != null
-            ? 'Payment recorded! Covered $monthsCount month(s).'
-            : 'Payment recorded.';
+            ? context.tr('payment_recorded_months').replaceAll('{0}', monthsCount.toString())
+            : context.tr('payment_recorded');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: AppColors.success),
         );
@@ -147,7 +148,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Record Payment', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('record_payment'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -160,11 +161,11 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Tenant', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+            Text(context.tr('tenant'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
             const SizedBox(height: 8),
             tenantsAsync.when(
               loading: () => const LinearProgressIndicator(),
-              error: (_, __) => Text('Failed to load tenants', style: GoogleFonts.nunito(color: Colors.red)),
+              error: (_, __) => Text(context.tr('failed_load_tenants'), style: GoogleFonts.nunito(color: Colors.red)),
               data: (tenants) => DropdownButtonFormField<String>(
                 isExpanded: true,
                 decoration: InputDecoration(
@@ -173,9 +174,9 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
-                hint: Text('Select tenant', style: GoogleFonts.nunito(fontSize: 14)),
+                hint: Text(context.tr('select_tenant'), style: GoogleFonts.nunito(fontSize: 14)),
                 items: tenants.map<DropdownMenuItem<String>>((t) {
-                  final name = t['user']?['full_name'] ?? t['full_name'] ?? 'Tenant';
+                  final name = t['user']?['full_name'] ?? t['full_name'] ?? context.tr('tenant');
                   return DropdownMenuItem(value: t['id'].toString(), child: Text(name, style: GoogleFonts.nunito(fontSize: 14)));
                 }).toList(),
                 onChanged: (v) => setState(() {
@@ -185,11 +186,11 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Contract', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+            Text(context.tr('contract'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
             const SizedBox(height: 8),
             contractsAsync.when(
               loading: () => const LinearProgressIndicator(),
-              error: (_, __) => Text('Failed to load contracts', style: GoogleFonts.nunito(color: Colors.red)),
+              error: (_, __) => Text(context.tr('failed_load_contracts'), style: GoogleFonts.nunito(color: Colors.red)),
               data: (contracts) {
                 final tenantContracts = contracts.where((c) => c['tenant_id'].toString() == _selectedTenantId).toList();
                 return DropdownButtonFormField<String>(
@@ -200,10 +201,10 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
-                  hint: Text('Select contract', style: GoogleFonts.nunito(fontSize: 14)),
+                  hint: Text(context.tr('select_contract'), style: GoogleFonts.nunito(fontSize: 14)),
                   value: _selectedContractId,
                   items: tenantContracts.map<DropdownMenuItem<String>>((c) {
-                    final label = c['contract_number'] ?? 'Contract';
+                    final label = c['contract_number'] ?? context.tr('contract');
                     return DropdownMenuItem(value: c['id'].toString(), child: Text(label, style: GoogleFonts.nunito(fontSize: 14)));
                   }).toList(),
                   onChanged: (v) {
@@ -214,21 +215,21 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
               },
             ),
             const SizedBox(height: 16),
-            Text('Payment Type', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+            Text(context.tr('payment_type'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [
-                _buildTypeChip('Rent', 'rent', AppColors.primary),
-                _buildTypeChip('Water', 'water', Colors.blue),
-                _buildTypeChip('Electricity', 'electricity', Colors.amber),
-                _buildTypeChip('Other', 'other', Colors.grey),
+                _buildTypeChip(context.tr('rent'), 'rent', AppColors.primary),
+                _buildTypeChip(context.tr('water'), 'water', Colors.blue),
+                _buildTypeChip(context.tr('electricity'), 'electricity', Colors.amber),
+                _buildTypeChip(context.tr('other'), 'other', Colors.grey),
               ],
             ),
             const SizedBox(height: 16),
             AppTextField(
-              label: 'Amount (TZS)',
+              label: context.tr('amount_tzs'),
               controller: _amountController,
               keyboardType: TextInputType.number,
             ),
@@ -236,18 +237,18 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
             _buildOverpaymentCard(isDark),
             const SizedBox(height: 16),
             AppTextField(
-              label: 'Method',
+              label: context.tr('method'),
               controller: TextEditingController(text: _method),
               readOnly: true,
               onTap: () => _showMethodPicker(context),
             ),
             const SizedBox(height: 16),
             AppTextField(
-              label: 'Reference Number',
+              label: context.tr('reference_number'),
               controller: _referenceController,
             ),
             const SizedBox(height: 16),
-            Text('Payment Date', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+            Text(context.tr('payment_date'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
             const SizedBox(height: 8),
             InkWell(
               onTap: _pickDate,
@@ -269,17 +270,17 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
             ),
             const SizedBox(height: 16),
             AppTextField(
-              label: 'Month Covered (e.g. July 2026)',
+              label: context.tr('month_covered_hint'),
               controller: _monthController,
             ),
             const SizedBox(height: 16),
             AppTextField(
-              label: 'Notes',
+              label: context.tr('notes'),
               controller: _notesController,
               maxLines: 3,
             ),
             const SizedBox(height: 24),
-            PrimaryButton(text: 'Save Payment', isLoading: _isLoading, onPressed: _submit),
+            PrimaryButton(text: context.tr('save_payment'), isLoading: _isLoading, onPressed: _submit),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
@@ -287,7 +288,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
                 onPressed: () {
                   if (context.canPop()) context.pop();
                 },
-                child: Text('Cancel', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                child: Text(context.tr('cancel'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
               ),
             ),
           ],
@@ -304,7 +305,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
           children: [
             const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
             const SizedBox(width: 12),
-            Text('Calculating coverage...', style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white60 : AppColors.textLight)),
+            Text(context.tr('calculating_coverage'), style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white60 : AppColors.textLight)),
           ],
         ),
       );
@@ -369,20 +370,20 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
               Expanded(
                 child: Text(
                   isOverpayment
-                      ? 'This payment covers $monthsCount months!'
-                      : 'This payment covers 1 month.',
+                      ? context.tr('payment_covers_months').replaceAll('{0}', monthsCount.toString())
+                      : context.tr('payment_covers_one_month'),
                   style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: cardColor),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          _previewRow('Months Covered', '$monthsCount month(s)', isDark),
-          _previewRow('Period', monthCovered, isDark),
+          _previewRow(context.tr('months_covered'), '$monthsCount month(s)', isDark),
+          _previewRow(context.tr('period'), monthCovered, isDark),
           if (overdueDate.isNotEmpty)
-            _previewRow('Next Due Date', overdueDate, isDark),
+            _previewRow(context.tr('next_due_date'), overdueDate, isDark),
           if (remainder > 0)
-            _previewRow('Remainder', 'TZS ${remainder.toStringAsFixed(0)}', isDark),
+            _previewRow(context.tr('remainder'), 'TZS ${remainder.toStringAsFixed(0)}', isDark),
         ],
       ),
     );
@@ -426,10 +427,10 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(title: Text('Cash', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() => _method = 'cash'); Navigator.pop(context); }),
-            ListTile(title: Text('Bank Transfer', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() => _method = 'bank_transfer'); Navigator.pop(context); }),
-            ListTile(title: Text('Mobile Money', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() => _method = 'mobile_money'); Navigator.pop(context); }),
-            ListTile(title: Text('Card', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() => _method = 'card'); Navigator.pop(context); }),
+            ListTile(title: Text(context.tr('cash'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() => _method = 'cash'); Navigator.pop(context); }),
+            ListTile(title: Text(context.tr('bank_transfer'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() => _method = 'bank_transfer'); Navigator.pop(context); }),
+            ListTile(title: Text(context.tr('mobile_money'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() => _method = 'mobile_money'); Navigator.pop(context); }),
+            ListTile(title: Text(context.tr('card'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() => _method = 'card'); Navigator.pop(context); }),
           ],
         ),
       ),

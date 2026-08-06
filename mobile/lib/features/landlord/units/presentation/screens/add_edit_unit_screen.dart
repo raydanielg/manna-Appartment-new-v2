@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/units_provider.dart';
@@ -133,7 +134,7 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      appBar: AppBar(title: Text(_isEditMode ? 'Edit Unit' : 'Add Unit'), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      appBar: AppBar(title: Text(_isEditMode ? context.tr('edit_unit') : context.tr('add_unit')), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -149,37 +150,37 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
                 _buildPropertySelector(context),
                 const SizedBox(height: 16),
               ],
-              AppTextField(label: 'Unit Name/Number', hint: 'e.g. A-101', controller: _nameController, validator: (v) => v == null || v.isEmpty ? 'Name is required' : null),
+              AppTextField(label: context.tr('unit_name_number'), hint: context.tr('unit_name_hint'), controller: _nameController, validator: (v) => v == null || v.isEmpty ? context.tr('name_required') : null),
               const SizedBox(height: 16),
-              AppTextField(label: 'Monthly Rent (TZS)', hint: 'e.g. 350000', controller: _rentController, keyboardType: TextInputType.number, validator: (v) => v == null || v.isEmpty ? 'Rent is required' : null),
+              AppTextField(label: context.tr('monthly_rent_tzs'), hint: context.tr('rent_hint'), controller: _rentController, keyboardType: TextInputType.number, validator: (v) => v == null || v.isEmpty ? context.tr('rent_required') : null),
               const SizedBox(height: 16),
-              AppTextField(label: 'Size (sqm)', hint: 'optional', controller: _sizeController, keyboardType: TextInputType.number),
+              AppTextField(label: context.tr('size_sqm'), hint: context.tr('optional'), controller: _sizeController, keyboardType: TextInputType.number),
               const SizedBox(height: 16),
-              Text('Unit Type', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+              Text(context.tr('unit_type'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _type,
                 decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)), contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
-                items: const [
-                  DropdownMenuItem(value: 'bedsitter', child: Text('Bedsitter')),
-                  DropdownMenuItem(value: '1br', child: Text('1 Bedroom')),
-                  DropdownMenuItem(value: '2br', child: Text('2 Bedroom')),
-                  DropdownMenuItem(value: '3br', child: Text('3 Bedroom')),
-                  DropdownMenuItem(value: 'studio', child: Text('Studio')),
-                  DropdownMenuItem(value: 'shop', child: Text('Shop')),
+                items: [
+                  DropdownMenuItem(value: 'bedsitter', child: Text(context.tr('bedsitter'))),
+                  DropdownMenuItem(value: '1br', child: Text(context.tr('1_bedroom'))),
+                  DropdownMenuItem(value: '2br', child: Text(context.tr('2_bedroom'))),
+                  DropdownMenuItem(value: '3br', child: Text(context.tr('3_bedroom'))),
+                  DropdownMenuItem(value: 'studio', child: Text(context.tr('studio'))),
+                  DropdownMenuItem(value: 'shop', child: Text(context.tr('shop'))),
                 ],
                 onChanged: (v) => setState(() => _type = v ?? 'bedsitter'),
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildCounter(context, 'Bedrooms', _bedrooms, (v) => setState(() => _bedrooms = v))),
+                  Expanded(child: _buildCounter(context, context.tr('bedrooms'), _bedrooms, (v) => setState(() => _bedrooms = v))),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildCounter(context, 'Bathrooms', _bathrooms, (v) => setState(() => _bathrooms = v))),
+                  Expanded(child: _buildCounter(context, context.tr('bathrooms'), _bathrooms, (v) => setState(() => _bathrooms = v))),
                 ],
               ),
               const SizedBox(height: 24),
-              PrimaryButton(text: _isEditMode ? 'Update Unit' : 'Save Unit', isLoading: _isLoading, onPressed: _submit),
+              PrimaryButton(text: _isEditMode ? context.tr('update_unit') : context.tr('save_unit'), isLoading: _isLoading, onPressed: _submit),
             ],
           ),
         ),
@@ -192,13 +193,13 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
     final propertiesAsync = ref.watch(propertiesListProvider);
     return propertiesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Text('Failed to load properties: $e', style: TextStyle(color: AppColors.error)),
+      error: (e, _) => Text('${context.tr('failed_load_properties')}: $e', style: TextStyle(color: AppColors.error)),
       data: (properties) {
         final items = properties.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Select Property', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+            Text(context.tr('select_property'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               value: _selectedPropertyId,
@@ -210,10 +211,10 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
               dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-              hint: Text('Choose a property', style: TextStyle(color: isDark ? Colors.white60 : AppColors.textLight)),
+              hint: Text(context.tr('choose_property'), style: TextStyle(color: isDark ? Colors.white60 : AppColors.textLight)),
               items: items,
               onChanged: (v) => setState(() => _selectedPropertyId = v),
-              validator: (v) => v == null || v.isEmpty ? 'Select a property' : null,
+              validator: (v) => v == null || v.isEmpty ? context.tr('please_select_property') : null,
             ),
           ],
         );

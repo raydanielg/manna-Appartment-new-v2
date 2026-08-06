@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/primary_button.dart';
@@ -19,7 +20,7 @@ class MyContractScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(title: Text('My Contract', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      appBar: AppBar(title: Text(context.tr('my_contract'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
       body: contractAsync.when(
         loading: () => const LoadingIndicator(),
         error: (e, _) {
@@ -37,9 +38,9 @@ class MyContractScreen extends ConsumerWidget {
                       child: const Icon(Icons.description_outlined, size: 36, color: AppColors.textLight),
                     ),
                     const SizedBox(height: 20),
-                    Text('No Contract Yet', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                    Text(context.tr('no_contract_yet'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
                     const SizedBox(height: 8),
-                    Text('Your contract details will appear here once your landlord sets up your tenancy.', textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
+                    Text(context.tr('no_contract_desc'), textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
                   ],
                 ),
               ),
@@ -62,22 +63,22 @@ class MyContractScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('My Contract', style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
+                    Text(context.tr('my_contract'), style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
                     const SizedBox(height: 8),
                     const StatusBadge(status: 'active'),
                   ],
                 ),
               ),
               const SizedBox(height: 20),
-              _buildRow(context, Icons.calendar_today, 'Start Date', contract['start_date'] ?? 'N/A'),
-              _buildRow(context, Icons.event, 'End Date', contract['end_date'] ?? 'N/A'),
-              _buildRow(context, Icons.account_balance_wallet, 'Monthly Rent', 'TZS ${contract['rent_amount'] ?? contract['monthly_rent'] ?? 0}'),
-              _buildRow(context, Icons.savings, 'Deposit', 'TZS ${contract['deposit_amount'] ?? contract['deposit'] ?? 0}'),
+              _buildRow(context, Icons.calendar_today, context.tr('start_date'), contract['start_date'] ?? 'N/A'),
+              _buildRow(context, Icons.event, context.tr('end_date'), contract['end_date'] ?? 'N/A'),
+              _buildRow(context, Icons.account_balance_wallet, context.tr('monthly_rent_label'), 'TZS ${contract['rent_amount'] ?? contract['monthly_rent'] ?? 0}'),
+              _buildRow(context, Icons.savings, context.tr('deposit'), 'TZS ${contract['deposit_amount'] ?? contract['deposit'] ?? 0}'),
               if (contract['unit'] != null)
-                _buildRow(context, Icons.meeting_room, 'Unit', contract['unit']['name'] ?? 'N/A'),
+                _buildRow(context, Icons.meeting_room, context.tr('unit'), contract['unit']['name'] ?? 'N/A'),
               const SizedBox(height: 24),
               PrimaryButton(
-                text: 'View Contract PDF',
+                text: context.tr('view_contract_pdf'),
                 icon: const Icon(Icons.picture_as_pdf),
                 onPressed: () => context.push('/tenant/contract/pdf'),
               ),

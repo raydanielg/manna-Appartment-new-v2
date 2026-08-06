@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../providers/properties_provider.dart';
@@ -19,7 +20,7 @@ class PropertyDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text('Property Details'),
+        title: Text(context.tr('property_details')),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
         actions: [
           IconButton(
@@ -53,7 +54,7 @@ class PropertyDetailScreen extends ConsumerWidget {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      property.address ?? 'No address',
+                      property.address ?? context.tr('no_address'),
                       style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight),
                     ),
                   ),
@@ -68,16 +69,16 @@ class PropertyDetailScreen extends ConsumerWidget {
                 ),
                 child: Column(
                   children: [
-                    _buildInfoRow(Icons.category_outlined, 'Type', _capitalize(property.type ?? 'N/A')),
+                    _buildInfoRow(Icons.category_outlined, context.tr('type'), _capitalize(property.type ?? 'N/A')),
                     const Divider(height: 1, indent: 52),
-                    _buildInfoRow(Icons.meeting_room_outlined, 'Total Units', '${property.unitsCount ?? 0}'),
+                    _buildInfoRow(Icons.meeting_room_outlined, context.tr('total_units'), '${property.unitsCount ?? 0}'),
                     const Divider(height: 1, indent: 52),
-                    _buildInfoRow(Icons.check_circle_outline, 'Occupied', '${property.occupiedUnits ?? 0}'),
+                    _buildInfoRow(Icons.check_circle_outline, context.tr('occupied'), '${property.occupiedUnits ?? 0}'),
                     const Divider(height: 1, indent: 52),
-                    _buildInfoRow(Icons.highlight_off, 'Vacant', '${property.vacantUnits ?? 0}'),
+                    _buildInfoRow(Icons.highlight_off, context.tr('vacant'), '${property.vacantUnits ?? 0}'),
                     if (property.monthlyRevenue != null && property.monthlyRevenue! > 0) ...[
                       const Divider(height: 1, indent: 52),
-                      _buildInfoRow(Icons.account_balance_wallet_outlined, 'Monthly Revenue', 'TZS ${property.monthlyRevenue!.toStringAsFixed(0)}'),
+                      _buildInfoRow(Icons.account_balance_wallet_outlined, context.tr('monthly_revenue'), 'TZS ${property.monthlyRevenue!.toStringAsFixed(0)}'),
                     ],
                   ],
                 ),
@@ -89,7 +90,7 @@ class PropertyDetailScreen extends ConsumerWidget {
                     child: ElevatedButton.icon(
                       onPressed: () => context.push('/landlord/properties/add?id=${property.id}'),
                       icon: const Icon(Icons.edit_outlined, size: 18),
-                      label: const Text('Edit'),
+                      label: Text(context.tr('edit')),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -102,7 +103,7 @@ class PropertyDetailScreen extends ConsumerWidget {
                         side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
                       ),
                       icon: const Icon(Icons.meeting_room_outlined, size: 18),
-                      label: const Text('Units'),
+                      label: Text(context.tr('units')),
                     ),
                   ),
                 ],
@@ -120,10 +121,10 @@ class PropertyDetailScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Delete Property', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        content: Text('Are you sure you want to delete this property? This will also affect all units under it.', style: GoogleFonts.nunito(fontSize: 14)),
+        title: Text(context.tr('delete_property'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        content: Text(context.tr('confirm_delete_property'), style: GoogleFonts.nunito(fontSize: 14)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('cancel'))),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -132,7 +133,7 @@ class PropertyDetailScreen extends ConsumerWidget {
                 ref.invalidate(propertiesListProvider);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Property deleted'), backgroundColor: AppColors.success),
+                    SnackBar(content: Text(context.tr('property_deleted')), backgroundColor: AppColors.success),
                   );
                   if (context.canPop()) context.pop();
                 }
@@ -144,7 +145,7 @@ class PropertyDetailScreen extends ConsumerWidget {
                 }
               }
             },
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -169,7 +170,7 @@ class PropertyDetailScreen extends ConsumerWidget {
           children: [
             Icon(Icons.apartment_outlined, size: 56, color: AppColors.primary.withValues(alpha: 0.4)),
             const SizedBox(height: 8),
-            Text('No photos', style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight)),
+            Text(context.tr('no_photos'), style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight)),
           ],
         ),
       );

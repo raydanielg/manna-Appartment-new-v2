@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/tenants_provider.dart';
@@ -62,7 +63,7 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load tenant: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text('${context.tr('failed_load_tenant')}: $e'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -91,13 +92,13 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedPropertyId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a property'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(context.tr('please_select_property'), style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
       );
       return;
     }
     if (_selectedUnitId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a unit'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(context.tr('please_select_unit'), style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -118,7 +119,7 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
         ref.invalidate(tenantDetailProvider(widget.tenantId!));
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tenant updated successfully'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
+            SnackBar(content: Text(context.tr('tenant_updated_success')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
           );
           context.pop();
         }
@@ -127,7 +128,7 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
         ref.invalidate(tenantsListProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tenant added. SMS sent with login credentials.'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
+            SnackBar(content: Text(context.tr('tenant_added_sms')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
           );
           context.pop();
         }
@@ -151,7 +152,7 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: Text(_isEditMode ? 'Edit Tenant' : 'Add Tenant', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(_isEditMode ? context.tr('edit_tenant') : context.tr('add_tenant'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -170,15 +171,15 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                 const SizedBox(height: 16),
                 const Center(child: CircularProgressIndicator()),
               ] else ...[
-                _buildSectionLabel('Property'),
+                _buildSectionLabel(context.tr('property')),
                 const SizedBox(height: 8),
                 propertiesAsync.when(
                   loading: () => const LinearProgressIndicator(),
-                  error: (_, __) => Text('Failed to load properties', style: GoogleFonts.nunito(color: AppColors.error)),
+                  error: (_, __) => Text(context.tr('failed_load_properties'), style: GoogleFonts.nunito(color: AppColors.error)),
                   data: (properties) => DropdownButtonFormField<String>(
                     value: _selectedPropertyId,
                     isExpanded: true,
-                    decoration: _dropdownDecoration('Select property'),
+                    decoration: _dropdownDecoration(context.tr('select_property')),
                     items: properties.map<DropdownMenuItem<String>>((p) {
                       return DropdownMenuItem(value: p.id, child: Text(p.name, style: GoogleFonts.nunito(fontSize: 14)));
                     }).toList(),
@@ -186,39 +187,39 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                       _selectedPropertyId = v;
                       _selectedUnitId = null;
                     }),
-                    validator: (v) => v == null || v.isEmpty ? 'Please select a property' : null,
+                    validator: (v) => v == null || v.isEmpty ? context.tr('please_select_property') : null,
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildSectionLabel('Unit'),
+                _buildSectionLabel(context.tr('unit')),
                 const SizedBox(height: 8),
                 unitsAsync.when(
                   loading: () => const LinearProgressIndicator(),
-                  error: (_, __) => Text('Failed to load units', style: GoogleFonts.nunito(color: AppColors.error)),
+                  error: (_, __) => Text(context.tr('failed_load_units'), style: GoogleFonts.nunito(color: AppColors.error)),
                   data: (units) => DropdownButtonFormField<String>(
                     value: _selectedUnitId,
                     isExpanded: true,
-                    decoration: _dropdownDecoration(_selectedPropertyId == null ? 'Select property first' : 'Select unit'),
+                    decoration: _dropdownDecoration(_selectedPropertyId == null ? context.tr('select_property_first') : context.tr('select_unit')),
                     items: units.map<DropdownMenuItem<String>>((u) {
-                      final label = u['name'] ?? u['unit_number'] ?? 'Unit';
+                      final label = u['name'] ?? u['unit_number'] ?? context.tr('unit');
                       return DropdownMenuItem(value: u['id'].toString(), child: Text(label, style: GoogleFonts.nunito(fontSize: 14)));
                     }).toList(),
                     onChanged: _selectedPropertyId == null ? null : (v) => setState(() => _selectedUnitId = v),
-                    validator: (v) => v == null || v.isEmpty ? 'Please select a unit' : null,
+                    validator: (v) => v == null || v.isEmpty ? context.tr('please_select_unit') : null,
                   ),
                 ),
                 const SizedBox(height: 24),
-                _buildSectionLabel('Tenant Details'),
+                _buildSectionLabel(context.tr('tenant_details_label')),
                 const SizedBox(height: 12),
-                AppTextField(label: 'Full Name', hint: 'e.g. John Doe', controller: _nameController, validator: (v) => v == null || v.isEmpty ? 'Name is required' : null),
+                AppTextField(label: context.tr('full_name'), hint: context.tr('full_name_hint'), controller: _nameController, validator: (v) => v == null || v.isEmpty ? context.tr('name_required') : null),
                 const SizedBox(height: 16),
-                AppTextField(label: 'Phone', hint: 'e.g. +255712345678', controller: _phoneController, keyboardType: TextInputType.phone, validator: (v) => v == null || v.isEmpty ? 'Phone is required' : null),
+                AppTextField(label: context.tr('phone'), hint: context.tr('phone_hint'), controller: _phoneController, keyboardType: TextInputType.phone, validator: (v) => v == null || v.isEmpty ? context.tr('phone_required') : null),
                 const SizedBox(height: 16),
-                AppTextField(label: 'Email', hint: 'optional', controller: _emailController, keyboardType: TextInputType.emailAddress),
+                AppTextField(label: context.tr('email'), hint: context.tr('optional'), controller: _emailController, keyboardType: TextInputType.emailAddress),
                 const SizedBox(height: 16),
-                AppTextField(label: 'Emergency Contact', hint: 'optional', controller: _emergencyController),
+                AppTextField(label: context.tr('emergency_contact'), hint: context.tr('optional'), controller: _emergencyController),
                 const SizedBox(height: 16),
-                _buildSectionLabel('Move-in Date'),
+                _buildSectionLabel(context.tr('move_in_date')),
                 const SizedBox(height: 8),
                 InkWell(
                   onTap: _pickMoveInDate,
@@ -240,7 +241,7 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                PrimaryButton(text: _isEditMode ? 'Update Tenant' : 'Save Tenant', isLoading: _isLoading, onPressed: _submit),
+                PrimaryButton(text: _isEditMode ? context.tr('update_tenant') : context.tr('save_tenant'), isLoading: _isLoading, onPressed: _submit),
               ],
             ],
           ),

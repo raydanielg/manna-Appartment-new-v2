@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
@@ -11,10 +12,10 @@ class HelpSupportScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final faqs = [
-      {'question': 'How do I add a property?', 'answer': 'Go to the Properties tab, tap the + button, and fill in the property details.'},
-      {'question': 'How do I record a payment?', 'answer': 'Open a tenant profile, select Payments, then tap Record Payment.'},
-      {'question': 'How does the free trial work?', 'answer': 'New landlords get 3 days of full access. Activate it from the Subscription page.'},
-      {'question': 'What happens when my subscription expires?', 'answer': 'Your account will be limited until you renew or choose a new plan.'},
+      {'question': context.tr('faq_q1'), 'answer': context.tr('faq_a1')},
+      {'question': context.tr('faq_q2'), 'answer': context.tr('faq_a2')},
+      {'question': context.tr('faq_q3'), 'answer': context.tr('faq_a3')},
+      {'question': context.tr('faq_q4'), 'answer': context.tr('faq_a4')},
     ];
 
     return Scaffold(
@@ -22,7 +23,7 @@ class HelpSupportScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
         elevation: 0,
-        title: Text('Help & Support', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('help_support'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -45,20 +46,20 @@ class HelpSupportScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Need help?', style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
+                  Text(context.tr('need_help'), style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
                   const SizedBox(height: 8),
-                  Text('Contact our support team and we will get back to you within 24 hours.', style: GoogleFonts.nunito(fontSize: 14, color: Colors.white70)),
+                  Text(context.tr('contact_support'), style: GoogleFonts.nunito(fontSize: 14, color: Colors.white70)),
                 ],
               ),
             ),
             const SizedBox(height: 24),
-            _buildContactCard(context, icon: Icons.phone, title: 'Call Us', value: '0734070202'),
+            _buildContactCard(context, icon: Icons.phone, title: context.tr('call_us'), value: '0734070202'),
             const SizedBox(height: 12),
-            _buildContactCard(context, icon: Icons.email, title: 'Email Us', value: 'support@mannaapartment.co.tz'),
+            _buildContactCard(context, icon: Icons.email, title: context.tr('email_us'), value: 'support@mannaapartment.co.tz'),
             const SizedBox(height: 12),
-            _buildContactCard(context, icon: Icons.chat_bubble, title: 'WhatsApp', value: '0734070202'),
+            _buildContactCard(context, icon: Icons.chat_bubble, title: context.tr('whatsapp'), value: '0734070202'),
             const SizedBox(height: 32),
-            Text('Frequently Asked Questions', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+            Text(context.tr('faq'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
             const SizedBox(height: 12),
             ...faqs.map((faq) => _buildFaqItem(context, faq['question']!, faq['answer']!)),
           ],

@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
@@ -33,7 +34,7 @@ class TenantHomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context, user?.fullName ?? 'Tenant', unreadCount),
+                _buildHeader(context, user?.fullName ?? context.tr('tenant'), unreadCount),
                 const SizedBox(height: 24),
                 dashboardAsync.when(
                   loading: () => const LoadingIndicator(),
@@ -44,7 +45,7 @@ class TenantHomeScreen extends ConsumerWidget {
                         return _buildMustChangePasswordCard(context);
                       }
                       return ErrorState(
-                        message: data is Map ? (data['message'] ?? 'Access denied') : 'Access denied',
+                        message: data is Map ? (data['message'] ?? context.tr('access_denied')) : context.tr('access_denied'),
                         onRetry: () => ref.invalidate(tenantDashboardProvider),
                       );
                     }
@@ -75,16 +76,16 @@ class TenantHomeScreen extends ConsumerWidget {
                         const SizedBox(height: 24),
                         BalanceSummaryCard(totalPaid: totalPaid, totalDue: rentAmount, balance: balance),
                         const SizedBox(height: 24),
-                        Text('Quick Actions', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+                        Text(context.tr('quick_actions'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
                         const SizedBox(height: 12),
-                        _buildQuickAction(context, icon: Icons.payments_outlined, title: 'My Payments', subtitle: 'View history', color: AppColors.success, onTap: () => context.push('/tenant/payments')),
-                        _buildQuickAction(context, icon: Icons.description_outlined, title: 'My Contract', subtitle: 'View details', color: AppColors.info, onTap: () => context.push('/tenant/contract')),
-                        _buildQuickAction(context, icon: Icons.build_outlined, title: 'Maintenance', subtitle: 'Submit & track requests', color: AppColors.warning, onTap: () => context.push('/tenant/maintenance/my')),
+                        _buildQuickAction(context, icon: Icons.payments_outlined, title: context.tr('my_payments'), subtitle: context.tr('view_history'), color: AppColors.success, onTap: () => context.push('/tenant/payments')),
+                        _buildQuickAction(context, icon: Icons.description_outlined, title: context.tr('my_contract'), subtitle: context.tr('view_details'), color: AppColors.info, onTap: () => context.push('/tenant/contract')),
+                        _buildQuickAction(context, icon: Icons.build_outlined, title: context.tr('maintenance'), subtitle: context.tr('submit_track'), color: AppColors.warning, onTap: () => context.push('/tenant/maintenance/my')),
                         const SizedBox(height: 24),
-                        Text('Recent Updates', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+                        Text(context.tr('recent_updates'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
                         const SizedBox(height: 12),
                         if (recentPayments.isEmpty && maintenanceRequests.isEmpty)
-                          _buildUpdate(context, title: 'No updates yet', subtitle: 'Notifications will appear here')
+                          _buildUpdate(context, title: context.tr('no_updates_yet'), subtitle: context.tr('notifications_appear'))
                         else ...[
                           ...recentPayments.take(3).map((p) => _buildUpdate(
                                 context,
@@ -145,7 +146,7 @@ class TenantHomeScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hello, $name',
+                '${context.tr('hello')}, $name',
                 style: GoogleFonts.nunito(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -154,7 +155,7 @@ class TenantHomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'Welcome to your tenant portal',
+                context.tr('welcome_tenant'),
                 style: GoogleFonts.nunito(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -248,9 +249,9 @@ class TenantHomeScreen extends ConsumerWidget {
             child: const Icon(Icons.lock_outline, color: AppColors.warning, size: 32),
           ),
           const SizedBox(height: 20),
-          Text('Password Change Required', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+          Text(context.tr('password_change_required'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
           const SizedBox(height: 8),
-          Text('You need to set a new password before you can access your dashboard.', textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
+          Text(context.tr('password_change_desc'), textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -262,7 +263,7 @@ class TenantHomeScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: Text('Change Password', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700)),
+              child: Text(context.tr('change_password'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700)),
             ),
           ),
         ],

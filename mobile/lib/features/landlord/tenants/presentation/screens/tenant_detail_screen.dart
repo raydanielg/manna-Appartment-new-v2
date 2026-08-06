@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/status_badge.dart';
@@ -22,7 +23,7 @@ class TenantDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Tenant Details', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('tenant_details_label'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -121,19 +122,19 @@ class TenantDetailScreen extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          _row(Icons.apartment_outlined, 'Property', property['name'] ?? 'N/A'),
+          _row(Icons.apartment_outlined, context.tr('property'), property['name'] ?? 'N/A'),
           const Divider(height: 1, indent: 56),
-          _row(Icons.location_on_outlined, 'Address', property['address'] ?? 'N/A'),
+          _row(Icons.location_on_outlined, context.tr('address'), property['address'] ?? 'N/A'),
           const Divider(height: 1, indent: 56),
-          _row(Icons.meeting_room_outlined, 'Unit', unit['name'] ?? 'No unit'),
+          _row(Icons.meeting_room_outlined, context.tr('unit'), unit['name'] ?? context.tr('no_unit')),
           const Divider(height: 1, indent: 56),
-          _row(Icons.payments_outlined, 'Rent', 'TZS ${_formatAmount(tenant['rent_amount'])}'),
+          _row(Icons.payments_outlined, context.tr('rent'), 'TZS ${_formatAmount(tenant['rent_amount'])}'),
           const Divider(height: 1, indent: 56),
-          _row(Icons.account_balance_wallet_outlined, 'Total Paid', 'TZS ${_formatAmount(tenant['total_paid'])}'),
+          _row(Icons.account_balance_wallet_outlined, context.tr('total_paid'), 'TZS ${_formatAmount(tenant['total_paid'])}'),
           const Divider(height: 1, indent: 56),
-          _row(Icons.warning_amber_rounded, 'Balance Due', 'TZS ${_formatAmount(balance)}', color: balance > 0 ? AppColors.error : AppColors.success),
+          _row(Icons.warning_amber_rounded, context.tr('balance_due'), 'TZS ${_formatAmount(balance)}', color: balance > 0 ? AppColors.error : AppColors.success),
           const Divider(height: 1, indent: 56),
-          _row(Icons.calendar_today_outlined, 'Move-in', tenant['moved_in_date'] ?? 'N/A'),
+          _row(Icons.calendar_today_outlined, context.tr('move_in'), tenant['moved_in_date'] ?? 'N/A'),
         ],
       ),
     );
@@ -148,11 +149,11 @@ class TenantDetailScreen extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Contracts', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+            Text(context.tr('contracts'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
             TextButton.icon(
               onPressed: () => context.push('/landlord/contracts/create'),
               icon: const Icon(Icons.add, size: 18),
-              label: Text('New Contract', style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700)),
+              label: Text(context.tr('new_contract'), style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700)),
             ),
           ],
         ),
@@ -165,7 +166,7 @@ class TenantDetailScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            child: Center(child: Text('No contracts yet', style: GoogleFonts.nunito(color: AppColors.textLight))),
+            child: Center(child: Text(context.tr('no_contracts_yet'), style: GoogleFonts.nunito(color: AppColors.textLight))),
           )
         else
           ...contracts.map((c) {
@@ -217,7 +218,7 @@ class TenantDetailScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Unit: $unitName', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                        Text('${context.tr('unit')}: $unitName', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark)),
                         const SizedBox(height: 2),
                         Text('$startDate - $endDate', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
                       ],
@@ -238,13 +239,13 @@ class TenantDetailScreen extends ConsumerWidget {
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Download failed: $e'), backgroundColor: AppColors.error),
+                              SnackBar(content: Text('${context.tr('download_failed')}: $e'), backgroundColor: AppColors.error),
                             );
                           }
                         }
                       },
                       icon: const Icon(Icons.download, size: 16),
-                      label: Text('Download PDF', style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700)),
+                      label: Text(context.tr('download_pdf'), style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primary,
                         side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
@@ -271,11 +272,11 @@ class TenantDetailScreen extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Payment History', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+            Text(context.tr('payment_history'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
             TextButton.icon(
               onPressed: () => context.push('/landlord/payments/record'),
               icon: const Icon(Icons.add, size: 18),
-              label: Text('Record', style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700)),
+              label: Text(context.tr('record'), style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700)),
             ),
           ],
         ),
@@ -288,7 +289,7 @@ class TenantDetailScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            child: Center(child: Text('No payments recorded', style: GoogleFonts.nunito(color: AppColors.textLight))),
+            child: Center(child: Text(context.tr('no_payments_recorded'), style: GoogleFonts.nunito(color: AppColors.textLight))),
           )
         else
           Container(
@@ -335,7 +336,7 @@ class TenantDetailScreen extends ConsumerWidget {
               child: ElevatedButton.icon(
                 onPressed: () => _showEditDialog(context, ref, id, tenant),
                 icon: const Icon(Icons.edit_outlined, size: 18),
-                label: const Text('Edit'),
+                label: Text(context.tr('edit')),
               ),
             ),
             const SizedBox(width: 12),
@@ -348,7 +349,7 @@ class TenantDetailScreen extends ConsumerWidget {
                   side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
                 ),
                 icon: const Icon(Icons.person_remove_outlined, size: 18),
-                label: const Text('Move Out'),
+                label: Text(context.tr('move_out')),
               ),
             ),
           ],
@@ -370,10 +371,10 @@ class TenantDetailScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Move Out Tenant', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        content: Text('Are you sure you want to mark this tenant as moved out?', style: GoogleFonts.nunito(fontSize: 14)),
+        title: Text(context.tr('move_out_tenant'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        content: Text(context.tr('confirm_move_out'), style: GoogleFonts.nunito(fontSize: 14)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('cancel'))),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -382,7 +383,7 @@ class TenantDetailScreen extends ConsumerWidget {
                 ref.invalidate(tenantDetailProvider(id));
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tenant moved out'), backgroundColor: AppColors.success),
+                    SnackBar(content: Text(context.tr('tenant_moved_out')), backgroundColor: AppColors.success),
                   );
                 }
               } catch (e) {
@@ -393,7 +394,7 @@ class TenantDetailScreen extends ConsumerWidget {
                 }
               }
             },
-            child: const Text('Move Out', style: TextStyle(color: AppColors.error)),
+            child: Text(context.tr('move_out'), style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -411,20 +412,20 @@ class TenantDetailScreen extends ConsumerWidget {
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text('Edit Tenant', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+          title: Text(context.tr('edit_tenant'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Full Name')),
-                TextField(controller: phoneController, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Phone')),
-                TextField(controller: emailController, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email')),
-                TextField(controller: emergencyController, decoration: const InputDecoration(labelText: 'Emergency Contact')),
+                TextField(controller: nameController, decoration: InputDecoration(labelText: context.tr('full_name'))),
+                TextField(controller: phoneController, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: context.tr('phone'))),
+                TextField(controller: emailController, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: context.tr('email'))),
+                TextField(controller: emergencyController, decoration: InputDecoration(labelText: context.tr('emergency_contact'))),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('cancel'))),
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
@@ -439,7 +440,7 @@ class TenantDetailScreen extends ConsumerWidget {
                   ref.invalidate(tenantsListProvider);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Tenant updated'), backgroundColor: AppColors.success),
+                      SnackBar(content: Text(context.tr('tenant_updated')), backgroundColor: AppColors.success),
                     );
                   }
                 } catch (e) {
@@ -450,7 +451,7 @@ class TenantDetailScreen extends ConsumerWidget {
                   }
                 }
               },
-              child: const Text('Save'),
+              child: Text(context.tr('save')),
             ),
           ],
         );
@@ -463,10 +464,10 @@ class TenantDetailScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Delete Tenant', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        content: Text('Are you sure you want to delete this tenant?', style: GoogleFonts.nunito(fontSize: 14)),
+        title: Text(context.tr('delete_tenant'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        content: Text(context.tr('confirm_delete_tenant'), style: GoogleFonts.nunito(fontSize: 14)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('cancel'))),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -475,7 +476,7 @@ class TenantDetailScreen extends ConsumerWidget {
                 ref.invalidate(tenantsListProvider);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tenant deleted'), backgroundColor: AppColors.success),
+                    SnackBar(content: Text(context.tr('tenant_deleted')), backgroundColor: AppColors.success),
                   );
                   if (context.canPop()) context.pop();
                 }
@@ -487,7 +488,7 @@ class TenantDetailScreen extends ConsumerWidget {
                 }
               }
             },
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),

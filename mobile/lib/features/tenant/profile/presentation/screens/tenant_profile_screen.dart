@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
 
 class TenantProfileScreen extends ConsumerWidget {
@@ -14,7 +15,7 @@ class TenantProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      appBar: AppBar(title: const Text('Profile'), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      appBar: AppBar(title: Text(context.tr('profile')), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -34,7 +35,7 @@ class TenantProfileScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user?.fullName ?? 'Tenant', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                        Text(user?.fullName ?? context.tr('tenant'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
                         Text(user?.phone ?? '', style: TextStyle(fontSize: 14, color: isDark ? Colors.white60 : AppColors.textLight)),
                       ],
                     ),
@@ -47,11 +48,11 @@ class TenantProfileScreen extends ConsumerWidget {
           Card(
             child: Column(
               children: [
-                ListTile(leading: const Icon(Icons.lock_outline), title: const Text('Change Password'), trailing: const Icon(Icons.arrow_forward_ios, size: 16), onTap: () => context.push('/tenant/profile/change-password')),
+                ListTile(leading: const Icon(Icons.lock_outline), title: Text(context.tr('change_password')), trailing: const Icon(Icons.arrow_forward_ios, size: 16), onTap: () => context.push('/tenant/profile/change-password')),
                 const Divider(height: 1),
-                ListTile(leading: const Icon(Icons.notifications_outlined), title: const Text('Notifications'), trailing: const Icon(Icons.arrow_forward_ios, size: 16)),
+                ListTile(leading: const Icon(Icons.notifications_outlined), title: Text(context.tr('notifications')), trailing: const Icon(Icons.arrow_forward_ios, size: 16)),
                 const Divider(height: 1),
-                ListTile(leading: const Icon(Icons.logout, color: AppColors.error), title: const Text('Logout', style: TextStyle(color: AppColors.error)), onTap: () async {
+                ListTile(leading: const Icon(Icons.logout, color: AppColors.error), title: Text(context.tr('logout'), style: const TextStyle(color: AppColors.error)), onTap: () async {
                   await ref.read(authProvider.notifier).logout();
                   if (context.mounted) context.go('/auth/login');
                 }),

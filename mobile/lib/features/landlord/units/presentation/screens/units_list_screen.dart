@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -20,7 +21,7 @@ class UnitsListScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text('Units'),
+        title: Text(context.tr('units')),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
       ),
       body: RefreshIndicator(
@@ -35,7 +36,7 @@ class UnitsListScreen extends ConsumerWidget {
               _buildAddUnitCard(context),
               const SizedBox(height: 16),
               if (units.isEmpty)
-                const EmptyState(message: 'No units yet. Tap above to add your first unit.', icon: Icons.meeting_room_outlined)
+                EmptyState(message: context.tr('no_units_tap'), icon: Icons.meeting_room_outlined)
               else
                 ...units.map((unit) => Dismissible(
                   key: Key(unit['id']?.toString() ?? UniqueKey().toString()),
@@ -55,13 +56,13 @@ class UnitsListScreen extends ConsumerWidget {
                       context: context,
                       builder: (context) => AlertDialog(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        title: Text('Delete Unit', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-                        content: Text('Are you sure you want to delete this unit?', style: GoogleFonts.nunito(fontSize: 14)),
+                        title: Text(context.tr('delete_unit'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                        content: Text(context.tr('confirm_delete_unit'), style: GoogleFonts.nunito(fontSize: 14)),
                         actions: [
-                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.tr('cancel'))),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+                            child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
                           ),
                         ],
                       ),
@@ -73,7 +74,7 @@ class UnitsListScreen extends ConsumerWidget {
                       ref.invalidate(unitsListProvider(propertyId));
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Unit deleted'), backgroundColor: AppColors.success),
+                          SnackBar(content: Text(context.tr('unit_deleted')), backgroundColor: AppColors.success),
                         );
                       }
                     } catch (e) {
@@ -124,12 +125,12 @@ class UnitsListScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Add Unit',
+                      context.tr('add_unit'),
                       style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Create a new unit for this property',
+                      context.tr('create_new_unit'),
                       style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight),
                     ),
                   ],

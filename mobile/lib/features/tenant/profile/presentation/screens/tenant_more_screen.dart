@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
 
 class TenantMoreScreen extends ConsumerWidget {
@@ -15,27 +16,27 @@ class TenantMoreScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text('More'),
+        title: Text(context.tr('more')),
         automaticallyImplyLeading: false,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildProfileHeader(context, user?.fullName ?? 'Tenant', user?.phone ?? ''),
+          _buildProfileHeader(context, user?.fullName ?? context.tr('tenant'), user?.phone ?? ''),
           const SizedBox(height: 20),
-          _buildSectionTitle(context, 'My Space'),
-          _buildMenuItem(context, icon: Icons.door_front_door_outlined, title: 'My Unit', subtitle: 'Unit details and photos', onTap: () => context.push('/tenant/my-unit')),
-          _buildMenuItem(context, icon: Icons.description_outlined, title: 'My Contract', subtitle: 'Contract and PDF', onTap: () => context.push('/tenant/contract')),
-          _buildMenuItem(context, icon: Icons.payments_outlined, title: 'My Payments', subtitle: 'Payment history and receipts', onTap: () => context.push('/tenant/payments')),
-          _buildMenuItem(context, icon: Icons.build_outlined, title: 'Maintenance', subtitle: 'Submit and track requests', onTap: () => context.push('/tenant/maintenance')),
+          _buildSectionTitle(context, context.tr('my_space')),
+          _buildMenuItem(context, icon: Icons.door_front_door_outlined, title: context.tr('my_unit'), subtitle: context.tr('unit_details_photos'), onTap: () => context.push('/tenant/my-unit')),
+          _buildMenuItem(context, icon: Icons.description_outlined, title: context.tr('my_contract'), subtitle: context.tr('contract_pdf'), onTap: () => context.push('/tenant/contract')),
+          _buildMenuItem(context, icon: Icons.payments_outlined, title: context.tr('my_payments'), subtitle: context.tr('payment_history_receipts'), onTap: () => context.push('/tenant/payments')),
+          _buildMenuItem(context, icon: Icons.build_outlined, title: context.tr('maintenance'), subtitle: context.tr('submit_track_requests'), onTap: () => context.push('/tenant/maintenance')),
           const SizedBox(height: 20),
-          _buildSectionTitle(context, 'Account'),
-          _buildMenuItem(context, icon: Icons.settings_outlined, title: 'Settings', subtitle: 'App preferences', onTap: () => context.push('/settings')),
+          _buildSectionTitle(context, context.tr('account')),
+          _buildMenuItem(context, icon: Icons.settings_outlined, title: context.tr('settings'), subtitle: context.tr('app_preferences'), onTap: () => context.push('/settings')),
           _buildMenuItem(
             context,
             icon: Icons.logout,
-            title: 'Logout',
-            subtitle: 'Sign out of your account',
+            title: context.tr('logout'),
+            subtitle: context.tr('sign_out_account'),
             color: AppColors.error,
             onTap: () async {
               await ref.read(authProvider.notifier).logout();

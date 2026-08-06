@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/error_state.dart';
@@ -19,7 +20,7 @@ class MyPaymentsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(title: Text('My Payments', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      appBar: AppBar(title: Text(context.tr('my_payments'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(myPaymentsProvider),
         color: AppColors.primary,
@@ -40,9 +41,9 @@ class MyPaymentsScreen extends ConsumerWidget {
                         child: const Icon(Icons.payments_outlined, size: 36, color: AppColors.textLight),
                       ),
                       const SizedBox(height: 20),
-                      Text('No Payments Yet', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                      Text(context.tr('no_payments_yet'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
                       const SizedBox(height: 8),
-                      Text('Your payment history will appear here once your landlord sets up your account.', textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
+                      Text(context.tr('no_payments_desc'), textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
                     ],
                   ),
                 ),
@@ -51,7 +52,7 @@ class MyPaymentsScreen extends ConsumerWidget {
             return ErrorState(message: e.toString(), onRetry: () => ref.invalidate(myPaymentsProvider));
           },
           data: (payments) => payments.isEmpty
-              ? const EmptyState(message: 'No payment records found.', icon: Icons.payments_outlined)
+              ? EmptyState(message: context.tr('no_payment_records'), icon: Icons.payments_outlined)
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: payments.length,

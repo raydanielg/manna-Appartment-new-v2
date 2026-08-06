@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -31,7 +32,7 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
         elevation: 0,
         centerTitle: false,
         title: Text(
-          'Tenants',
+          context.tr('tenants'),
           style: GoogleFonts.nunito(fontWeight: FontWeight.w800, color: const Color(0xFF111827), fontSize: 20),
         ),
         leading: IconButton(
@@ -50,7 +51,7 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
               onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
               style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600),
               decoration: InputDecoration(
-                hintText: 'Search by name or phone...',
+                hintText: context.tr('search_name_phone'),
                 hintStyle: GoogleFonts.nunito(fontSize: 14, color: const Color(0xFF9CA3AF)),
                 prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF6B7280), size: 20),
                 filled: true,
@@ -68,11 +69,11 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildFilterChip('All Tenants', 'all'),
+                  _buildFilterChip(context.tr('all_tenants'), 'all'),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Active', 'active'),
+                  _buildFilterChip(context.tr('active'), 'active'),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Moved Out', 'moved_out'),
+                  _buildFilterChip(context.tr('moved_out'), 'moved_out'),
                 ],
               ),
             ),
@@ -93,7 +94,7 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
                     message: message,
                     onRetry: () => ref.invalidate(tenantsListProvider),
                     onAction: isSetupError ? () => context.go('/landlord/subscription') : null,
-                    actionLabel: 'Complete Setup',
+                    actionLabel: context.tr('complete_setup'),
                   );
                 },
                 data: (tenants) {
@@ -108,7 +109,7 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
                   }).toList();
 
                   if (filtered.isEmpty) {
-                    return const EmptyState(message: 'No tenants found. Add your first tenant.', icon: Icons.people_outline);
+                    return EmptyState(message: context.tr('no_tenants_found'), icon: Icons.people_outline);
                   }
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
@@ -133,13 +134,13 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
                           return await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Delete Tenant'),
-                              content: const Text('Are you sure you want to delete this tenant? This action cannot be undone.'),
+                              title: Text(context.tr('delete_tenant')),
+                              content: Text(context.tr('confirm_delete_tenant')),
                               actions: [
-                                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                                TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.tr('cancel'))),
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, true),
-                                  child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+                                  child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
                                 ),
                               ],
                             ),
@@ -151,7 +152,7 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
                             ref.invalidate(tenantsListProvider);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Tenant deleted'), backgroundColor: AppColors.success),
+                                SnackBar(content: Text(context.tr('tenant_deleted')), backgroundColor: AppColors.success),
                               );
                             }
                           } catch (e) {
@@ -179,7 +180,7 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
         foregroundColor: Colors.white,
         elevation: 4,
         icon: const Icon(Icons.person_add_rounded),
-        label: Text('Add Tenant', style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+        label: Text(context.tr('add_tenant'), style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/properties_provider.dart';
@@ -57,7 +58,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load property: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text('${context.tr('failed_load_property')}: $e'), backgroundColor: AppColors.error),
         );
       }
     }
@@ -117,7 +118,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
           return data['message'].toString();
         }
       }
-      return error.message ?? 'Request failed. Please try again.';
+      return error.message ?? context.tr('request_failed');
     }
     return error.toString();
   }
@@ -141,8 +142,8 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
         ref.invalidate(propertyDetailProvider(widget.propertyId!));
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Property updated successfully'),
+            SnackBar(
+              content: Text(context.tr('property_updated')),
               backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
             ),
@@ -160,8 +161,8 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
         ref.invalidate(propertiesListProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Property created successfully'),
+            SnackBar(
+              content: Text(context.tr('property_created')),
               backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
             ),
@@ -190,7 +191,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: Text(_isEditMode ? 'Edit Property' : 'Add Property', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(_isEditMode ? context.tr('edit_property') : context.tr('add_property'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -210,29 +211,29 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
                 const Center(child: CircularProgressIndicator()),
               ],
               AppTextField(
-                label: 'Property Name',
-                hint: 'e.g. Manna Apartments',
+                label: context.tr('property_name'),
+                hint: context.tr('property_name_hint'),
                 controller: _nameController,
                 prefix: const Icon(Icons.apartment, size: 20),
-                validator: (v) => v == null || v.isEmpty ? 'Name is required' : null,
+                validator: (v) => v == null || v.isEmpty ? context.tr('name_required') : null,
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'Address',
-                hint: 'e.g. Kijitonyama, Dar es Salaam',
+                label: context.tr('address'),
+                hint: context.tr('address_hint'),
                 controller: _addressController,
                 prefix: const Icon(Icons.location_on, size: 20),
-                validator: (v) => v == null || v.isEmpty ? 'Address is required' : null,
+                validator: (v) => v == null || v.isEmpty ? context.tr('address_required') : null,
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'Location (Optional)',
-                hint: 'e.g. Dar es Salaam',
+                label: context.tr('location_optional'),
+                hint: context.tr('location_hint'),
                 controller: _locationController,
                 prefix: const Icon(Icons.map, size: 20),
               ),
               const SizedBox(height: 16),
-              Text('Property Type', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+              Text(context.tr('property_type'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: _type,
@@ -243,23 +244,23 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
                 dropdownColor: Colors.white,
-                items: const [
-                  DropdownMenuItem(value: 'apartment', child: Text('Apartment')),
-                  DropdownMenuItem(value: 'house', child: Text('House')),
-                  DropdownMenuItem(value: 'commercial', child: Text('Commercial')),
-                  DropdownMenuItem(value: 'mixed', child: Text('Mixed Use')),
+                items: [
+                  DropdownMenuItem(value: 'apartment', child: Text(context.tr('apartment'))),
+                  DropdownMenuItem(value: 'house', child: Text(context.tr('house'))),
+                  DropdownMenuItem(value: 'commercial', child: Text(context.tr('commercial'))),
+                  DropdownMenuItem(value: 'mixed', child: Text(context.tr('mixed_use'))),
                 ],
                 onChanged: (v) => setState(() => _type = v ?? 'apartment'),
               ),
               if (!_isEditMode) ...[
                 const SizedBox(height: 24),
-                Text('Property Photos', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+                Text(context.tr('property_photos'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
                 const SizedBox(height: 10),
                 _buildImagePicker(context),
               ],
               const SizedBox(height: 24),
               PrimaryButton(
-                text: _isEditMode ? 'Update Property' : 'Save Property',
+                text: _isEditMode ? context.tr('update_property') : context.tr('save_property'),
                 isLoading: _isLoading,
                 onPressed: _submit,
               ),
@@ -323,7 +324,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
                   children: [
                     Icon(Icons.add_photo_alternate, color: AppColors.primary),
                     const SizedBox(height: 4),
-                    Text('Add Photos', style: GoogleFonts.nunito(fontSize: 11, color: AppColors.textLight)),
+                    Text(context.tr('add_photos'), style: GoogleFonts.nunito(fontSize: 11, color: AppColors.textLight)),
                   ],
                 ),
               ),
@@ -333,7 +334,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
         if (_imagePaths.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 10),
-            child: Text('${_imagePaths.length} photo(s) selected', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
+            child: Text('${_imagePaths.length} ${context.tr('photos_selected')}', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
           ),
       ],
     );

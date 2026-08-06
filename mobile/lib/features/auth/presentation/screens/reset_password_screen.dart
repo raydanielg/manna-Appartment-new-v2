@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/auth_background.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
@@ -29,24 +30,24 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
   Future<void> _resetPassword() async {
     if (_passwordController.text.isEmpty) {
-      _showError('Enter a new password');
+      _showError(context.tr('enter_new_password_first'));
       return;
     }
     if (_passwordController.text.length < 6) {
-      _showError('Password must be at least 6 characters');
+      _showError(context.tr('password_min_6'));
       return;
     }
     if (_passwordController.text != _confirmController.text) {
-      _showError('Passwords do not match');
+      _showError(context.tr('passwords_not_match'));
       return;
     }
     final success = await ref.read(authProvider.notifier)
         .resetPassword(_phone, _passwordController.text);
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset successfully! Please login.'),
-          backgroundColor: Color(0xFF22C55E),
+        SnackBar(
+          content: Text(context.tr('password_reset_success')),
+          backgroundColor: const Color(0xFF22C55E),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -94,7 +95,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
               const SizedBox(height: 32),
               Text(
-                'Reset Password',
+                context.tr('reset_password_title'),
                 style: GoogleFonts.nunito(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
@@ -103,7 +104,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Enter your new password below.',
+                context.tr('reset_password_subtitle'),
                 style: GoogleFonts.nunito(
                   fontSize: 14,
                   color: const Color(0xFF6B7280),
@@ -139,13 +140,13 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 const SizedBox(height: 20),
               ],
 
-              _buildLabel('New Password'),
+              _buildLabel(context.tr('new_password')),
               TextField(
                 controller: _passwordController,
                 obscureText: _obscure,
                 style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
                 decoration: _buildInputDecoration(
-                  hint: 'Enter new password',
+                  hint: context.tr('enter_new_password'),
                   suffix: IconButton(
                     icon: Icon(
                       _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -158,14 +159,14 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               ),
               
               const SizedBox(height: 16),
-              _buildLabel('Confirm Password'),
+              _buildLabel(context.tr('confirm_password')),
               TextField(
                 controller: _confirmController,
                 obscureText: _obscureConfirm,
                 style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
                 onSubmitted: (_) => _resetPassword(),
                 decoration: _buildInputDecoration(
-                  hint: 'Confirm new password',
+                  hint: context.tr('confirm_new_password'),
                   suffix: IconButton(
                     icon: Icon(
                       _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
@@ -203,7 +204,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                           ),
                         )
                       : Text(
-                          'Update Password',
+                          context.tr('update_password'),
                           style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                 ),

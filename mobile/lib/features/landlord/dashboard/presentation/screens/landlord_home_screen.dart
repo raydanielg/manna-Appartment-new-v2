@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/config/app_config.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../features/auth/data/models/login_response_model.dart';
@@ -49,7 +50,7 @@ class LandlordHomeScreen extends ConsumerWidget {
                       message: message,
                       onRetry: () => ref.invalidate(landlordDashboardProvider),
                       onAction: isSetupError ? () => context.go('/landlord/subscription') : null,
-                      actionLabel: 'Complete Setup',
+                      actionLabel: context.tr('complete_setup'),
                     );
                   },
                   data: (data) => Column(
@@ -57,7 +58,7 @@ class LandlordHomeScreen extends ConsumerWidget {
                     children: [
                       SummaryCards(data: data),
                       const SizedBox(height: 24),
-                      Text('Income Overview', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+                      Text(context.tr('income_overview'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
                       const SizedBox(height: 12),
                       IncomeChart(data: data),
                       const SizedBox(height: 24),
@@ -74,7 +75,7 @@ class LandlordHomeScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, UserModel? user, int unreadCount) {
-    final name = user?.fullName ?? 'Landlord';
+    final name = user?.fullName ?? context.tr('landlord');
     final avatarUrl = user?.avatar;
     final initials = name.trim().split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join().toUpperCase();
     return Row(
@@ -126,7 +127,7 @@ class LandlordHomeScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hello, $name',
+                '${context.tr('hello')}, $name',
                 style: GoogleFonts.nunito(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -135,7 +136,7 @@ class LandlordHomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'Welcome back to your dashboard',
+                context.tr('welcome_back'),
                 style: GoogleFonts.nunito(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -193,7 +194,7 @@ class LandlordHomeScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Tenants',
+              context.tr('tenants'),
               style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark),
             ),
             TextButton(
@@ -202,7 +203,7 @@ class LandlordHomeScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'View All',
+                    context.tr('view_all'),
                     style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary),
                   ),
                   const SizedBox(width: 4),
@@ -230,7 +231,7 @@ class LandlordHomeScreen extends ConsumerWidget {
                     Icon(Icons.people_outline, size: 36, color: Colors.grey.shade300),
                     const SizedBox(height: 10),
                     Text(
-                      'No tenants yet',
+                      context.tr('no_tenants_yet'),
                       style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey.shade400),
                     ),
                   ],

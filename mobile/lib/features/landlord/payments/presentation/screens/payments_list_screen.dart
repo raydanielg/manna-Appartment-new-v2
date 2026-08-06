@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -28,7 +29,7 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Payments', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('payments'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -43,7 +44,7 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
             child: TextField(
               onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
               decoration: InputDecoration(
-                hintText: 'Search payments...',
+                hintText: context.tr('search_payments'),
                 hintStyle: GoogleFonts.nunito(fontSize: 14),
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
@@ -58,15 +59,15 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildFilterChip('All', 'all'),
+                  _buildFilterChip(context.tr('all'), 'all'),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Rent', 'rent'),
+                  _buildFilterChip(context.tr('rent'), 'rent'),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Water', 'water'),
+                  _buildFilterChip(context.tr('water'), 'water'),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Electricity', 'electricity'),
+                  _buildFilterChip(context.tr('electricity'), 'electricity'),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Other', 'other'),
+                  _buildFilterChip(context.tr('other'), 'other'),
                 ],
               ),
             ),
@@ -87,7 +88,7 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
                     message: message,
                     onRetry: () => ref.invalidate(landlordPaymentsProvider),
                     onAction: isSetupError ? () => context.go('/landlord/subscription') : null,
-                    actionLabel: 'Complete Setup',
+                    actionLabel: context.tr('complete_setup'),
                   );
                 },
                 data: (payments) {
@@ -100,7 +101,7 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
                   }).toList();
 
                   if (filtered.isEmpty) {
-                    return const EmptyState(message: 'No payments recorded yet.');
+                    return EmptyState(message: context.tr('no_payments_recorded_yet'));
                   }
                   return ListView.builder(
                     padding: const EdgeInsets.all(16),
@@ -124,13 +125,13 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
                           return await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Delete Payment'),
-                              content: const Text('Are you sure you want to delete this payment record?'),
+                              title: Text(context.tr('delete_payment')),
+                              content: Text(context.tr('confirm_delete_payment')),
                               actions: [
-                                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                                TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.tr('cancel'))),
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, true),
-                                  child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+                                  child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
                                 ),
                               ],
                             ),
@@ -142,7 +143,7 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
                             ref.invalidate(landlordPaymentsProvider);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Payment deleted'), backgroundColor: AppColors.success),
+                                SnackBar(content: Text(context.tr('payment_deleted')), backgroundColor: AppColors.success),
                               );
                             }
                           } catch (e) {
@@ -168,7 +169,7 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
         onPressed: () => context.push('/landlord/payments/record'),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add),
-        label: const Text('Record'),
+        label: Text(context.tr('record')),
       ),
     );
   }
@@ -227,7 +228,7 @@ class _PaymentCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              payment['tenant']?['user']?['full_name'] ?? payment['tenant']?['full_name'] ?? payment['tenant_name'] ?? 'Unknown',
+              payment['tenant']?['user']?['full_name'] ?? payment['tenant']?['full_name'] ?? payment['tenant_name'] ?? context.tr('unknown'),
               style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight),
             ),
             Text(

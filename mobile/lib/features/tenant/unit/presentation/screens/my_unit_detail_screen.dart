@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/status_badge.dart';
@@ -18,7 +19,7 @@ class MyUnitDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(title: Text('My Unit', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      appBar: AppBar(title: Text(context.tr('my_unit'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
       body: unitAsync.when(
         loading: () => const LoadingIndicator(),
         error: (e, _) {
@@ -36,9 +37,9 @@ class MyUnitDetailScreen extends ConsumerWidget {
                       child: const Icon(Icons.meeting_room_outlined, size: 36, color: AppColors.textLight),
                     ),
                     const SizedBox(height: 20),
-                    Text('No Unit Assigned', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                    Text(context.tr('no_unit_assigned_title'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
                     const SizedBox(height: 8),
-                    Text('You haven\'t been assigned a unit yet. Please contact your landlord.', textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
+                    Text(context.tr('no_unit_assigned_desc'), textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
                   ],
                 ),
               ),
@@ -61,21 +62,21 @@ class MyUnitDetailScreen extends ConsumerWidget {
                 child: const Center(child: Icon(Icons.meeting_room, size: 64, color: Colors.white70)),
               ),
               const SizedBox(height: 20),
-              Text(unit['name'] ?? 'My Unit', style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+              Text(unit['name'] ?? context.tr('my_unit'), style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark)),
               const SizedBox(height: 8),
-              Text('TZS ${unit['monthly_rent'] ?? unit['rent_amount'] ?? 0}/month', style: const TextStyle(fontSize: 16, color: AppColors.primary, fontWeight: FontWeight.w700)),
+              Text('TZS ${unit['monthly_rent'] ?? unit['rent_amount'] ?? 0}${context.tr('per_month')}', style: const TextStyle(fontSize: 16, color: AppColors.primary, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
               StatusBadge(status: unit['status'] ?? 'occupied'),
               const SizedBox(height: 20),
-              _buildInfoRow(context, Icons.category_outlined, 'Type', unit['type'] ?? 'N/A'),
-              _buildInfoRow(context, Icons.square_foot, 'Size', '${unit['size'] ?? 'N/A'} sqm'),
-              _buildInfoRow(context, Icons.bed, 'Bedrooms', '${unit['bedrooms'] ?? 0}'),
-              _buildInfoRow(context, Icons.bathtub, 'Bathrooms', '${unit['bathrooms'] ?? 0}'),
+              _buildInfoRow(context, Icons.category_outlined, context.tr('type'), unit['type'] ?? 'N/A'),
+              _buildInfoRow(context, Icons.square_foot, context.tr('size'), '${unit['size'] ?? 'N/A'} sqm'),
+              _buildInfoRow(context, Icons.bed, context.tr('bedrooms'), '${unit['bedrooms'] ?? 0}'),
+              _buildInfoRow(context, Icons.bathtub, context.tr('bathrooms'), '${unit['bathrooms'] ?? 0}'),
               if (unit['property'] != null)
-                _buildInfoRow(context, Icons.apartment, 'Property', unit['property']['name'] ?? 'N/A'),
+                _buildInfoRow(context, Icons.apartment, context.tr('property'), unit['property']['name'] ?? 'N/A'),
               if (unit['description'] != null) ...[
                 const SizedBox(height: 20),
-                Text('Description', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+                Text(context.tr('description'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
                 const SizedBox(height: 8),
                 Text(unit['description'], style: TextStyle(fontSize: 14, color: AppColors.textDark)),
               ],

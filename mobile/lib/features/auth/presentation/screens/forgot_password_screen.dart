@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/auth_background.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -25,7 +26,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Future<void> _sendOtp() async {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty || !RegExp(r'^[0-9]{9}$').hasMatch(phone)) {
-      _showError('Enter a valid 9-digit phone number');
+      _showError(context.tr('valid_9_digit_phone'));
       return;
     }
     final fullPhone = '255$phone';
@@ -74,7 +75,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
               const SizedBox(height: 32),
               Text(
-                'Forgot Password',
+                context.tr('forgot_password_title'),
                 style: GoogleFonts.nunito(
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
@@ -83,7 +84,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Enter your phone number to receive a verification code.',
+                context.tr('forgot_password_subtitle'),
                 style: GoogleFonts.nunito(
                   fontSize: 14,
                   color: const Color(0xFF6B7280),
@@ -119,7 +120,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 const SizedBox(height: 20),
               ],
 
-              _buildLabel('Phone Number'),
+              _buildLabel(context.tr('phone_number')),
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
@@ -175,7 +176,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           ),
                         )
                       : Text(
-                          'Send Code',
+                          context.tr('send_code'),
                           style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold),
                         ),
                 ),
@@ -189,7 +190,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     context.go('/auth/login');
                   },
                   child: Text(
-                    'Back to Sign In',
+                    context.tr('back_to_sign_in'),
                     style: GoogleFonts.nunito(
                       color: AuthColors.primary,
                       fontSize: 14,

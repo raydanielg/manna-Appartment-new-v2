@@ -17,7 +17,7 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(context.tr('settings')),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -44,21 +44,21 @@ class SettingsScreen extends ConsumerWidget {
             context,
             icon: Icons.language,
             title: context.tr('language'),
-            subtitle: 'Current: $currentLanguage',
+            subtitle: context.tr('language') + ': $currentLanguage',
             onTap: () => context.push('/settings/language'),
           ),
           _buildMenuItem(
             context,
             icon: Icons.info_outline,
             title: context.tr('about'),
-            subtitle: 'Manna Apartment v1.0.0',
+            subtitle: 'Manna Apartment v3.1.0+5',
             onTap: () => context.push('/settings/about'),
           ),
           _buildMenuItem(
             context,
             icon: Icons.help_outline,
             title: context.tr('help_support'),
-            subtitle: 'Get help and contact support',
+            subtitle: context.tr('contact_support'),
             onTap: () => context.push('/settings/help-support'),
           ),
           const SizedBox(height: 20),
@@ -67,14 +67,14 @@ class SettingsScreen extends ConsumerWidget {
             context,
             icon: Icons.privacy_tip_outlined,
             title: context.tr('privacy_policy'),
-            subtitle: 'Read our privacy policy',
+            subtitle: context.tr('privacy_policy'),
             onTap: () => context.push('/settings/privacy'),
           ),
           _buildMenuItem(
             context,
             icon: Icons.description_outlined,
             title: context.tr('terms_of_service'),
-            subtitle: 'Read our terms of service',
+            subtitle: context.tr('terms_of_service'),
             onTap: () => context.push('/settings/terms'),
           ),
         ],
