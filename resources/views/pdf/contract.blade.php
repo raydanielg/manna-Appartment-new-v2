@@ -15,7 +15,7 @@
         .label { font-weight: 600; }
         .terms { text-align: justify; }
         .signature-box { margin-top: 40px; border-top: 1px solid #e5e7eb; padding-top: 12px; }
-        .signature-img { max-height: 80px; margin-top: 6px; }
+        .signature-img { max-height: 120px; max-width: 300px; margin-top: 8px; }
         .footer { margin-top: 60px; display: flex; justify-content: space-between; }
         .sign-line { border-top: 1px solid #374151; width: 200px; margin-top: 40px; padding-top: 4px; font-size: 11px; }
     </style>
@@ -64,9 +64,18 @@
 
     @if($signatureBase64)
     <div class="signature-box">
-        <div class="section-title">Signature</div>
-        <p class="terms">This contract was signed electronically on {{ $contract->signed_at?->format('d M Y H:i') ?? now()->format('d M Y H:i') }}.</p>
-        <img src="{{ $signatureBase64 }}" class="signature-img" alt="Signature">
+        <div class="section-title">Signatures</div>
+        <div class="footer" style="margin-top: 20px;">
+            <div>
+                <div style="font-weight: 700; font-size: 12px; margin-bottom: 8px;">Landlord</div>
+                <img src="{{ $signatureBase64 }}" class="signature-img" alt="Landlord Signature">
+                <div class="sign-line" style="margin-top: 8px;">Signed on {{ $contract->signed_at?->format('d M Y') ?? now()->format('d M Y') }}</div>
+            </div>
+            <div>
+                <div style="font-weight: 700; font-size: 12px; margin-bottom: 8px;">Tenant</div>
+                <div class="sign-line" style="margin-top: 52px;">Tenant Signature</div>
+            </div>
+        </div>
     </div>
     @else
     <div class="footer">

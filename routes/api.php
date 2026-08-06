@@ -186,6 +186,7 @@ Route::prefix('v1')->group(function () {
                 Route::get('/contracts/{id}/pdf', [ContractController::class, 'pdf']);
                 Route::post('/contracts/{id}/sign', [ContractController::class, 'sign']);
                 Route::get('/contracts/{id}/download', [ContractController::class, 'downloadPdf']);
+                Route::delete('/contracts/{id}', [ContractController::class, 'destroy']);
 
                 Route::get('/payments', [PaymentController::class, 'index']);
                 Route::post('/payments', [PaymentController::class, 'store']);

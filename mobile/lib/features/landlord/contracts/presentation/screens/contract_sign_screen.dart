@@ -135,7 +135,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
             loading: () => const LoadingIndicator(),
             error: (e, _) => Center(child: Text('Failed to load contract', style: GoogleFonts.nunito(color: AppColors.error))),
             data: (contract) => SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 280),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 340),
               child: _buildContractPreview(contract),
             ),
           ),
@@ -216,18 +216,33 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
           ),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
-            height: 140,
+            height: 200,
             decoration: BoxDecoration(
               color: const Color(0xFFFAFAFA),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: Signature(
-                controller: _controller,
-                backgroundColor: const Color(0xFFFAFAFA),
-              ),
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Signature(
+                    controller: _controller,
+                    backgroundColor: const Color(0xFFFAFAFA),
+                  ),
+                ),
+                if (_controller.isEmpty && !_isPlaced)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Center(
+                        child: Text(
+                          'Sign here',
+                          style: GoogleFonts.nunito(fontSize: 16, color: Colors.grey.shade400, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
           Padding(
@@ -373,7 +388,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
                           const SizedBox(height: 8),
                           if (_signatureBytes != null)
                             Container(
-                              height: 60,
+                              height: 80,
                               padding: const EdgeInsets.symmetric(horizontal: 4),
                               child: Image.memory(_signatureBytes!, fit: BoxFit.contain),
                             )

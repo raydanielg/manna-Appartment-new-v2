@@ -137,4 +137,17 @@ class ContractController extends Controller
         }
         return response()->download(Storage::disk('public')->path("contracts/{$contract->id}.pdf"), "contract_{$contract->contract_number}.pdf");
     }
+
+    public function destroy($id)
+    {
+        $contract = Contract::findOrFail($id);
+
+        if ($contract->unit) {
+            $contract->unit->update(['status' => 'vacant']);
+        }
+
+        $contract->delete();
+
+        return $this->success('Contract deleted.');
+    }
 }
