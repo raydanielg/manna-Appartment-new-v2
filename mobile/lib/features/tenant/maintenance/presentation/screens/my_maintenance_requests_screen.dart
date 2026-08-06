@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
@@ -17,13 +19,37 @@ class MyMaintenanceRequestsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(title: const Text('My Requests'), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      appBar: AppBar(title: Text('My Requests', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(myMaintenanceRequestsProvider),
         color: AppColors.primary,
         child: requestsAsync.when(
           loading: () => const LoadingIndicator(),
-          error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(myMaintenanceRequestsProvider)),
+          error: (e, _) {
+            if (e is DioException && e.response?.statusCode == 404) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(color: AppColors.textLight.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
+                        child: const Icon(Icons.build_outlined, size: 36, color: AppColors.textLight),
+                      ),
+                      const SizedBox(height: 20),
+                      Text('No Requests Yet', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                      const SizedBox(height: 8),
+                      Text('Maintenance requests will appear here once your landlord sets up your tenancy.', textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return ErrorState(message: e.toString(), onRetry: () => ref.invalidate(myMaintenanceRequestsProvider));
+          },
           data: (requests) => requests.isEmpty
               ? const EmptyState(message: 'No maintenance requests yet.', icon: Icons.build_outlined)
               : ListView.builder(

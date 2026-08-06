@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -45,8 +46,12 @@ class _SubmitMaintenanceScreenState extends ConsumerState<SubmitMaintenanceScree
       }
     } catch (e) {
       if (context.mounted) {
+        String msg = 'Failed: $e';
+        if (e is DioException && e.response?.statusCode == 404) {
+          msg = 'No unit assigned. Please contact your landlord to set up your tenancy before submitting maintenance requests.';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text(msg), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
         );
       }
     } finally {

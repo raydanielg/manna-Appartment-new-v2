@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -53,17 +54,21 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     setState(() => _isLoading = true);
     try {
       final repo = ref.read(_profileRepoProvider);
-      if (mustChange) {
-        await repo.forceChangePassword(_newController.text);
-      } else {
-        await repo.changePassword(_currentController.text, _newController.text);
+      try {
+        if (mustChange) {
+          await repo.forceChangePassword(_newController.text);
+        } else {
+          await repo.changePassword(_currentController.text, _newController.text);
+        }
+      } catch (e) {
+        if (e is DioException && e.response?.statusCode == 403) {
+          await repo.forceChangePassword(_newController.text);
+        } else {
+          rethrow;
+        }
       }
 
-      final user = ref.read(authProvider).user;
-      if (user != null) {
-        final updated = user.copyWith(mustChangePassword: false);
-        ref.read(authProvider.notifier).state = ref.read(authProvider).copyWith(user: updated);
-      }
+      ref.read(authProvider.notifier).updateMustChangePassword(false);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

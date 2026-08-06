@@ -289,6 +289,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(error: '');
   }
 
+  void updateMustChangePassword(bool value) {
+    final user = state.user;
+    if (user != null) {
+      final updated = user.copyWith(mustChangePassword: value);
+      state = state.copyWith(user: updated);
+      SecureStorageService.setUserData(jsonEncode(updated.toJson()));
+    }
+  }
+
   String _parseError(dynamic error) {
     if (error is DioException) {
       // ErrorInterceptor already parsed a user-friendly message into error.error

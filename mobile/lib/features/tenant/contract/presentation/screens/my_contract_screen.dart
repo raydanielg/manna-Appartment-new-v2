@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,10 +19,34 @@ class MyContractScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(title: const Text('My Contract'), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      appBar: AppBar(title: Text('My Contract', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
       body: contractAsync.when(
         loading: () => const LoadingIndicator(),
-        error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(myContractProvider)),
+        error: (e, _) {
+          if (e is DioException && e.response?.statusCode == 404) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(color: AppColors.textLight.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
+                      child: const Icon(Icons.description_outlined, size: 36, color: AppColors.textLight),
+                    ),
+                    const SizedBox(height: 20),
+                    Text('No Contract Yet', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                    const SizedBox(height: 8),
+                    Text('Your contract details will appear here once your landlord sets up your tenancy.', textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
+                  ],
+                ),
+              ),
+            );
+          }
+          return ErrorState(message: e.toString(), onRetry: () => ref.invalidate(myContractProvider));
+        },
         data: (contract) => SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(

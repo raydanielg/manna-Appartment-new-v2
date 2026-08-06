@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
@@ -36,10 +37,22 @@ class TenantHomeScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 dashboardAsync.when(
                   loading: () => const LoadingIndicator(),
-                  error: (e, _) => ErrorState(
-                    message: e.toString(),
-                    onRetry: () => ref.invalidate(tenantDashboardProvider),
-                  ),
+                  error: (e, _) {
+                    if (e is DioException && e.response?.statusCode == 403) {
+                      final data = e.response?.data;
+                      if (data is Map && data['must_change_password'] == true) {
+                        return _buildMustChangePasswordCard(context);
+                      }
+                      return ErrorState(
+                        message: data is Map ? (data['message'] ?? 'Access denied') : 'Access denied',
+                        onRetry: () => ref.invalidate(tenantDashboardProvider),
+                      );
+                    }
+                    return ErrorState(
+                      message: e.toString(),
+                      onRetry: () => ref.invalidate(tenantDashboardProvider),
+                    );
+                  },
                   data: (data) {
                     final unit = data['unit'] as Map<String, dynamic>?;
                     final contract = data['contract'] as Map<String, dynamic>?;
@@ -207,6 +220,52 @@ class TenantHomeScreen extends ConsumerWidget {
       child: ListTile(
         title: Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textDark)),
         subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: AppColors.textLight)),
+      ),
+    );
+  }
+
+  Widget _buildMustChangePasswordCard(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(Icons.lock_outline, color: AppColors.warning, size: 32),
+          ),
+          const SizedBox(height: 20),
+          Text('Password Change Required', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+          const SizedBox(height: 8),
+          Text('You need to set a new password before you can access your dashboard.', textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => context.go('/tenant/profile/change-password'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('Change Password', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
       ),
     );
   }
