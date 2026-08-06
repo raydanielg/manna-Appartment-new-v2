@@ -20,13 +20,6 @@ class IncomeChart extends StatelessWidget {
     return amount.toStringAsFixed(0);
   }
 
-  String _formatFull(double amount) {
-    return amount.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]},',
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final rawMonthly = data['monthly_income'];
@@ -45,10 +38,7 @@ class IncomeChart extends StatelessWidget {
 
     final chartHeight = 200.0;
     final minY = 0.0;
-    final maxY = maxVal > 0 ? maxVal * 1.25 : 100.0;
-    final totalIncome = spots.fold<double>(0, (sum, s) => sum + s.y);
-    final allZero = maxVal == 0;
-    final hasData = spots.isNotEmpty && !allZero;
+    final maxY = maxVal > 0 ? maxVal * 1.2 : 100.0;
 
     return Container(
       decoration: BoxDecoration(
@@ -85,22 +75,11 @@ class IncomeChart extends StatelessWidget {
                     const SizedBox(height: 4),
                     if (spots.isNotEmpty)
                       Text(
-                        allZero
-                            ? 'TZS 0'
-                            : 'TZS ${_formatAmount(totalIncome)}',
+                        'TZS ${_formatAmount(spots.last.y)}',
                         style: GoogleFonts.nunito(
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
-                          color: allZero ? AppColors.textLight : AppColors.primary,
-                        ),
-                      ),
-                    if (spots.isNotEmpty)
-                      Text(
-                        allZero ? 'No income recorded yet' : 'Total for ${monthly.length} months',
-                        style: GoogleFonts.nunito(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textLight,
+                          color: AppColors.primary,
                         ),
                       ),
                   ],
@@ -137,8 +116,22 @@ class IncomeChart extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            if (spots.isEmpty || !hasData)
-              _buildEmptyState(labels, chartHeight)
+            if (spots.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: Column(
+                    children: [
+                      Icon(Icons.show_chart_rounded, size: 48, color: Colors.grey.shade300),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No income data yet',
+                        style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey.shade400),
+                      ),
+                    ],
+                  ),
+                ),
+              )
             else
               SizedBox(
                 height: chartHeight,
@@ -200,7 +193,7 @@ class IncomeChart extends StatelessWidget {
                     ),
                     borderData: FlBorderData(show: false),
                     minX: 0,
-                    maxX: (spots.length > 1 ? (spots.length - 1).toDouble() : 1.0),
+                    maxX: (spots.length - 1).toDouble(),
                     minY: minY,
                     maxY: maxY,
                     lineBarsData: [
@@ -261,71 +254,6 @@ class IncomeChart extends StatelessWidget {
               ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(List<String> labels, double height) {
-    return SizedBox(
-      height: height,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.06),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.trending_up_rounded,
-                      size: 32,
-                      color: AppColors.primary.withValues(alpha: 0.4),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'No income recorded yet',
-                    style: GoogleFonts.nunito(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textLight,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Income will appear here once payments are confirmed',
-                    style: GoogleFonts.nunito(
-                      fontSize: 11,
-                      color: AppColors.textLight.withValues(alpha: 0.7),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (labels.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: labels.map((l) => Text(
-                l,
-                style: GoogleFonts.nunito(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textLight.withValues(alpha: 0.5),
-                ),
-              )).toList(),
-            ),
-          ],
-        ],
       ),
     );
   }

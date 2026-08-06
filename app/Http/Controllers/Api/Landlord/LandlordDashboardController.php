@@ -80,7 +80,6 @@ class LandlordDashboardController extends Controller
             'tenants_count' => $tenantsCount,
             'vacant_units_count' => $vacantUnitsCount,
             'month_income' => (float) $monthIncome,
-            'total_income' => (float) $totalIncome,
             'outstanding' => (float) $outstanding,
             'monthly_income' => $monthlyIncome,
             'recent_activity' => $recentActivity,
