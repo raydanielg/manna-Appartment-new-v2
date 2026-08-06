@@ -23,6 +23,7 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
   bool _showWaiting = false;
   String _paymentStatus = '';
   String _currentReference = '';
+  Map<String, dynamic> _paymentResult = {};
   int _pollAttempts = 0;
   Timer? _pollTimer;
   late final AnimationController _successController;
@@ -54,7 +55,7 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
     return p;
   }
 
-  Future<void> _pay(Map<String, dynamic> plan) async {
+  Future<void> _proceed(Map<String, dynamic> plan) async {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) {
       _showSnack('Weka namba ya simu ya kulipia.');
@@ -91,12 +92,15 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
         _showWaiting = true;
         _paymentStatus = 'pending';
         _currentReference = paymentRef;
+        _paymentResult = result;
       });
 
-      // Open checkout URL in browser
       final launched = await launchUrl(
         Uri.parse(checkoutUrl),
-        mode: LaunchMode.externalApplication,
+        mode: LaunchMode.inAppBrowserView,
+        browserConfiguration: const BrowserConfiguration(
+          showTitle: true,
+        ),
       );
 
       if (!launched) {
@@ -105,7 +109,6 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
         return;
       }
 
-      // Start polling for payment status after browser opens
       if (paymentRef.isNotEmpty) {
         _startPolling(paymentRef);
       }
@@ -167,12 +170,15 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
 
         if (statusStr == 'completed' || statusStr == 'paid' || statusStr == 'successful' || statusStr == 'success') {
           timer.cancel();
-          setState(() => _showWaiting = false);
+          setState(() {
+            _showWaiting = false;
+            _paymentResult = status;
+          });
           _showSuccessAnimation();
         } else if (statusStr == 'failed' || statusStr == 'expired' || statusStr == 'cancelled') {
           timer.cancel();
           setState(() => _showWaiting = false);
-          _showSnack('Malipo yameshindwa. Huenda USSD push haikufika kwenye simu yako. Tafadhali hakikisha namba ya simu ni sahihi na jaribu tena.');
+          _showSnack('Malipo yameshindwa. Tafadhali hakikisha namba ya simu ni sahihi na jaribu tena.');
         }
       } catch (e) {
         // ignore polling errors
@@ -190,14 +196,17 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
 
       if (statusStr == 'completed' || statusStr == 'paid' || statusStr == 'successful' || statusStr == 'success') {
         _pollTimer?.cancel();
-        setState(() => _showWaiting = false);
+        setState(() {
+          _showWaiting = false;
+          _paymentResult = status;
+        });
         _showSuccessAnimation();
       } else if (statusStr == 'failed' || statusStr == 'expired' || statusStr == 'cancelled') {
         _pollTimer?.cancel();
         setState(() => _showWaiting = false);
         _showSnack('Malipo yameshindwa.');
       } else {
-        _showSnack('Hali ya malipo: $statusStr. Bado subiri USSD kwenye simu yako.');
+        _showSnack('Hali ya malipo: $statusStr. Bado subiri malipo kwenye simu yako.');
       }
     } catch (e) {
       _showSnack('Imeshindwa kuangalia hali ya malipo. Tafadhali subiri.');
@@ -225,6 +234,11 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
   String _formatPrice(dynamic price) {
     final value = (price is num ? price : num.tryParse(price.toString())) ?? 0;
     return 'TZS ${value.toStringAsFixed(0)}';
+  }
+
+  String _formatDateTime(dynamic value) {
+    if (value == null) return DateTime.now().toString().substring(0, 19);
+    return value.toString().substring(0, 19);
   }
 
   @override
@@ -281,115 +295,54 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Muhtasari wa Oda',
-                        style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textLight),
-                      ),
-                      const SizedBox(height: 16),
                       Row(
                         children: [
                           Container(
-                            width: 52,
-                            height: 52,
+                            width: 48,
+                            height: 48,
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
                                 colors: [Color(0xFF2563EB), Color(0xFF1E40AF)],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 28),
+                            child: const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 24),
                           ),
-                          const SizedBox(width: 14),
+                          const SizedBox(width: 12),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  planName,
-                                  style: GoogleFonts.nunito(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.textDark),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${_formatPrice(planPrice)} / ${planCycle.toLowerCase()}',
-                                  style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary),
-                                ),
-                              ],
+                            child: Text(
+                              planName,
+                              style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textDark),
                             ),
                           ),
                         ],
                       ),
-                      if (planFeatures.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        const Divider(color: Color(0xFFE5E7EB)),
-                        const SizedBox(height: 12),
-                        ...planFeatures.take(4).map((f) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 3),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.check_circle_rounded, size: 16, color: AppColors.primary),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  f.toString(),
-                                  style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textDark),
-                                ),
-                              ),
-                            ],
+                      const SizedBox(height: 20),
+                      const Divider(color: Color(0xFFE5E7EB)),
+                      const SizedBox(height: 16),
+                      _receiptRow('Plan', planName),
+                      const SizedBox(height: 10),
+                      _receiptRow('Mzunguko', planCycle.toString().toLowerCase()),
+                      const SizedBox(height: 10),
+                      _receiptRow('Kiasi', _formatPrice(planPrice), valueColor: AppColors.primary),
+                      const SizedBox(height: 16),
+                      const Divider(color: Color(0xFFE5E7EB)),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Jumla',
+                            style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark),
                           ),
-                        )),
-                      ],
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Payment Method Section
-                Text(
-                  'Njia ya Malipo',
-                  style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textDark),
-                ),
-                const SizedBox(height: 12),
-
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFBFDBFE)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.phone_android_rounded, color: AppColors.primary, size: 26),
+                          Text(
+                            _formatPrice(planPrice),
+                            style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.primary),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Mobile Money',
-                              style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'M-Pesa, Tigo Pesa, Airtel Money, Halopesa',
-                              style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textLight),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 22),
                     ],
                   ),
                 ),
@@ -426,18 +379,18 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Utapokea ombi la malipo kwenye simu hii baada ya kufungua ukurasa wa malipo. Ingiza PIN yako ya mobile money kukamilisha.',
+                  'Weka namba ya simu utakayolipia nayo.',
                   style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textLight, height: 1.4),
                 ),
 
                 const SizedBox(height: 28),
 
-                // Pay Button
+                // Proceed Button
                 SizedBox(
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: (plan.isEmpty || _isPaying) ? null : () => _pay(plan),
+                    onPressed: (plan.isEmpty || _isPaying) ? null : () => _proceed(plan),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -451,10 +404,10 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.lock_rounded, size: 20),
+                              const Icon(Icons.arrow_forward_rounded, size: 20),
                               const SizedBox(width: 8),
                               Text(
-                                'Lipa ${_formatPrice(planPrice)}',
+                                'Endelea kwa Malipo',
                                 style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800),
                               ),
                             ],
@@ -462,35 +415,11 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
                   ),
                 ),
 
-                const SizedBox(height: 24),
-
-                // Security note
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFBBF7D0)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.shield_rounded, color: Color(0xFF16A34A), size: 20),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Malipo yako yanalindwa kupitia Snippe Payment Gateway. Simu yako itapokea USSD push kwa usalama.',
-                          style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF15803D), height: 1.4),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
                 const SizedBox(height: 40),
               ],
             ),
           ),
-          if (_showSuccess) _buildSuccessOverlay(),
+          if (_showSuccess) _buildSuccessOverlay(planName, planPrice),
           if (_showWaiting) _buildWaitingOverlay(),
         ],
       ),
@@ -511,7 +440,6 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Animated phone icon
               Container(
                 width: 80,
                 height: 80,
@@ -529,13 +457,12 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Ukurasa wa malipo umefunguliwa kwenye browser. Kamilisha malipo hapo, kisha rudi kwenye app kuangalia hali.',
+                'Ukurasa wa malipo umefunguliwa ndani ya app. Kamilisha malipo, kisha funga huo ukurasa kurudi hapa.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textLight, height: 1.4),
               ),
               const SizedBox(height: 16),
 
-              // Status badge
               if (_paymentStatus.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -560,7 +487,6 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
               ),
               const SizedBox(height: 20),
 
-              // Check status button
               SizedBox(
                 width: double.infinity,
                 height: 44,
@@ -595,77 +521,169 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
     );
   }
 
-  Widget _buildSuccessOverlay() {
+  Widget _buildSuccessOverlay(String planName, dynamic planPrice) {
+    final amount = _paymentResult['amount'] ?? planPrice;
+    final currency = _paymentResult['currency'] ?? 'TZS';
+    final reference = _paymentResult['reference'] ?? _currentReference;
+    final paidAt = _paymentResult['paid_at'] ?? DateTime.now().toIso8601String();
+
     return AnimatedBuilder(
       animation: _successController,
       builder: (context, child) {
         final scale = Tween<double>(begin: 0.0, end: 1.0).animate(
           CurvedAnimation(parent: _successController, curve: Curves.elasticOut),
         ).value;
+        final opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(parent: _successController, curve: Curves.easeIn),
+        ).value;
 
-        return Container(
-          color: Colors.black.withValues(alpha: 0.75),
-          child: Center(
-            child: Transform.scale(
-              scale: scale,
-              child: Container(
-                margin: const EdgeInsets.all(32),
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF22C55E),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.check_rounded, color: Colors.white, size: 48),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Malipo yamekamilika!',
-                      style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textDark),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Subscription yako sasa imewashwa. Asante.',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textLight),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          _pollTimer?.cancel();
-                          context.go('/landlord/subscription');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        return Opacity(
+          opacity: opacity,
+          child: Container(
+            color: Colors.black.withValues(alpha: 0.8),
+            child: Center(
+              child: Transform.scale(
+                scale: scale,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 28),
+                  padding: const EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Success icon with gradient ring
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF22C55E), Color(0xFF16A34A)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF22C55E).withValues(alpha: 0.3),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.check_rounded, color: Colors.white, size: 48),
                         ),
-                        child: Text(
-                          'Endelea',
-                          style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Malipo Yamekamilika!',
+                          style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textDark),
                         ),
-                      ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Subscription yako imewashwa kikamilifu.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textLight),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Receipt card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF9FAFB),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                          ),
+                          child: Column(
+                            children: [
+                              _receiptRow('Plan', planName),
+                              const SizedBox(height: 12),
+                              _receiptRow('Kiasi', '$currency ${_formatPrice(amount).replaceAll('TZS ', '')}'),
+                              const SizedBox(height: 12),
+                              _receiptRow('Namba ya Rufaa', reference.toString().substring(0, reference.toString().length > 20 ? 20 : reference.toString().length)),
+                              const SizedBox(height: 12),
+                              _receiptRow('Tarehe', _formatDateTime(paidAt)),
+                              const SizedBox(height: 12),
+                              _receiptRow('Hali', 'Imekamilika', valueColor: const Color(0xFF16A34A)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Continue button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _pollTimer?.cancel();
+                              context.go('/landlord/subscription');
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            child: Text(
+                              'Endelea kwa Subscription',
+                              style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
+                        // View receipt button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 44,
+                          child: TextButton(
+                            onPressed: () {
+                              _pollTimer?.cancel();
+                              context.go('/landlord/subscription/invoices');
+                            },
+                            child: Text(
+                              'Angalia Invoices',
+                              style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.primary),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _receiptRow(String label, String value, {Color? valueColor}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textLight),
+        ),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: GoogleFonts.nunito(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: valueColor ?? AppColors.textDark,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -178,10 +178,12 @@ class PaymentGatewayController extends Controller
                     'plan_id' => $plan->id,
                     'type' => 'subscription',
                 ],
-                'redirect_url' => config('snippe.redirect_url'),
+                'expires_in' => 86400,
             ];
 
             $session = $snippe->createSession($sessionData);
+
+            Log::info('Snippe checkout session response', ['session' => $session]);
 
             if (!empty($session['status']) && $session['status'] === 'error') {
                 $transaction->update(['status' => 'failed']);

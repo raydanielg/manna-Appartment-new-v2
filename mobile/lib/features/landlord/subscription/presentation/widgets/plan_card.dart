@@ -21,7 +21,7 @@ class PlanCard extends StatelessWidget {
     final smsIncluded = plan['sms_included'] ?? 0;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
         borderRadius: BorderRadius.circular(20),
@@ -35,6 +35,7 @@ class PlanCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header: name + current badge
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -56,37 +57,50 @@ class PlanCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
+            // Price
             Text(
-              isTrial ? 'Free Trial' : 'TZS ${price.toStringAsFixed(0)}/${billingCycle.replaceAll('ly', '')}',
-              style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primary),
+              isTrial ? 'Free Trial' : 'TZS ${price.toStringAsFixed(0)} / ${billingCycle.replaceAll('ly', '')}',
+              style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.primary),
             ),
+
+            const SizedBox(height: 18),
+            const Divider(color: Color(0xFFE5E7EB)),
             const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _LimitItem(label: 'Properties', value: propertyLimit == 0 ? 'Unlimited' : propertyLimit.toString()),
-                  _LimitItem(label: 'Units', value: unitLimit == 0 ? 'Unlimited' : unitLimit.toString()),
-                  _LimitItem(label: 'SMS', value: smsIncluded.toString()),
-                ],
-              ),
+
+            // Limits row
+            Row(
+              children: [
+                _LimitItem(icon: Icons.home_work_rounded, label: 'Properties', value: propertyLimit == 0 ? 'Unlimited' : propertyLimit.toString()),
+                _divider(),
+                _LimitItem(icon: Icons.apartment_rounded, label: 'Units', value: unitLimit == 0 ? 'Unlimited' : unitLimit.toString()),
+                _divider(),
+                _LimitItem(icon: Icons.sms_rounded, label: 'SMS', value: smsIncluded.toString()),
+              ],
             ),
-            const SizedBox(height: 14),
-            ...features.map((f) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(children: [
-                const Icon(Icons.check_circle_rounded, size: 16, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Expanded(child: Text(f.toString(), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark))),
-              ]),
-            )),
+
+            // Features
+            if (features.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              const Divider(color: Color(0xFFE5E7EB)),
+              const SizedBox(height: 14),
+              ...features.map((f) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle_rounded, size: 16, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _formatFeature(f.toString()),
+                        style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textDark),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+            ],
+
             const SizedBox(height: 18),
             if (!isCurrent)
               SizedBox(
@@ -111,21 +125,36 @@ class PlanCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _divider() => Container(width: 1, height: 32, color: const Color(0xFFE5E7EB), margin: const EdgeInsets.symmetric(horizontal: 8));
+
+  String _formatFeature(String f) {
+    return f
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
+  }
 }
 
 class _LimitItem extends StatelessWidget {
+  final IconData icon;
   final String label;
   final String value;
-  const _LimitItem({required this.label, required this.value});
+  const _LimitItem({required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(value, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark)),
-        const SizedBox(height: 2),
-        Text(label, style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textLight)),
-      ],
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, size: 20, color: AppColors.primary),
+          const SizedBox(height: 6),
+          Text(value, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+          const SizedBox(height: 2),
+          Text(label, style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textLight)),
+        ],
+      ),
     );
   }
 }

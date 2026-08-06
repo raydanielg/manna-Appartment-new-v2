@@ -191,12 +191,18 @@ class SnippeService
                 'name' => $data['customer_name'] ?? 'Manna User',
                 'phone' => '+' . $phone,
             ],
-            'redirect_url' => $data['redirect_url'] ?? config('snippe.redirect_url'),
-            'webhook_url' => $data['webhook_url'] ?? route('snippe.webhook'),
             'description' => $data['description'] ?? 'Payment',
             'metadata' => $data['metadata'] ?? [],
             'expires_in' => $data['expires_in'] ?? 3600,
         ];
+
+        if (!empty($data['redirect_url'])) {
+            $payload['redirect_url'] = $data['redirect_url'];
+        }
+
+        if (!empty($data['webhook_url'])) {
+            $payload['webhook_url'] = $data['webhook_url'];
+        }
 
         if (!empty($data['customer_email'])) {
             $payload['customer']['email'] = $data['customer_email'];
