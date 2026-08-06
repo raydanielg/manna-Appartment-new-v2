@@ -133,7 +133,7 @@ class TenantCard extends StatelessWidget {
         status.toUpperCase(),
         style: TextStyle(
           fontSize: 10, 
-          fontWeight: FontWeight.black, 
+          fontWeight: FontWeight.w900, 
           color: isActive ? const Color(0xFF166534) : const Color(0xFFB91C1C),
           letterSpacing: 0.5
         ),

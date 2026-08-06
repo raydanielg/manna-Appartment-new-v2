@@ -8,7 +8,6 @@ class SummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final monthIncome = data['month_income'] ?? 0;
     final outstanding = data['outstanding'] ?? 0;
 
@@ -54,7 +53,7 @@ class SummaryCards extends StatelessWidget {
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
       childAspectRatio: 1.3,
-      children: items.map((i) => _buildCard(i, isDark)).toList(),
+      children: items.map((i) => _buildCard(i)).toList(),
     );
   }
 
@@ -67,12 +66,12 @@ class SummaryCards extends StatelessWidget {
     return n.toStringAsFixed(0);
   }
 
-  Widget _buildCard(_Item item, bool isDark) {
+  Widget _buildCard(_Item item) {
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -86,7 +85,7 @@ class SummaryCards extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: item.color.withValues(alpha: isDark ? 0.15 : 0.1),
+                    color: item.color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: item.customIcon != null
@@ -106,7 +105,7 @@ class SummaryCards extends StatelessWidget {
                     style: GoogleFonts.nunito(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white60 : AppColors.textLight,
+                      color: AppColors.textLight,
                     ),
                   ),
                 ),
@@ -120,7 +119,7 @@ class SummaryCards extends StatelessWidget {
                   style: GoogleFonts.nunito(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : AppColors.textDark,
+                    color: AppColors.textDark,
                   ),
                 ),
                 const SizedBox(height: 1),
@@ -128,7 +127,7 @@ class SummaryCards extends StatelessWidget {
                   item.sub,
                   style: GoogleFonts.nunito(
                     fontSize: 10,
-                    color: isDark ? Colors.white38 : AppColors.textLight,
+                    color: AppColors.textLight,
                   ),
                 ),
               ],

@@ -12,13 +12,12 @@ class PropertyDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final state = GoRouterState.of(context);
     final id = state.pathParameters['id'] ?? '';
     final propertyAsync = ref.watch(propertyDetailProvider(id));
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
         title: const Text('Property Details'),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
@@ -45,60 +44,70 @@ class PropertyDetailScreen extends ConsumerWidget {
               const SizedBox(height: 20),
               Text(
                 property.name,
-                style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark),
+                style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark),
               ),
-              const SizedBox(height: 4),
-              Text(
-                property.address ?? 'No address',
-                style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white60 : AppColors.textLight),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(Icons.location_on_outlined, size: 16, color: AppColors.textLight),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      property.address ?? 'No address',
+                      style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
-              _buildInfoRow(context, Icons.category_outlined, 'Type', property.type ?? 'N/A'),
-              _buildInfoRow(context, Icons.meeting_room_outlined, 'Total Units', '${property.unitsCount ?? 0}'),
-              _buildInfoRow(context, Icons.check_circle_outline, 'Occupied', '${property.occupiedUnits ?? 0}'),
-              _buildInfoRow(context, Icons.highlight_off, 'Vacant', '${property.vacantUnits ?? 0}'),
-              if (property.monthlyRevenue != null && property.monthlyRevenue! > 0)
-                _buildInfoRow(context, Icons.account_balance_wallet, 'Monthly Revenue', 'TZS ${property.monthlyRevenue!.toStringAsFixed(0)}'),
-              if (property.description != null && property.description!.isNotEmpty) ...[
-                const SizedBox(height: 20),
-                Text('Description', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-                const SizedBox(height: 8),
-                Text(property.description!, style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textDark)),
-              ],
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  children: [
+                    _buildInfoRow(Icons.category_outlined, 'Type', _capitalize(property.type ?? 'N/A')),
+                    const Divider(height: 1, indent: 52),
+                    _buildInfoRow(Icons.meeting_room_outlined, 'Total Units', '${property.unitsCount ?? 0}'),
+                    const Divider(height: 1, indent: 52),
+                    _buildInfoRow(Icons.check_circle_outline, 'Occupied', '${property.occupiedUnits ?? 0}'),
+                    const Divider(height: 1, indent: 52),
+                    _buildInfoRow(Icons.highlight_off, 'Vacant', '${property.vacantUnits ?? 0}'),
+                    if (property.monthlyRevenue != null && property.monthlyRevenue! > 0) ...[
+                      const Divider(height: 1, indent: 52),
+                      _buildInfoRow(Icons.account_balance_wallet_outlined, 'Monthly Revenue', 'TZS ${property.monthlyRevenue!.toStringAsFixed(0)}'),
+                    ],
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () => context.push('/landlord/properties/add?id=${property.id}'),
-                      icon: const Icon(Icons.edit),
+                      icon: const Icon(Icons.edit_outlined, size: 18),
                       label: const Text('Edit'),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _confirmDelete(context, ref, property.id),
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text('Delete'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
                       onPressed: () => context.push('/landlord/units?propertyId=${property.id}'),
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.info),
-                      icon: const Icon(Icons.meeting_room),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppColors.primary,
+                        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
+                      ),
+                      icon: const Icon(Icons.meeting_room_outlined, size: 18),
                       label: const Text('Units'),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -110,8 +119,9 @@ class PropertyDetailScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Property'),
-        content: const Text('Are you sure you want to delete this property? This will also affect all units under it. This action cannot be undone.'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Delete Property', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        content: Text('Are you sure you want to delete this property? This will also affect all units under it.', style: GoogleFonts.nunito(fontSize: 14)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(
@@ -144,49 +154,85 @@ class PropertyDetailScreen extends ConsumerWidget {
   Widget _buildImageGallery(BuildContext context, property) {
     final images = property.images is List ? property.images as List<String> : <String>[];
     final hasImages = images.isNotEmpty;
+
     if (!hasImages) {
       return Container(
         width: double.infinity,
-        height: 180,
+        height: 200,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
-          borderRadius: BorderRadius.circular(8),
+          color: AppColors.primary.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
         ),
-        child: const Center(child: Icon(Icons.apartment, size: 64, color: Colors.white70)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.apartment_outlined, size: 56, color: AppColors.primary.withValues(alpha: 0.4)),
+            const SizedBox(height: 8),
+            Text('No photos', style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight)),
+          ],
+        ),
       );
     }
-    return SizedBox(
-      height: 180,
-      child: PageView.builder(
-        itemCount: images.length,
-        itemBuilder: (context, index) => ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            images[index],
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              child: const Icon(Icons.apartment, color: AppColors.primary, size: 48),
+
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: SizedBox(
+            height: 220,
+            child: PageView.builder(
+              itemCount: images.length,
+              itemBuilder: (context, index) => Image.network(
+                images[index],
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  color: AppColors.primary.withValues(alpha: 0.06),
+                  child: const Icon(Icons.apartment_outlined, color: AppColors.primary, size: 48),
+                ),
+              ),
             ),
           ),
         ),
-      ),
+        if (images.length > 1) ...[
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              images.length,
+              (index) => Container(
+                width: 6,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                decoration: BoxDecoration(
+                  color: index == 0 ? AppColors.primary : Colors.grey.shade300,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _buildInfoRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
           Icon(icon, size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
-          Text(label, style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white60 : AppColors.textLight)),
+          Text(label, style: GoogleFonts.nunito(fontSize: 14, color: AppColors.textLight)),
           const Spacer(),
-          Text(value, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+          Text(value, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
         ],
       ),
     );
+  }
+
+  String _capitalize(String s) {
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
   }
 }

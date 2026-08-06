@@ -20,13 +20,12 @@ class LandlordHomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = ref.watch(authProvider).user;
     final dashboardAsync = ref.watch(landlordDashboardProvider);
     final unreadCount = ref.watch(unreadCountProvider).value ?? 0;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: AppColors.lightBackground,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async => ref.invalidate(landlordDashboardProvider),
@@ -58,11 +57,11 @@ class LandlordHomeScreen extends ConsumerWidget {
                     children: [
                       SummaryCards(data: data),
                       const SizedBox(height: 24),
-                      Text('Income Overview', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                      Text('Income Overview', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
                       const SizedBox(height: 12),
                       IncomeChart(data: data),
                       const SizedBox(height: 24),
-                      _buildTenantsSection(context, ref, isDark),
+                      _buildTenantsSection(context, ref),
                     ],
                   ),
                 ),
@@ -75,7 +74,6 @@ class LandlordHomeScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, UserModel? user, int unreadCount) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final name = user?.fullName ?? 'Landlord';
     final avatarUrl = user?.avatar;
     final initials = name.trim().split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join().toUpperCase();
@@ -132,7 +130,7 @@ class LandlordHomeScreen extends ConsumerWidget {
                 style: GoogleFonts.nunito(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : AppColors.textDark,
+                  color: AppColors.textDark,
                 ),
               ),
               const SizedBox(height: 2),
@@ -141,7 +139,7 @@ class LandlordHomeScreen extends ConsumerWidget {
                 style: GoogleFonts.nunito(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.white54 : AppColors.textLight,
+                  color: AppColors.textLight,
                 ),
               ),
             ],
@@ -151,7 +149,7 @@ class LandlordHomeScreen extends ConsumerWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF3F4F6),
+            color: const Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Stack(
@@ -160,7 +158,7 @@ class LandlordHomeScreen extends ConsumerWidget {
               IconButton(
                 onPressed: () => context.push('/notifications'),
                 icon: const Icon(Icons.notifications_none_rounded, size: 20),
-                color: isDark ? Colors.white70 : AppColors.textLight,
+                color: AppColors.textLight,
                 padding: EdgeInsets.zero,
               ),
               if (unreadCount > 0)
@@ -185,7 +183,7 @@ class LandlordHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTenantsSection(BuildContext context, WidgetRef ref, bool isDark) {
+  Widget _buildTenantsSection(BuildContext context, WidgetRef ref) {
     final tenantsAsync = ref.watch(tenantsListProvider);
 
     return Column(
@@ -196,7 +194,7 @@ class LandlordHomeScreen extends ConsumerWidget {
           children: [
             Text(
               'Tenants',
-              style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark),
+              style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark),
             ),
             TextButton(
               onPressed: () => context.push('/landlord/tenants'),
@@ -223,17 +221,17 @@ class LandlordHomeScreen extends ConsumerWidget {
               return Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.people_outline, size: 36, color: isDark ? Colors.white24 : Colors.grey.shade300),
+                    Icon(Icons.people_outline, size: 36, color: Colors.grey.shade300),
                     const SizedBox(height: 10),
                     Text(
                       'No tenants yet',
-                      style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white38 : Colors.grey.shade400),
+                      style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey.shade400),
                     ),
                   ],
                 ),

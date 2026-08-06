@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../app.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/localization/locale_provider.dart';
 import '../../../../features/auth/providers/auth_provider.dart';
 
@@ -11,13 +11,11 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     final currentLanguage = locale.languageCode == 'sw' ? 'Swahili' : 'English';
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
         title: const Text('Settings'),
         leading: IconButton(
@@ -41,74 +39,43 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildSectionTitle(context, 'Appearance'),
-          Card(
-            child: Column(
-              children: [
-                _ThemeOption(
-                  icon: Icons.phone_android,
-                  title: 'System Default',
-                  value: ThemeMode.system,
-                  groupValue: themeMode,
-                  onChanged: (v) => ref.read(themeModeProvider.notifier).setThemeMode(v),
-                ),
-                const Divider(height: 1, indent: 56),
-                _ThemeOption(
-                  icon: Icons.light_mode,
-                  title: 'Light Mode',
-                  value: ThemeMode.light,
-                  groupValue: themeMode,
-                  onChanged: (v) => ref.read(themeModeProvider.notifier).setThemeMode(v),
-                ),
-                const Divider(height: 1, indent: 56),
-                _ThemeOption(
-                  icon: Icons.dark_mode,
-                  title: 'Dark Mode',
-                  value: ThemeMode.dark,
-                  groupValue: themeMode,
-                  onChanged: (v) => ref.read(themeModeProvider.notifier).setThemeMode(v),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildSectionTitle(context, 'App'),
+          _buildSectionTitle(context, context.tr('about')),
           _buildMenuItem(
             context,
             icon: Icons.language,
-            title: 'Language',
+            title: context.tr('language'),
             subtitle: 'Current: $currentLanguage',
             onTap: () => context.push('/settings/language'),
           ),
           _buildMenuItem(
             context,
             icon: Icons.info_outline,
-            title: 'About',
+            title: context.tr('about'),
             subtitle: 'Manna Apartment v1.0.0',
-            onTap: () => context.go('/settings/about'),
+            onTap: () => context.push('/settings/about'),
           ),
           _buildMenuItem(
             context,
             icon: Icons.help_outline,
-            title: 'Help & Support',
+            title: context.tr('help_support'),
             subtitle: 'Get help and contact support',
-            onTap: () => context.go('/settings/help-support'),
+            onTap: () => context.push('/settings/help-support'),
           ),
           const SizedBox(height: 20),
-          _buildSectionTitle(context, 'Legal'),
+          _buildSectionTitle(context, context.tr('legal')),
           _buildMenuItem(
             context,
             icon: Icons.privacy_tip_outlined,
-            title: 'Privacy Policy',
+            title: context.tr('privacy_policy'),
             subtitle: 'Read our privacy policy',
-            onTap: () => context.go('/settings/privacy'),
+            onTap: () => context.push('/settings/privacy'),
           ),
           _buildMenuItem(
             context,
             icon: Icons.description_outlined,
-            title: 'Terms of Service',
+            title: context.tr('terms_of_service'),
             subtitle: 'Read our terms of service',
-            onTap: () => context.go('/settings/terms'),
+            onTap: () => context.push('/settings/terms'),
           ),
         ],
       ),
@@ -116,15 +83,14 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, left: 4),
       child: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w700,
-          color: isDark ? Colors.white60 : AppColors.textLight,
+          color: AppColors.textLight,
           letterSpacing: 0.5,
         ),
       ),
@@ -138,30 +104,29 @@ class SettingsScreen extends ConsumerWidget {
     required String subtitle,
     VoidCallback? onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: isDark ? 0.15 : 0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: AppColors.primary),
         ),
         title: Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : AppColors.textDark,
+            color: AppColors.textDark,
           ),
         ),
         subtitle: Text(
           subtitle,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
-            color: isDark ? Colors.white60 : AppColors.textLight,
+            color: AppColors.textLight,
           ),
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -171,32 +136,3 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _ThemeOption extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final ThemeMode value;
-  final ThemeMode groupValue;
-  final ValueChanged<ThemeMode> onChanged;
-
-  const _ThemeOption({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.groupValue,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isSelected = value == groupValue;
-    return ListTile(
-      leading: Icon(icon, color: AppColors.primary),
-      title: Text(title),
-      trailing: Icon(
-        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-        color: isSelected ? AppColors.primary : Colors.grey,
-      ),
-      onTap: () => onChanged(value),
-    );
-  }
-}

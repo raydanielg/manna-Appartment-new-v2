@@ -42,12 +42,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _initialize() async {
-    await Future.delayed(const Duration(milliseconds: 1800));
-    await ref.read(authProvider.notifier).checkAuth();
+    await Future.delayed(const Duration(milliseconds: 1500));
 
     if (mounted) {
-      unawaited(AppUpdateChecker.checkForUpdate(context));
+      final canProceed = await AppUpdateChecker.checkForUpdate(context);
+      if (!canProceed || !mounted) return;
     }
+
+    await ref.read(authProvider.notifier).checkAuth();
 
     final onboardingComplete =
         await LocalCacheService.getString('onboarding_complete');

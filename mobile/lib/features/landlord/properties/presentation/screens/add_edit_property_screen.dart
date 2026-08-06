@@ -23,7 +23,6 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
   final _locationController = TextEditingController();
-  final _descriptionController = TextEditingController();
   final _picker = ImagePicker();
   String _type = 'apartment';
   bool _isLoading = false;
@@ -49,7 +48,6 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
       _nameController.text = property.name;
       _addressController.text = property.address ?? '';
       _locationController.text = '';
-      _descriptionController.text = property.description ?? '';
       _type = property.type ?? 'apartment';
       if (mounted) setState(() {
         _isDataLoaded = true;
@@ -70,7 +68,6 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
     _nameController.dispose();
     _addressController.dispose();
     _locationController.dispose();
-    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -139,7 +136,6 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
           'address': _addressController.text.trim(),
           'type': _type,
           if (_locationController.text.trim().isNotEmpty) 'location': _locationController.text.trim(),
-          if (_descriptionController.text.trim().isNotEmpty) 'description': _descriptionController.text.trim(),
         });
         ref.invalidate(propertiesListProvider);
         ref.invalidate(propertyDetailProvider(widget.propertyId!));
@@ -159,7 +155,6 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
           address: _addressController.text.trim(),
           location: _locationController.text.trim(),
           type: _type,
-          description: _descriptionController.text.trim(),
           imagePaths: _imagePaths,
         );
         ref.invalidate(propertiesListProvider);
@@ -192,9 +187,8 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
         title: Text(_isEditMode ? 'Edit Property' : 'Add Property', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
@@ -215,8 +209,6 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
                 const SizedBox(height: 16),
                 const Center(child: CircularProgressIndicator()),
               ],
-              _buildHeader(context),
-              const SizedBox(height: 24),
               AppTextField(
                 label: 'Property Name',
                 hint: 'e.g. Manna Apartments',
@@ -240,17 +232,17 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
                 prefix: const Icon(Icons.map, size: 20),
               ),
               const SizedBox(height: 16),
-              Text('Property Type', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+              Text('Property Type', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: _type,
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
-                dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                dropdownColor: Colors.white,
                 items: const [
                   DropdownMenuItem(value: 'apartment', child: Text('Apartment')),
                   DropdownMenuItem(value: 'house', child: Text('House')),
@@ -259,16 +251,9 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
                 ],
                 onChanged: (v) => setState(() => _type = v ?? 'apartment'),
               ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Description',
-                hint: 'Optional description',
-                controller: _descriptionController,
-                maxLines: 3,
-              ),
               if (!_isEditMode) ...[
                 const SizedBox(height: 24),
-                Text('Property Photos', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                Text('Property Photos', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
                 const SizedBox(height: 10),
                 _buildImagePicker(context),
               ],
@@ -286,39 +271,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
-            child: const Icon(Icons.apartment, color: Colors.white, size: 32),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(_isEditMode ? 'Edit Property' : 'Add Property', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
-                const SizedBox(height: 4),
-                Text(_isEditMode ? 'Update the details of your property.' : 'Fill in the details below to register your property.', style: GoogleFonts.nunito(fontSize: 12, color: Colors.white70)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildImagePicker(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -361,16 +314,16 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
                 width: 96,
                 height: 96,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF26334D) : Colors.grey.shade50,
+                  color: Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: isDark ? Colors.white24 : Colors.grey.shade300),
+                  border: Border.all(color: Colors.grey.shade300),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.add_photo_alternate, color: AppColors.primary),
                     const SizedBox(height: 4),
-                    Text('Add Photos', style: GoogleFonts.nunito(fontSize: 11, color: isDark ? Colors.white70 : AppColors.textLight)),
+                    Text('Add Photos', style: GoogleFonts.nunito(fontSize: 11, color: AppColors.textLight)),
                   ],
                 ),
               ),
@@ -380,7 +333,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
         if (_imagePaths.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 10),
-            child: Text('${_imagePaths.length} photo(s) selected', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+            child: Text('${_imagePaths.length} photo(s) selected', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
           ),
       ],
     );

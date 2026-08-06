@@ -31,6 +31,12 @@ class AppLocalizations {
   }
 }
 
+extension AppLocalizationsX on BuildContext {
+  String tr(String key) {
+    return AppLocalizations.of(this)?.translate(key) ?? key;
+  }
+}
+
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 

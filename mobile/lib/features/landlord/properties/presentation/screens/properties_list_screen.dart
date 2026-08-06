@@ -24,11 +24,10 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final propertiesAsync = ref.watch(propertiesListProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
         title: Text('Properties', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () {
@@ -58,7 +57,7 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
                 hintStyle: GoogleFonts.nunito(fontSize: 14),
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
-                fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                fillColor: Colors.white,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
               ),
             ),

@@ -21,17 +21,14 @@ class IncomeChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final rawMonthly = data['monthly_income'];
     final monthly = (rawMonthly is List) ? rawMonthly : <dynamic>[];
-    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final borderColor = isDark ? Colors.white10 : const Color(0xFFE2E8F0);
 
     return Container(
       decoration: BoxDecoration(
-        color: cardColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -46,7 +43,7 @@ class IncomeChart extends StatelessWidget {
                   style: GoogleFonts.nunito(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : AppColors.textDark,
+                    color: AppColors.textDark,
                   ),
                 ),
                 Container(
@@ -73,7 +70,7 @@ class IncomeChart extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Text(
                     'No data available',
-                    style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white38 : Colors.grey.shade400),
+                    style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey.shade400),
                   ),
                 ),
               )
@@ -82,7 +79,7 @@ class IncomeChart extends StatelessWidget {
                 height: 160,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
-                  children: _buildBars(monthly, isDark),
+                  children: _buildBars(monthly),
                 ),
               ),
           ],
@@ -91,7 +88,7 @@ class IncomeChart extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildBars(List<dynamic> monthly, bool isDark) {
+  List<Widget> _buildBars(List<dynamic> monthly) {
     final amounts = monthly.map<double>((m) => _parseAmount(m['amount'])).toList();
     final maxAmount = amounts.isNotEmpty ? amounts.reduce((a, b) => a > b ? a : b) : 0.0;
 
@@ -117,7 +114,7 @@ class IncomeChart extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   color: isHighest
                       ? const Color(0xFF2563EB)
-                      : (isDark ? Colors.white54 : AppColors.textLight),
+                      : AppColors.textLight,
                 ),
               ),
               const SizedBox(height: 4),
@@ -141,7 +138,7 @@ class IncomeChart extends StatelessWidget {
                 style: GoogleFonts.nunito(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white54 : AppColors.textLight,
+                  color: AppColors.textLight,
                 ),
               ),
             ],

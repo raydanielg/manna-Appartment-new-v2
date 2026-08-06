@@ -20,10 +20,10 @@ class AppColors {
   static const Color textWhite = Color(0xFFFFFFFF);
 
   // Light theme backgrounds
-  static const Color lightBackground = Color(0xFFF8FAFC);
+  static const Color lightBackground = Color(0xFFF7F8FA);
   static const Color lightSurface = Color(0xFFFFFFFF);
   static const Color lightCard = Color(0xFFFFFFFF);
-  static const Color lightInput = Color(0xFFF3F4F6);
+  static const Color lightInput = Color(0xFFF1F5F9);
 
   // Dark theme backgrounds
   static const Color darkBackground = Color(0xFF0F172A);

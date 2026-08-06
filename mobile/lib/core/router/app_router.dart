@@ -71,6 +71,7 @@ import '../../shared/settings/presentation/screens/about_screen.dart';
 import '../../shared/settings/presentation/screens/language_toggle_screen.dart';
 import '../../shared/settings/presentation/screens/settings_screen.dart';
 import '../router/route_guard.dart';
+import '../localization/app_localizations.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -115,8 +116,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/landlord/tenants/add', builder: (context, state) => AddTenantScreen(tenantId: state.uri.queryParameters['id'])),
           GoRoute(path: '/landlord/tenants/:id', builder: (context, state) => const TenantDetailScreen()),
           GoRoute(path: '/landlord/tenants/:id/move-out', builder: (context, state) => const MoveOutScreen()),
-          GoRoute(path: '/landlord/units', builder: (context, state) => const UnitsListScreen()),
-          GoRoute(path: '/landlord/units/add', builder: (context, state) => AddEditUnitScreen(propertyId: state.uri.queryParameters['propertyId'])),
+          GoRoute(path: '/landlord/units', builder: (context, state) => UnitsListScreen(propertyId: state.uri.queryParameters['propertyId'])),
+          GoRoute(path: '/landlord/units/add', builder: (context, state) => AddEditUnitScreen(propertyId: state.uri.queryParameters['propertyId'], unitId: state.uri.queryParameters['id'])),
           GoRoute(path: '/landlord/units/:id', builder: (context, state) => const UnitDetailScreen()),
           GoRoute(path: '/landlord/payments', builder: (context, state) => const PaymentsListScreen()),
           GoRoute(path: '/landlord/payments/record', builder: (context, state) => const RecordPaymentScreen()),
@@ -173,11 +174,11 @@ class LandlordScaffold extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentIndex = _getIndex(context);
     final items = [
-      _NavItem('Home', Icons.home_rounded, Icons.home_rounded, customIcon: 'assets/icons/homeicons.png'),
-      _NavItem('Properties', Icons.apartment_rounded, Icons.apartment_rounded, customIcon: 'assets/icons/propertiesicon.png'),
-      _NavItem('Tenants', Icons.people_rounded, Icons.people_rounded, customIcon: 'assets/icons/tenantsicon.png'),
-      _NavItem('Payments', Icons.account_balance_wallet_rounded, Icons.account_balance_wallet_rounded, customIcon: 'assets/icons/incomeicon.png'),
-      _NavItem('More', Icons.grid_view_rounded, Icons.grid_view_rounded, customIcon: 'assets/icons/moreicon.png'),
+      _NavItem(context.tr('home'), Icons.home_rounded, Icons.home_rounded, customIcon: 'assets/icons/homeicons.png'),
+      _NavItem(context.tr('properties'), Icons.apartment_rounded, Icons.apartment_rounded, customIcon: 'assets/icons/propertiesicon.png'),
+      _NavItem(context.tr('tenants'), Icons.people_rounded, Icons.people_rounded, customIcon: 'assets/icons/tenantsicon.png'),
+      _NavItem(context.tr('payments'), Icons.account_balance_wallet_rounded, Icons.account_balance_wallet_rounded, customIcon: 'assets/icons/incomeicon.png'),
+      _NavItem(context.tr('more'), Icons.grid_view_rounded, Icons.grid_view_rounded, customIcon: 'assets/icons/moreicon.png'),
     ];
     final routes = ['/landlord/home', '/landlord/properties', '/landlord/tenants', '/landlord/payments', '/landlord/more'];
 
@@ -285,10 +286,10 @@ class TenantScaffold extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentIndex = _getIndex(context);
     final items = [
-      _NavItem('Home', Icons.home_rounded, Icons.home_rounded),
-      _NavItem('My Unit', Icons.door_front_door_rounded, Icons.door_front_door_rounded),
-      _NavItem('Payments', Icons.account_balance_wallet_rounded, Icons.account_balance_wallet_rounded),
-      _NavItem('More', Icons.grid_view_rounded, Icons.grid_view_rounded),
+      _NavItem(context.tr('home'), Icons.home_rounded, Icons.home_rounded),
+      _NavItem(context.tr('my_unit'), Icons.door_front_door_rounded, Icons.door_front_door_rounded),
+      _NavItem(context.tr('payments'), Icons.account_balance_wallet_rounded, Icons.account_balance_wallet_rounded),
+      _NavItem(context.tr('more'), Icons.grid_view_rounded, Icons.grid_view_rounded),
     ];
     final routes = ['/tenant/home', '/tenant/my-unit', '/tenant/payments', '/tenant/more'];
 

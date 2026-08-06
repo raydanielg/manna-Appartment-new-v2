@@ -15,6 +15,10 @@ class ContractsRepository {
     return [];
   }
 
+  Future<void> deleteContract(String id) async {
+    await _client.delete('/landlord/contracts/$id');
+  }
+
   Future<Map<String, dynamic>> getContract(String id) async {
     final response = await _client.get('/landlord/contracts/$id');
     return response.data['data'] ?? {};

@@ -196,8 +196,7 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
       selected: isSelected,
       selectedColor: const Color(0xFF2563EB),
       backgroundColor: const Color(0xFFF3F4F6),
-      borderSide: BorderSide.none,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide.none),
       showCheckmark: false,
       onSelected: (_) => setState(() => _filterStatus = value),
     );

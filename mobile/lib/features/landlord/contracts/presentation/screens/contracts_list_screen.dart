@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
@@ -13,11 +14,10 @@ class ContractsListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final contractsAsync = ref.watch(contractsListProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
         title: const Text('Contracts'),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
@@ -28,20 +28,67 @@ class ContractsListScreen extends ConsumerWidget {
         child: contractsAsync.when(
           loading: () => const LoadingIndicator(),
           error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(contractsListProvider)),
-          data: (contracts) => contracts.isEmpty
-              ? const EmptyState(message: 'No contracts yet.', icon: Icons.description_outlined)
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: contracts.length,
-                  itemBuilder: (context, index) => ContractCard(contract: contracts[index]),
-                ),
+          data: (contracts) => ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              _buildNewContractCard(context),
+              const SizedBox(height: 16),
+              if (contracts.isEmpty)
+                const EmptyState(message: 'No contracts yet. Tap above to create one.', icon: Icons.description_outlined)
+              else
+                ...contracts.map((c) => ContractCard(contract: c)),
+            ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/landlord/contracts/create'),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add),
-        label: const Text('New Contract'),
+    );
+  }
+
+  Widget _buildNewContractCard(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.push('/landlord/contracts/create'),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.add, color: AppColors.primary, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'New Contract',
+                      style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Create a new tenancy contract',
+                      style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.primary.withValues(alpha: 0.5)),
+            ],
+          ),
+        ),
       ),
     );
   }

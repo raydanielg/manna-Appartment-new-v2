@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/error_state.dart';
@@ -15,12 +16,11 @@ class ContractDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final id = GoRouterState.of(context).pathParameters['id'] ?? '';
     final contractAsync = ref.watch(contractDetailProvider(id));
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
         title: const Text('Contract Details'),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
@@ -34,7 +34,6 @@ class ContractDetailScreen extends ConsumerWidget {
           final property = unit?['property'];
           final rent = _parseAmount(contract['rent_amount']);
           final deposit = _parseAmount(contract['deposit_amount']);
-          final isManual = contract['contract_type'] == 'manual';
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -60,7 +59,7 @@ class ContractDetailScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(8)),
-                            child: Text(isManual ? 'Manual' : 'Digital', style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
+                            child: Text('Digital', style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
                           ),
                         ],
                       ),
@@ -68,40 +67,31 @@ class ContractDetailScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                _buildSection(context, 'Tenant', tenant?['full_name'] ?? tenant?['user']?['full_name'] ?? 'N/A', Icons.person),
-                _buildSection(context, 'Property', property?['name'] ?? 'N/A', Icons.apartment),
-                _buildSection(context, 'Unit', unit?['name'] ?? unit?['unit_number'] ?? 'N/A', Icons.meeting_room),
-                _buildSection(context, 'Start Date', _formatDate(contract['start_date']), Icons.calendar_today),
-                _buildSection(context, 'End Date', _formatDate(contract['end_date']), Icons.event),
-                _buildSection(context, 'Monthly Rent', 'TZS ${rent.toStringAsFixed(0)}', Icons.account_balance_wallet),
-                _buildSection(context, 'Deposit', 'TZS ${deposit.toStringAsFixed(0)}', Icons.savings),
+                _buildSection('Tenant', tenant?['full_name'] ?? tenant?['user']?['full_name'] ?? 'N/A', Icons.person_outline),
+                _buildSection('Property', property?['name'] ?? 'N/A', Icons.apartment_outlined),
+                _buildSection('Unit', unit?['name'] ?? unit?['unit_number'] ?? 'N/A', Icons.meeting_room_outlined),
+                _buildSection('Start Date', _formatDate(contract['start_date']), Icons.calendar_today_outlined),
+                _buildSection('End Date', _formatDate(contract['end_date']), Icons.event_outlined),
+                _buildSection('Monthly Rent', 'TZS ${_formatNumber(rent)}', Icons.payments_outlined),
+                _buildSection('Deposit', 'TZS ${_formatNumber(deposit)}', Icons.savings_outlined),
                 const SizedBox(height: 24),
                 _buildA4Contract(context, contract),
                 const SizedBox(height: 24),
                 Row(
                   children: [
-                    if (isManual)
-                      Expanded(
-                        child: PrimaryButton(
-                          text: 'Download Word',
-                          icon: const Icon(Icons.download),
-                          onPressed: () => _downloadTemplate(context, ref, contract['tenant_id']?.toString()),
-                        ),
-                      )
-                    else
-                      Expanded(
-                        child: PrimaryButton(
-                          text: 'View PDF',
-                          icon: const Icon(Icons.picture_as_pdf),
-                          onPressed: () => _downloadAndOpen(context, ref, id),
-                        ),
+                    Expanded(
+                      child: PrimaryButton(
+                        text: 'View PDF',
+                        icon: const Icon(Icons.picture_as_pdf, size: 18),
+                        onPressed: () => _downloadAndOpen(context, ref, id),
                       ),
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: PrimaryButton(
                         text: 'Terminate',
                         color: AppColors.error,
-                        icon: const Icon(Icons.cancel),
+                        icon: const Icon(Icons.cancel_outlined, size: 18),
                         onPressed: () async {
                           await ref.read(contractsRepositoryProvider).terminateContract(id);
                           if (context.mounted) {
@@ -119,28 +109,77 @@ class ContractDetailScreen extends ConsumerWidget {
                 if (contract['signed_at'] != null)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+                    ),
                     child: Row(
                       children: [
-                        const Icon(Icons.verified, color: AppColors.success),
-                        const SizedBox(width: 8),
-                        Text('Signed on ${contract['signed_at']}', style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: AppColors.success)),
+                        const Icon(Icons.verified, color: AppColors.success, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text('Signed on ${_formatDate(contract['signed_at'])}', style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: AppColors.success, fontSize: 13)),
+                        ),
                       ],
                     ),
                   )
                 else
                   PrimaryButton(
                     text: 'Sign Contract',
-                    icon: const Icon(Icons.draw),
+                    icon: const Icon(Icons.draw, size: 18),
                     color: AppColors.info,
                     onPressed: () => context.push('/landlord/contracts/$id/sign'),
                   ),
+                const SizedBox(height: 12),
+                PrimaryButton(
+                  text: 'Delete Contract',
+                  color: AppColors.error,
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  onPressed: () => _confirmDelete(context, ref, id),
+                ),
                 const SizedBox(height: 12),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Delete Contract', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        content: Text('Are you sure you want to delete this contract?', style: GoogleFonts.nunito(fontSize: 14)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await ref.read(contractsRepositoryProvider).deleteContract(id);
+                ref.invalidate(contractsListProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Contract deleted'), backgroundColor: AppColors.success),
+                  );
+                  if (context.canPop()) context.pop();
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+                  );
+                }
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
       ),
     );
   }
@@ -152,43 +191,33 @@ class ContractDetailScreen extends ConsumerWidget {
     return 0.0;
   }
 
-  Widget _buildSection(BuildContext context, String label, String value, IconData icon) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  String _formatNumber(double amount) {
+    return NumberFormat('#,###').format(amount);
+  }
+
+  Widget _buildSection(String label, String value, IconData icon) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: [
           Icon(icon, color: AppColors.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(label, style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+            child: Text(label, style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
           ),
           const SizedBox(width: 8),
           Flexible(
-            child: Text(value, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark), textAlign: TextAlign.end, maxLines: 1, overflow: TextOverflow.ellipsis),
+            child: Text(value, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark), textAlign: TextAlign.end, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
         ],
       ),
     );
-  }
-
-  Future<void> _downloadTemplate(BuildContext context, WidgetRef ref, String? tenantId) async {
-    try {
-      final path = await ref.read(contractsRepositoryProvider).downloadTemplate(tenantId: tenantId);
-      await OpenFilex.open(path);
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download failed: $e'), backgroundColor: AppColors.error),
-        );
-      }
-    }
   }
 
   Future<void> _downloadAndOpen(BuildContext context, WidgetRef ref, String id) async {
@@ -436,10 +465,6 @@ class ContractDetailScreen extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  String _formatNumber(double amount) {
-    return amount.toStringAsFixed(0);
   }
 
   String _formatDate(dynamic date) {

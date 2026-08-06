@@ -111,7 +111,7 @@ class CurrentPlanScreen extends ConsumerWidget {
                               ),
                               child: const Text(
                                 'ACTIVE',
-                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.black, color: Color(0xFF166534), letterSpacing: 0.5),
+                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF166534), letterSpacing: 0.5),
                               ),
                             ),
                         ],

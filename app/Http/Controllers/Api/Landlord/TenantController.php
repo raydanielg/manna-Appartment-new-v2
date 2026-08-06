@@ -20,7 +20,7 @@ class TenantController extends Controller
 
     public function index(Request $request)
     {
-        $query = Tenant::with(['user', 'unit'])->latest();
+        $query = Tenant::with(['user', 'unit.property'])->latest();
         return $this->paginated($query->paginate($request->get('per_page', 20)));
     }
 

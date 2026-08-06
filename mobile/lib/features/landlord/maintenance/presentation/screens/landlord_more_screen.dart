@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/config/app_config.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
 import '../../../../../features/landlord/subscription/providers/subscription_provider.dart';
 
@@ -33,27 +34,27 @@ class LandlordMoreScreen extends ConsumerWidget {
             data: (plan) => _buildPlanCard(context, plan),
           ),
           const SizedBox(height: 20),
-          _buildSectionTitle(context, 'Management'),
-          _buildMenuItem(context, icon: Icons.apartment, customIcon: 'assets/icons/propertiesicon.png', title: 'Properties', subtitle: 'Manage your properties & units', onTap: () => context.push('/landlord/properties')),
-          _buildMenuItem(context, icon: Icons.people, customIcon: 'assets/icons/tenantsicon.png', title: 'Tenants', subtitle: 'View and manage tenants', onTap: () => context.push('/landlord/tenants')),
-          _buildMenuItem(context, icon: Icons.description_outlined, customIcon: 'assets/icons/contracts.png', title: 'Contracts', subtitle: 'View and create contracts', onTap: () => context.push('/landlord/contracts')),
-          _buildMenuItem(context, icon: Icons.payments, customIcon: 'assets/icons/incomeicon.png', title: 'Payments', subtitle: 'Record and view payments', onTap: () => context.push('/landlord/payments')),
-          _buildMenuItem(context, icon: Icons.sms_outlined, customIcon: 'assets/icons/sms.png', title: 'SMS Broadcast', subtitle: 'Send reminders and messages', onTap: () => context.push('/landlord/sms')),
-          _buildMenuItem(context, icon: Icons.build_outlined, customIcon: 'assets/icons/maintainance.png', title: 'Maintenance', subtitle: 'Respond to tenant requests', onTap: () => context.push('/landlord/maintenance')),
+          _buildSectionTitle(context, context.tr('management')),
+          _buildMenuItem(context, icon: Icons.apartment, customIcon: 'assets/icons/propertiesicon.png', title: context.tr('properties'), subtitle: 'Manage your properties & units', onTap: () => context.push('/landlord/properties')),
+          _buildMenuItem(context, icon: Icons.people, customIcon: 'assets/icons/tenantsicon.png', title: context.tr('tenants'), subtitle: 'View and manage tenants', onTap: () => context.push('/landlord/tenants')),
+          _buildMenuItem(context, icon: Icons.description_outlined, customIcon: 'assets/icons/contracts.png', title: context.tr('contracts'), subtitle: 'View and create contracts', onTap: () => context.push('/landlord/contracts')),
+          _buildMenuItem(context, icon: Icons.payments, customIcon: 'assets/icons/incomeicon.png', title: context.tr('payments'), subtitle: 'Record and view payments', onTap: () => context.push('/landlord/payments')),
+          _buildMenuItem(context, icon: Icons.sms_outlined, customIcon: 'assets/icons/sms.png', title: context.tr('sms_broadcast'), subtitle: 'Send reminders and messages', onTap: () => context.push('/landlord/sms')),
+          _buildMenuItem(context, icon: Icons.build_outlined, customIcon: 'assets/icons/maintainance.png', title: context.tr('maintenance'), subtitle: 'Respond to tenant requests', onTap: () => context.push('/landlord/maintenance')),
           if (user?.role == 'super_admin') ...[
             const SizedBox(height: 20),
             _buildSectionTitle(context, 'Admin'),
             _buildMenuItem(context, icon: Icons.admin_panel_settings, title: 'Manage Landlords', subtitle: 'View all owners & organizations', onTap: () => context.push('/admin/landlords')),
           ],
           const SizedBox(height: 20),
-          _buildSectionTitle(context, 'Account'),
-          _buildMenuItem(context, icon: Icons.subscriptions_outlined, title: 'Subscription Plan', subtitle: 'View and manage your plan', onTap: () => context.push('/landlord/subscription')),
-          _buildMenuItem(context, icon: Icons.settings_outlined, title: 'Settings', subtitle: 'App preferences', onTap: () => context.push('/settings')),
-          _buildMenuItem(context, icon: Icons.help_outline, title: 'How to Use', subtitle: 'Quick guide for landlords', onTap: () => context.push('/landlord/help')),
+          _buildSectionTitle(context, context.tr('account')),
+          _buildMenuItem(context, icon: Icons.subscriptions_outlined, title: context.tr('subscription'), subtitle: 'View and manage your plan', onTap: () => context.push('/landlord/subscription')),
+          _buildMenuItem(context, icon: Icons.settings_outlined, title: context.tr('settings'), subtitle: 'App preferences', onTap: () => context.push('/settings')),
+          _buildMenuItem(context, icon: Icons.help_outline, title: context.tr('how_to_use'), subtitle: 'Quick guide for landlords', onTap: () => context.push('/landlord/help')),
           _buildMenuItem(
             context,
             icon: Icons.logout,
-            title: 'Logout',
+            title: context.tr('logout'),
             subtitle: 'Sign out of your account',
             color: AppColors.error,
             onTap: () => _showLogoutConfirmation(context, ref),

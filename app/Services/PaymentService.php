@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\AppNotification;
 use App\Models\Contract;
 use App\Models\Payment;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,7 +32,76 @@ class PaymentService
             'overdue_date' => $calc['overdue_date'],
         ]));
 
+        if (($data['payment_type'] ?? '') === 'rent') {
+            $this->notifyLandlordRentPaid($payment, $calc);
+        }
+
         return $payment;
+    }
+
+    /**
+     * Send SMS and in-app notification to landlord when rent is paid.
+     */
+    private function notifyLandlordRentPaid(Payment $payment, array $calc): void
+    {
+        $tenant = $payment->tenant;
+        $contract = $payment->contract;
+        $contract->load('unit.property');
+
+        $orgId = $contract->organization_id ?? ($contract->unit?->property?->organization_id) ?? Auth::user()?->organization_id;
+
+        $landlord = User::where('organization_id', $orgId)
+            ->where('role', 'landlord')
+            ->first();
+
+        if (!$landlord) {
+            $landlord = Auth::user();
+        }
+
+        if (!$landlord) {
+            return;
+        }
+
+        $tenantName = $tenant?->user?->full_name ?? 'Tenant';
+        $unitName = $contract->unit?->name ?? $contract->unit?->unit_number ?? 'N/A';
+        $amount = number_format((float) $payment->amount, 0, '.', ',');
+        $monthCovered = $calc['month_covered'] ?? $payment->month_covered ?? 'N/A';
+        $method = $payment->method ?? 'N/A';
+
+        $message = "Malipo ya KODI yamewasilishwa.\n"
+            . "Tenant: {$tenantName}\n"
+            . "Unit: {$unitName}\n"
+            . "Kiasi: TZS {$amount}\n"
+            . "Mwezi: {$monthCovered}\n"
+            . "Njia: {$method}\n"
+            . "Tarehe: " . Carbon::parse($payment->payment_date)->format('d/m/Y');
+
+        $smsService = app(SmsService::class);
+
+        if ($landlord->phone) {
+            $smsService->send(
+                $landlord->phone,
+                $message,
+                'rent_payment_notification',
+                $orgId
+            );
+        }
+
+        AppNotification::create([
+            'user_id' => $landlord->id,
+            'title' => 'Rent Payment Received',
+            'body' => "{$tenantName} paid TZS {$amount} for {$unitName}. Month: {$monthCovered}.",
+            'type' => 'rent_payment',
+            'data' => [
+                'payment_id' => $payment->id,
+                'tenant_id' => $tenant?->id,
+                'contract_id' => $contract->id,
+                'amount' => $payment->amount,
+                'month_covered' => $monthCovered,
+                'unit_name' => $unitName,
+            ],
+            'sent_at' => now(),
+        ]);
     }
 
     /**

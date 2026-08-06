@@ -10,8 +10,9 @@ import '../../../properties/providers/properties_provider.dart';
 
 class AddEditUnitScreen extends ConsumerStatefulWidget {
   final String? propertyId;
+  final String? unitId;
 
-  const AddEditUnitScreen({super.key, this.propertyId});
+  const AddEditUnitScreen({super.key, this.propertyId, this.unitId});
 
   @override
   ConsumerState<AddEditUnitScreen> createState() => _AddEditUnitScreenState();
@@ -26,14 +27,44 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
   int _bedrooms = 0;
   int _bathrooms = 1;
   bool _isLoading = false;
+  bool _isEditMode = false;
+  bool _isDataLoaded = false;
   String? _selectedPropertyId;
 
   @override
   void initState() {
     super.initState();
-    final id = widget.propertyId;
-    if (id != null && id.isNotEmpty) {
-      _selectedPropertyId = id;
+    final pid = widget.propertyId;
+    if (pid != null && pid.isNotEmpty) {
+      _selectedPropertyId = pid;
+    }
+    _isEditMode = widget.unitId != null && widget.unitId!.isNotEmpty;
+    if (_isEditMode) {
+      _loadUnitData();
+    }
+  }
+
+  Future<void> _loadUnitData() async {
+    setState(() => _isLoading = true);
+    try {
+      final repo = ref.read(unitsRepositoryProvider);
+      final unit = await repo.getUnit(widget.unitId!);
+      _nameController.text = unit['name'] ?? unit['unit_number'] ?? '';
+      _rentController.text = (unit['monthly_rent'] ?? '').toString();
+      _sizeController.text = unit['size']?.toString() ?? '';
+      _type = unit['type'] ?? 'bedsitter';
+      _bedrooms = unit['bedrooms'] ?? 0;
+      _bathrooms = unit['bathrooms'] ?? 1;
+      _selectedPropertyId = unit['property_id']?.toString() ?? _selectedPropertyId;
+      if (mounted) setState(() {
+        _isDataLoaded = true;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showSnack('Failed to load unit: $e', AppColors.error);
+      }
     }
   }
 
@@ -58,17 +89,29 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
     setState(() => _isLoading = true);
     try {
       final repo = ref.read(unitsRepositoryProvider);
-      await repo.createUnit(propertyId, {
+      final data = {
         'name': _nameController.text.trim(),
-        'monthly_rent': int.tryParse(_rentController.text) ?? 0,
+        'monthly_rent': double.tryParse(_rentController.text) ?? 0,
         'size': _sizeController.text.trim(),
         'type': _type,
         'bedrooms': _bedrooms,
         'bathrooms': _bathrooms,
-      });
-      if (mounted) {
-        _showSnack('Unit created successfully', AppColors.success);
-        context.pop();
+      };
+      if (_isEditMode) {
+        await repo.updateUnit(widget.unitId!, data);
+        ref.invalidate(unitsListProvider(_selectedPropertyId));
+        ref.invalidate(unitDetailProvider(widget.unitId!));
+        if (mounted) {
+          _showSnack('Unit updated successfully', AppColors.success);
+          context.pop();
+        }
+      } else {
+        await repo.createUnit(propertyId, data);
+        ref.invalidate(unitsListProvider(propertyId));
+        if (mounted) {
+          _showSnack('Unit created successfully', AppColors.success);
+          context.pop();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -90,7 +133,7 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      appBar: AppBar(title: const Text('Add Unit'), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      appBar: AppBar(title: Text(_isEditMode ? 'Edit Unit' : 'Add Unit'), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -98,6 +141,10 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_isLoading && _isEditMode && !_isDataLoaded) ...[
+                const SizedBox(height: 16),
+                const Center(child: CircularProgressIndicator()),
+              ],
               if (widget.propertyId == null || widget.propertyId!.isEmpty) ...[
                 _buildPropertySelector(context),
                 const SizedBox(height: 16),
@@ -132,7 +179,7 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              PrimaryButton(text: 'Save Unit', isLoading: _isLoading, onPressed: _submit),
+              PrimaryButton(text: _isEditMode ? 'Update Unit' : 'Save Unit', isLoading: _isLoading, onPressed: _submit),
             ],
           ),
         ),

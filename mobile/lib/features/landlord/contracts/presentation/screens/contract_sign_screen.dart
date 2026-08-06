@@ -87,9 +87,8 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
         title: Text('Sign Contract', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
@@ -101,12 +100,38 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              'Draw your signature inside the box below using your finger.',
-              style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textLight),
-              textAlign: TextAlign.center,
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.draw_outlined, color: AppColors.info, size: 24),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Draw Your Signature',
+                  style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Use your finger to sign inside the box below. This will be applied to the contract as your legal signature.',
+                  style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -114,28 +139,34 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
+                ],
               ),
-              child: Signature(
-                controller: _controller,
-                backgroundColor: Colors.white,
-                height: MediaQuery.of(context).size.height * 0.5,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Signature(
+                  controller: _controller,
+                  backgroundColor: Colors.white,
+                  height: MediaQuery.of(context).size.height * 0.4,
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               TextButton.icon(
                 onPressed: () => _controller.clear(),
-                icon: const Icon(Icons.clear, color: AppColors.error),
-                label: Text('Clear', style: GoogleFonts.nunito(color: AppColors.error, fontWeight: FontWeight.w700)),
+                icon: const Icon(Icons.refresh, size: 18, color: AppColors.error),
+                label: Text('Clear', style: GoogleFonts.nunito(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 13)),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.all(16),
             child: PrimaryButton(

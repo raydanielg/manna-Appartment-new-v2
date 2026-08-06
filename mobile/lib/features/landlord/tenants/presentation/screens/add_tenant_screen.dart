@@ -7,6 +7,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/tenants_provider.dart';
+import '../../../properties/providers/properties_provider.dart';
 import '../../../units/providers/units_provider.dart';
 
 class AddTenantScreen extends ConsumerStatefulWidget {
@@ -22,8 +23,8 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
-  final _idNumberController = TextEditingController();
   final _emergencyController = TextEditingController();
+  String? _selectedPropertyId;
   String? _selectedUnitId;
   DateTime _moveInDate = DateTime.now();
   bool _isLoading = false;
@@ -47,9 +48,9 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
       _nameController.text = tenant['full_name'] ?? tenant['user']?['full_name'] ?? '';
       _phoneController.text = tenant['phone'] ?? tenant['user']?['phone'] ?? '';
       _emailController.text = tenant['email'] ?? tenant['user']?['email'] ?? '';
-      _idNumberController.text = tenant['id_number'] ?? '';
       _emergencyController.text = tenant['emergency_contact'] ?? '';
       _selectedUnitId = tenant['unit']?['id']?.toString();
+      _selectedPropertyId = tenant['unit']?['property_id']?.toString();
       if (tenant['moved_in_date'] != null) {
         _moveInDate = DateTime.tryParse(tenant['moved_in_date'].toString()) ?? DateTime.now();
       }
@@ -72,7 +73,6 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
-    _idNumberController.dispose();
     _emergencyController.dispose();
     super.dispose();
   }
@@ -89,6 +89,12 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedPropertyId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a property'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
     if (_selectedUnitId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a unit'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
@@ -102,7 +108,6 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
         'full_name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'email': _emailController.text.trim(),
-        'id_number': _idNumberController.text.trim(),
         'emergency_contact': _emergencyController.text.trim(),
         'unit_id': _selectedUnitId,
         'moved_in_date': DateFormat('yyyy-MM-dd').format(_moveInDate),
@@ -140,10 +145,11 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final unitsAsync = ref.watch(unitsListProvider(null));
+    final propertiesAsync = ref.watch(propertiesListProvider);
+    final unitsAsync = ref.watch(unitsListProvider(_selectedPropertyId));
+
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
         title: Text(_isEditMode ? 'Edit Tenant' : 'Add Tenant', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
@@ -160,69 +166,106 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppTextField(label: 'Full Name', hint: 'e.g. John Doe', controller: _nameController, validator: (v) => v == null || v.isEmpty ? 'Name is required' : null),
-              const SizedBox(height: 16),
-              AppTextField(label: 'Phone', hint: 'e.g. +255712345678', controller: _phoneController, keyboardType: TextInputType.phone, validator: (v) => v == null || v.isEmpty ? 'Phone is required' : null),
-              const SizedBox(height: 16),
-              AppTextField(label: 'Email', hint: 'optional', controller: _emailController, keyboardType: TextInputType.emailAddress),
-              const SizedBox(height: 16),
-              AppTextField(label: 'ID Number', hint: 'optional', controller: _idNumberController),
-              const SizedBox(height: 16),
-              AppTextField(label: 'Emergency Contact', hint: 'optional', controller: _emergencyController),
               if (_isLoading && _isEditMode && !_isDataLoaded) ...[
                 const SizedBox(height: 16),
                 const Center(child: CircularProgressIndicator()),
+              ] else ...[
+                _buildSectionLabel('Property'),
+                const SizedBox(height: 8),
+                propertiesAsync.when(
+                  loading: () => const LinearProgressIndicator(),
+                  error: (_, __) => Text('Failed to load properties', style: GoogleFonts.nunito(color: AppColors.error)),
+                  data: (properties) => DropdownButtonFormField<String>(
+                    value: _selectedPropertyId,
+                    isExpanded: true,
+                    decoration: _dropdownDecoration('Select property'),
+                    items: properties.map<DropdownMenuItem<String>>((p) {
+                      return DropdownMenuItem(value: p.id, child: Text(p.name, style: GoogleFonts.nunito(fontSize: 14)));
+                    }).toList(),
+                    onChanged: (v) => setState(() {
+                      _selectedPropertyId = v;
+                      _selectedUnitId = null;
+                    }),
+                    validator: (v) => v == null || v.isEmpty ? 'Please select a property' : null,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildSectionLabel('Unit'),
+                const SizedBox(height: 8),
+                unitsAsync.when(
+                  loading: () => const LinearProgressIndicator(),
+                  error: (_, __) => Text('Failed to load units', style: GoogleFonts.nunito(color: AppColors.error)),
+                  data: (units) => DropdownButtonFormField<String>(
+                    value: _selectedUnitId,
+                    isExpanded: true,
+                    decoration: _dropdownDecoration(_selectedPropertyId == null ? 'Select property first' : 'Select unit'),
+                    items: units.map<DropdownMenuItem<String>>((u) {
+                      final label = u['name'] ?? u['unit_number'] ?? 'Unit';
+                      return DropdownMenuItem(value: u['id'].toString(), child: Text(label, style: GoogleFonts.nunito(fontSize: 14)));
+                    }).toList(),
+                    onChanged: _selectedPropertyId == null ? null : (v) => setState(() => _selectedUnitId = v),
+                    validator: (v) => v == null || v.isEmpty ? 'Please select a unit' : null,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _buildSectionLabel('Tenant Details'),
+                const SizedBox(height: 12),
+                AppTextField(label: 'Full Name', hint: 'e.g. John Doe', controller: _nameController, validator: (v) => v == null || v.isEmpty ? 'Name is required' : null),
+                const SizedBox(height: 16),
+                AppTextField(label: 'Phone', hint: 'e.g. +255712345678', controller: _phoneController, keyboardType: TextInputType.phone, validator: (v) => v == null || v.isEmpty ? 'Phone is required' : null),
+                const SizedBox(height: 16),
+                AppTextField(label: 'Email', hint: 'optional', controller: _emailController, keyboardType: TextInputType.emailAddress),
+                const SizedBox(height: 16),
+                AppTextField(label: 'Emergency Contact', hint: 'optional', controller: _emergencyController),
+                const SizedBox(height: 16),
+                _buildSectionLabel('Move-in Date'),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: _pickMoveInDate,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today_outlined, size: 18, color: AppColors.textLight),
+                        const SizedBox(width: 12),
+                        Text(DateFormat('dd MMM yyyy').format(_moveInDate), style: GoogleFonts.nunito(fontSize: 14, color: AppColors.textDark)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                PrimaryButton(text: _isEditMode ? 'Update Tenant' : 'Save Tenant', isLoading: _isLoading, onPressed: _submit),
               ],
-              const SizedBox(height: 16),
-              Text('Unit', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-              const SizedBox(height: 8),
-              unitsAsync.when(
-                loading: () => const LinearProgressIndicator(),
-                error: (_, __) => Text('Failed to load units', style: GoogleFonts.nunito(color: Colors.red)),
-                data: (units) => DropdownButtonFormField<String>(
-                  value: _selectedUnitId,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  ),
-                  hint: Text('Select unit', style: GoogleFonts.nunito(fontSize: 14)),
-                  items: units.map<DropdownMenuItem<String>>((u) {
-                    final label = u['name'] ?? u['unit_number'] ?? 'Unit';
-                    return DropdownMenuItem(value: u['id'].toString(), child: Text(label, style: GoogleFonts.nunito(fontSize: 14)));
-                  }).toList(),
-                  onChanged: (v) => setState(() => _selectedUnitId = v),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text('Move-in Date', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: _pickMoveInDate,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.calendar_today, size: 18, color: isDark ? Colors.white60 : AppColors.textLight),
-                      const SizedBox(width: 12),
-                      Text(DateFormat('dd MMM yyyy').format(_moveInDate), style: GoogleFonts.nunito(fontSize: 14)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              PrimaryButton(text: _isEditMode ? 'Update Tenant' : 'Save Tenant', isLoading: _isLoading, onPressed: _submit),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionLabel(String label) {
+    return Text(
+      label,
+      style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark),
+    );
+  }
+
+  InputDecoration _dropdownDecoration(String hint) {
+    return InputDecoration(
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      hintText: hint,
+      hintStyle: GoogleFonts.nunito(fontSize: 14, color: AppColors.textLight),
     );
   }
 }
