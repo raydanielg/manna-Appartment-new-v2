@@ -16,13 +16,12 @@ class TenantHomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = ref.watch(authProvider).user;
     final unreadCount = ref.watch(unreadCountProvider).value ?? 0;
     final dashboardAsync = ref.watch(tenantDashboardProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: AppColors.lightBackground,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async => ref.invalidate(tenantDashboardProvider),
@@ -63,13 +62,13 @@ class TenantHomeScreen extends ConsumerWidget {
                         const SizedBox(height: 24),
                         BalanceSummaryCard(totalPaid: totalPaid, totalDue: rentAmount, balance: balance),
                         const SizedBox(height: 24),
-                        Text('Quick Actions', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                        Text('Quick Actions', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
                         const SizedBox(height: 12),
                         _buildQuickAction(context, icon: Icons.payments_outlined, title: 'My Payments', subtitle: 'View history', color: AppColors.success, onTap: () => context.push('/tenant/payments')),
                         _buildQuickAction(context, icon: Icons.description_outlined, title: 'My Contract', subtitle: 'View details', color: AppColors.info, onTap: () => context.push('/tenant/contract')),
-                        _buildQuickAction(context, icon: Icons.build_outlined, title: 'Maintenance', subtitle: 'Submit request', color: AppColors.warning, onTap: () => context.push('/tenant/maintenance')),
+                        _buildQuickAction(context, icon: Icons.build_outlined, title: 'Maintenance', subtitle: 'Submit & track requests', color: AppColors.warning, onTap: () => context.push('/tenant/maintenance/my')),
                         const SizedBox(height: 24),
-                        Text('Recent Updates', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                        Text('Recent Updates', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
                         const SizedBox(height: 12),
                         if (recentPayments.isEmpty && maintenanceRequests.isEmpty)
                           _buildUpdate(context, title: 'No updates yet', subtitle: 'Notifications will appear here')
@@ -102,7 +101,6 @@ class TenantHomeScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, String name, int unreadCount) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final initials = name.trim().split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join().toUpperCase();
     return Row(
       children: [
@@ -138,7 +136,7 @@ class TenantHomeScreen extends ConsumerWidget {
                 style: GoogleFonts.nunito(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : AppColors.textDark,
+                  color: AppColors.textDark,
                 ),
               ),
               const SizedBox(height: 2),
@@ -147,7 +145,7 @@ class TenantHomeScreen extends ConsumerWidget {
                 style: GoogleFonts.nunito(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.white54 : AppColors.textLight,
+                  color: AppColors.textLight,
                 ),
               ),
             ],
@@ -157,7 +155,7 @@ class TenantHomeScreen extends ConsumerWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF3F4F6),
+            color: const Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Stack(
@@ -166,7 +164,7 @@ class TenantHomeScreen extends ConsumerWidget {
               IconButton(
                 onPressed: () => context.push('/notifications'),
                 icon: const Icon(Icons.notifications_none_rounded, size: 20),
-                color: isDark ? Colors.white70 : AppColors.textLight,
+                color: AppColors.textLight,
                 padding: EdgeInsets.zero,
               ),
               if (unreadCount > 0)
@@ -192,13 +190,12 @@ class TenantHomeScreen extends ConsumerWidget {
   }
 
   Widget _buildQuickAction(BuildContext context, {required IconData icon, required String title, required String subtitle, required Color color, VoidCallback? onTap}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        leading: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: isDark ? 0.15 : 0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color)),
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-        subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+        leading: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color)),
+        title: Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textDark)),
+        subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: AppColors.textLight)),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,
       ),
@@ -206,11 +203,10 @@ class TenantHomeScreen extends ConsumerWidget {
   }
 
   Widget _buildUpdate(BuildContext context, {required String title, required String subtitle, IconData icon = Icons.notifications, Color color = AppColors.info}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       child: ListTile(
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-        subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+        title: Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textDark)),
+        subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: AppColors.textLight)),
       ),
     );
   }

@@ -22,7 +22,12 @@ class LoginController extends Controller
             'platform' => 'required|in:web,mobile',
         ]);
 
-        $user = User::where('phone', $request->phone)->first();
+        $phone = $this->normalizePhone($request->phone);
+        $user = User::where('phone', $phone)->first();
+
+        if (!$user) {
+            $user = User::where('phone', $request->phone)->first();
+        }
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
@@ -80,5 +85,24 @@ class LoginController extends Controller
             default:
                 return [];
         }
+    }
+
+    private function normalizePhone(string $phone): string
+    {
+        $phone = preg_replace('/\D/', '', $phone);
+
+        if (str_starts_with($phone, '0')) {
+            $phone = '255' . substr($phone, 1);
+        }
+
+        if (strlen($phone) === 9) {
+            $phone = '255' . $phone;
+        }
+
+        if (str_starts_with($phone, '+')) {
+            $phone = ltrim($phone, '+');
+        }
+
+        return $phone;
     }
 }
