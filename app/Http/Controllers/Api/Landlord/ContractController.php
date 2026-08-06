@@ -33,6 +33,7 @@ class ContractController extends Controller
             'rent_amount' => 'required|numeric|min:0',
             'deposit_amount' => 'nullable|numeric|min:0',
             'contract_type' => 'nullable|in:digital,manual',
+            'template_content' => 'nullable|string',
         ]);
 
         $tenant = Tenant::findOrFail($request->tenant_id);
@@ -41,7 +42,7 @@ class ContractController extends Controller
 
         $contract = Contract::create(array_merge(
             $request->only([
-                'tenant_id', 'unit_id', 'duration_type', 'start_date', 'end_date', 'rent_amount', 'deposit_amount', 'contract_type',
+                'tenant_id', 'unit_id', 'duration_type', 'start_date', 'end_date', 'rent_amount', 'deposit_amount', 'contract_type', 'template_content',
             ]),
             [
                 'duration_type' => $request->duration_type ?? 'custom',

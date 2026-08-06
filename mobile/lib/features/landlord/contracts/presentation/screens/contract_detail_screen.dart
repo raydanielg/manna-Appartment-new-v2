@@ -34,6 +34,7 @@ class ContractDetailScreen extends ConsumerWidget {
           final property = unit?['property'];
           final rent = _parseAmount(contract['rent_amount']);
           final deposit = _parseAmount(contract['deposit_amount']);
+          final isManual = contract['contract_type'] == 'manual';
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -59,7 +60,7 @@ class ContractDetailScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(8)),
-                            child: Text('Digital', style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
+                            child: Text(isManual ? 'Manual' : 'Digital', style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
                           ),
                         ],
                       ),
@@ -248,6 +249,8 @@ class ContractDetailScreen extends ConsumerWidget {
     final unitName = unit?['name'] ?? unit?['unit_number'] ?? '________________';
     final contractNo = contract['contract_number'] ?? 'N/A';
     final isSigned = contract['signed_at'] != null;
+    final isManual = contract['contract_type'] == 'manual';
+    final customTerms = contract['template_content']?.toString() ?? '';
 
     return Container(
       width: double.infinity,
@@ -330,14 +333,18 @@ class ContractDetailScreen extends ConsumerWidget {
                 // 5. TERMS AND CONDITIONS
                 _buildDocSectionTitle('5. TERMS AND CONDITIONS'),
                 const SizedBox(height: 10),
-                _buildDocTerm('5.1', 'The Tenant shall pay the monthly rent on or before the 5th day of each calendar month. Late payment shall attract a penalty as determined by the Landlord.'),
-                _buildDocTerm('5.2', 'The Tenant shall use the premises for residential purposes only and shall not sub-let, assign, or transfer any part of the premises without prior written consent of the Landlord.'),
-                _buildDocTerm('5.3', 'The Tenant shall maintain the premises in good and clean condition and shall be responsible for any damage caused by negligence or misuse, excluding normal wear and tear.'),
-                _buildDocTerm('5.4', 'The Landlord shall be responsible for structural repairs, plumbing, electrical, and other major maintenance. The Tenant shall report any defects promptly.'),
-                _buildDocTerm('5.5', 'The Tenant shall not make any alterations, additions, or improvements to the premises without the prior written consent of the Landlord.'),
-                _buildDocTerm('5.6', 'Either party may terminate this agreement by giving one (1) month written notice to the other party. The Landlord may terminate immediately for non-payment of rent or breach of any term herein.'),
-                _buildDocTerm('5.7', 'Upon termination, the Tenant shall hand over the premises in the same condition as at the commencement of the tenancy, fair wear and tear excepted. The security deposit shall be refunded after deduction of any outstanding rent or damage costs.'),
-                _buildDocTerm('5.8', 'The Tenant shall comply with all building rules, regulations, and by-laws as may be prescribed by the Landlord or local authorities from time to time.'),
+                if (isManual && customTerms.isNotEmpty)
+                  Text(customTerms, style: GoogleFonts.nunito(fontSize: 11, color: Colors.black87, height: 1.6))
+                else ...[
+                  _buildDocTerm('5.1', 'The Tenant shall pay the monthly rent on or before the 5th day of each calendar month. Late payment shall attract a penalty as determined by the Landlord.'),
+                  _buildDocTerm('5.2', 'The Tenant shall use the premises for residential purposes only and shall not sub-let, assign, or transfer any part of the premises without prior written consent of the Landlord.'),
+                  _buildDocTerm('5.3', 'The Tenant shall maintain the premises in good and clean condition and shall be responsible for any damage caused by negligence or misuse, excluding normal wear and tear.'),
+                  _buildDocTerm('5.4', 'The Landlord shall be responsible for structural repairs, plumbing, electrical, and other major maintenance. The Tenant shall report any defects promptly.'),
+                  _buildDocTerm('5.5', 'The Tenant shall not make any alterations, additions, or improvements to the premises without the prior written consent of the Landlord.'),
+                  _buildDocTerm('5.6', 'Either party may terminate this agreement by giving one (1) month written notice to the other party. The Landlord may terminate immediately for non-payment of rent or breach of any term herein.'),
+                  _buildDocTerm('5.7', 'Upon termination, the Tenant shall hand over the premises in the same condition as at the commencement of the tenancy, fair wear and tear excepted. The security deposit shall be refunded after deduction of any outstanding rent or damage costs.'),
+                  _buildDocTerm('5.8', 'The Tenant shall comply with all building rules, regulations, and by-laws as may be prescribed by the Landlord or local authorities from time to time.'),
+                ],
                 const SizedBox(height: 24),
 
                 // 6. GOVERNING LAW

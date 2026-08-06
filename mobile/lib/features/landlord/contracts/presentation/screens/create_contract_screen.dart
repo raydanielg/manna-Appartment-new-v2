@@ -26,6 +26,8 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
   Map<String, dynamic>? _selectedTenant;
   String? _unitId;
   Map<String, dynamic>? _selectedUnit;
+  String _contractType = 'digital';
+  final _termsController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -34,6 +36,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
     _endDateController.dispose();
     _rentController.dispose();
     _depositController.dispose();
+    _termsController.dispose();
     super.dispose();
   }
 
@@ -84,7 +87,8 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
         'end_date': _endDateController.text.trim(),
         'rent_amount': double.tryParse(_rentController.text) ?? 0,
         'deposit_amount': double.tryParse(_depositController.text) ?? 0,
-        'contract_type': 'digital',
+        'contract_type': _contractType,
+        if (_contractType == 'manual') 'template_content': _termsController.text.trim(),
       });
       ref.invalidate(contractsListProvider);
       if (mounted) {
@@ -126,6 +130,30 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              _buildSectionLabel('Contract Type'),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTypeCard(
+                      Icons.auto_awesome_outlined,
+                      'Digital',
+                      'Auto-generated terms',
+                      'digital',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTypeCard(
+                      Icons.edit_note_outlined,
+                      'Manual',
+                      'Write your own terms',
+                      'manual',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
               _buildSectionLabel('Select Tenant'),
               const SizedBox(height: 8),
               tenantsAsync.when(
@@ -212,6 +240,30 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
               AppTextField(label: 'Monthly Rent (TZS)', controller: _rentController, keyboardType: TextInputType.number, validator: (v) => v == null || v.isEmpty ? 'Required' : null),
               const SizedBox(height: 16),
               AppTextField(label: 'Deposit (TZS)', controller: _depositController, keyboardType: TextInputType.number),
+              if (_contractType == 'manual') ...[
+                const SizedBox(height: 24),
+                _buildSectionLabel('Contract Terms'),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: TextField(
+                    controller: _termsController,
+                    maxLines: 12,
+                    minLines: 8,
+                    style: GoogleFonts.nunito(fontSize: 14, color: AppColors.textDark, height: 1.6),
+                    decoration: InputDecoration(
+                      hintText: 'Write your contract terms here...\n\nExample:\n1. The tenant shall pay rent on or before the 5th of each month.\n2. The tenant shall maintain the premises in good condition.\n3. Either party may terminate with one month notice.\n4. ...',
+                      hintStyle: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.6),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               PrimaryButton(text: 'Create Contract', isLoading: _isLoading, onPressed: _submit),
             ],
@@ -225,6 +277,42 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
     return Text(
       label,
       style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark),
+    );
+  }
+
+  Widget _buildTypeCard(IconData icon, String title, String subtitle, String value) {
+    final isSelected = _contractType == value;
+    return GestureDetector(
+      onTap: () => setState(() => _contractType = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.05) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : const Color(0xFFE2E8F0),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: isSelected ? AppColors.primary : AppColors.textLight, size: 20),
+            ),
+            const SizedBox(height: 10),
+            Text(title, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: isSelected ? AppColors.primary : AppColors.textDark)),
+            const SizedBox(height: 2),
+            Text(subtitle, style: GoogleFonts.nunito(fontSize: 11, color: AppColors.textLight), textAlign: TextAlign.center),
+          ],
+        ),
+      ),
     );
   }
 
