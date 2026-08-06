@@ -57,7 +57,7 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
         );
       }
     } finally {

@@ -667,5 +667,6 @@
   "confirm_move_out_desc": "This will mark the tenant as moved out. The unit will become vacant. This action cannot be undone.",
   "confirm_move_out_btn": "Confirm Move Out",
   "free_trial_activated_dashboard": "Free trial activated! Enjoy the dashboard.",
-  "could_not_load_history": "Could not load history."
+  "could_not_load_history": "Could not load history.",
+  "no_staff_members": "No staff members yet."
 }

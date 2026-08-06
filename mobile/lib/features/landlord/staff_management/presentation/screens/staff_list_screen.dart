@@ -27,7 +27,7 @@ class StaffListScreen extends ConsumerWidget {
           loading: () => const LoadingIndicator(),
           error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(staffListProvider)),
           data: (staff) => staff.isEmpty
-              ? const EmptyState(message: 'No staff members yet.', icon: Icons.badge_outlined)
+              ? EmptyState(message: context.tr('no_staff_members'), icon: Icons.badge_outlined)
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: staff.length,

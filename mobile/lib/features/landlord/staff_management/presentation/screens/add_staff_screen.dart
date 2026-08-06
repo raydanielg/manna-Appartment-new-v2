@@ -66,9 +66,9 @@ class _AddStaffScreenState extends ConsumerState<AddStaffScreen> {
           key: _formKey,
           child: Column(
             children: [
-              AppTextField(label: 'Full Name', hint: 'e.g. Jane Manager', controller: _nameController, validator: (v) => v == null || v.isEmpty ? 'Required' : null),
+              AppTextField(label: context.tr('full_name'), hint: context.tr('enter_full_name'), controller: _nameController, validator: (v) => v == null || v.isEmpty ? context.tr('required_field') : null),
               const SizedBox(height: 16),
-              AppTextField(label: 'Phone', hint: '+255...', controller: _phoneController, keyboardType: TextInputType.phone, validator: (v) => v == null || v.isEmpty ? 'Required' : null),
+              AppTextField(label: context.tr('phone'), hint: '+255...', controller: _phoneController, keyboardType: TextInputType.phone, validator: (v) => v == null || v.isEmpty ? context.tr('required_field') : null),
               const SizedBox(height: 16),
               Text(context.tr('role'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
               const SizedBox(height: 8),
