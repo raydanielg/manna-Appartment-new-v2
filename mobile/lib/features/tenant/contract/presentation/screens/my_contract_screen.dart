@@ -14,11 +14,10 @@ class MyContractScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final contractAsync = ref.watch(myContractProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: AppColors.lightBackground,
       appBar: AppBar(title: const Text('My Contract'), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
       body: contractAsync.when(
         loading: () => const LoadingIndicator(),
@@ -47,8 +46,8 @@ class MyContractScreen extends ConsumerWidget {
               const SizedBox(height: 20),
               _buildRow(context, Icons.calendar_today, 'Start Date', contract['start_date'] ?? 'N/A'),
               _buildRow(context, Icons.event, 'End Date', contract['end_date'] ?? 'N/A'),
-              _buildRow(context, Icons.account_balance_wallet, 'Monthly Rent', 'TZS ${contract['monthly_rent'] ?? 0}'),
-              _buildRow(context, Icons.savings, 'Deposit', 'TZS ${contract['deposit'] ?? 0}'),
+              _buildRow(context, Icons.account_balance_wallet, 'Monthly Rent', 'TZS ${contract['rent_amount'] ?? contract['monthly_rent'] ?? 0}'),
+              _buildRow(context, Icons.savings, 'Deposit', 'TZS ${contract['deposit_amount'] ?? contract['deposit'] ?? 0}'),
               if (contract['unit'] != null)
                 _buildRow(context, Icons.meeting_room, 'Unit', contract['unit']['name'] ?? 'N/A'),
               const SizedBox(height: 24),
@@ -65,13 +64,12 @@ class MyContractScreen extends ConsumerWidget {
   }
 
   Widget _buildRow(BuildContext context, IconData icon, String label, String value) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Icon(icon, color: AppColors.primary),
-        title: Text(label, style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
-        trailing: Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+        title: Text(label, style: TextStyle(fontSize: 12, color: AppColors.textLight)),
+        trailing: Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
       ),
     );
   }

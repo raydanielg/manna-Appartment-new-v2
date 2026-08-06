@@ -6,6 +6,9 @@ class TenantPaymentsRepository {
 
   Future<List<dynamic>> getMyPayments() async {
     final response = await _client.get('/tenant/my-payments');
-    return response.data['data'] ?? [];
+    final data = response.data['data'];
+    if (data is Map && data['data'] is List) return data['data'];
+    if (data is List) return data;
+    return [];
   }
 }

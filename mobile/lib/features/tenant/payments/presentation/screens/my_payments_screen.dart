@@ -1,42 +1,71 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/error_state.dart';
-import '../../../../../features/landlord/payments/providers/payments_provider.dart';
+import '../../../../../core/widgets/status_badge.dart';
+import '../../providers/payments_provider.dart';
 
 class MyPaymentsScreen extends ConsumerWidget {
   const MyPaymentsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final paymentsAsync = ref.watch(landlordPaymentsProvider);
+    final paymentsAsync = ref.watch(myPaymentsProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      appBar: AppBar(title: const Text('My Payments'), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
-      body: paymentsAsync.when(
-        loading: () => const LoadingIndicator(),
-        error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(landlordPaymentsProvider)),
-        data: (payments) => payments.isEmpty
-            ? const EmptyState(message: 'No payment records found.')
-            : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: payments.length,
-                itemBuilder: (context, index) {
-                  final p = payments[index];
-                  return Card(
-                    child: ListTile(
-                      title: Text('TZS ', style: TextStyle(fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-                      subtitle: Text(p['month_covered'] ?? '', style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
-                      trailing: Text(p['payment_date'] ?? '', style: const TextStyle(fontSize: 12)),
-                    ),
-                  );
-                },
-              ),
+      backgroundColor: AppColors.lightBackground,
+      appBar: AppBar(title: Text('My Payments', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      body: RefreshIndicator(
+        onRefresh: () async => ref.invalidate(myPaymentsProvider),
+        color: AppColors.primary,
+        child: paymentsAsync.when(
+          loading: () => const LoadingIndicator(),
+          error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(myPaymentsProvider)),
+          data: (payments) => payments.isEmpty
+              ? const EmptyState(message: 'No payment records found.', icon: Icons.payments_outlined)
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: payments.length,
+                  itemBuilder: (context, index) {
+                    final p = payments[index];
+                    final amount = p['amount'] ?? 0;
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.success.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.payments, color: AppColors.success, size: 22),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('TZS ${amount.toStringAsFixed(0)}', style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                                  const SizedBox(height: 4),
+                                  Text(p['month_covered'] ?? p['payment_date'] ?? '', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
+                                ],
+                              ),
+                            ),
+                            StatusBadge(status: p['status'] ?? 'confirmed'),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
       ),
     );
   }

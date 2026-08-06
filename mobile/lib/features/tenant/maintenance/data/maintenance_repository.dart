@@ -6,7 +6,10 @@ class TenantMaintenanceRepository {
 
   Future<List<dynamic>> getMyRequests() async {
     final response = await _client.get('/tenant/maintenance-requests');
-    return response.data['data'] ?? [];
+    final data = response.data['data'];
+    if (data is Map && data['data'] is List) return data['data'];
+    if (data is List) return data;
+    return [];
   }
 
   Future<Map<String, dynamic>> submitRequest(Map<String, dynamic> data) async {

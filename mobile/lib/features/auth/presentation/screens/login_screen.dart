@@ -30,7 +30,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _showError('Please enter both phone and password');
       return;
     }
-    final phone = '255${_phoneController.text.trim()}';
+    var phone = _phoneController.text.trim().replaceAll(RegExp(r'\D'), '');
+    if (phone.startsWith('0')) {
+      phone = '255${phone.substring(1)}';
+    } else if (phone.startsWith('255')) {
+      // already correct
+    } else if (phone.length == 9) {
+      phone = '255$phone';
+    }
     final password = _passwordController.text;
     await ref.read(authProvider.notifier).login(phone, password);
   }
