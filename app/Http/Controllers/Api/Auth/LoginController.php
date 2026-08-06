@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -24,22 +23,11 @@ class LoginController extends Controller
         ]);
 
         $phone = $this->normalizePhone($request->phone);
-        Log::info('Login attempt', [
-            'raw_phone' => $request->phone,
-            'normalized_phone' => $phone,
-            'password_length' => strlen($request->password),
-            'platform' => $request->platform,
-        ]);
         $user = User::where('phone', $phone)->first();
 
         if (!$user) {
             $user = User::where('phone', $request->phone)->first();
         }
-
-        Log::info('User lookup', [
-            'found_user' => $user ? $user->phone : 'NOT FOUND',
-            'hash_check' => $user ? Hash::check($request->password, $user->password) : false,
-        ]);
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
