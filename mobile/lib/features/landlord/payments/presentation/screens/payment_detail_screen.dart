@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/status_badge.dart';
@@ -27,7 +28,7 @@ class PaymentDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Payment Details', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('payment_details'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -78,7 +79,7 @@ class PaymentDetailScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Amount', style: GoogleFonts.nunito(fontSize: 14, color: Colors.white70)),
+                      Text(context.tr('amount_label'), style: GoogleFonts.nunito(fontSize: 14, color: Colors.white70)),
                       Text('TZS ${amount.toStringAsFixed(0)}', style: GoogleFonts.nunito(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white)),
                       const SizedBox(height: 8),
                       Row(
@@ -96,13 +97,13 @@ class PaymentDetailScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                _buildRow(context, Icons.person, 'Tenant', tenantName),
-                _buildRow(context, Icons.meeting_room, 'Unit', unitName),
-                _buildRow(context, Icons.calendar_today, 'Date', date),
-                _buildRow(context, Icons.payment, 'Method', method),
-                _buildRow(context, Icons.receipt, 'Reference', payment['reference_number'] ?? 'N/A'),
-                _buildRow(context, Icons.calendar_month, 'Month Covered', monthCovered),
-                _buildRow(context, Icons.note, 'Notes', notes),
+                _buildRow(context, Icons.person, context.tr('tenant'), tenantName),
+                _buildRow(context, Icons.meeting_room, context.tr('unit'), unitName),
+                _buildRow(context, Icons.calendar_today, context.tr('date'), date),
+                _buildRow(context, Icons.payment, context.tr('method'), method),
+                _buildRow(context, Icons.receipt, context.tr('reference'), payment['reference_number'] ?? 'N/A'),
+                _buildRow(context, Icons.calendar_month, context.tr('month_covered'), monthCovered),
+                _buildRow(context, Icons.note, context.tr('notes'), notes),
                 const SizedBox(height: 24),
                 Row(
                   children: [
@@ -111,7 +112,7 @@ class PaymentDetailScreen extends ConsumerWidget {
                         onPressed: () => _showReceipt(context, isDark, tenantName, unitName, amount, paid, date, method, receiptNo, monthCovered, notes, paymentId, type),
                         style: ElevatedButton.styleFrom(backgroundColor: AppColors.info),
                         icon: const Icon(Icons.receipt_long),
-                        label: const Text('View Receipt'),
+                        label: Text(context.tr('view_receipt')),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -119,7 +120,7 @@ class PaymentDetailScreen extends ConsumerWidget {
                       child: ElevatedButton.icon(
                         onPressed: () => _showEditDialog(context, ref, id, payment),
                         icon: const Icon(Icons.edit),
-                        label: const Text('Edit'),
+                        label: Text(context.tr('edit')),
                       ),
                     ),
                   ],
@@ -158,10 +159,10 @@ class PaymentDetailScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cancel Payment'),
-        content: const Text('Are you sure you want to delete this payment record?'),
+        title: Text(context.tr('cancel_payment_record')),
+        content: Text(context.tr('confirm_delete_payment')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('No')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('no'))),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -170,7 +171,7 @@ class PaymentDetailScreen extends ConsumerWidget {
                 ref.invalidate(landlordPaymentsProvider);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Payment deleted'), backgroundColor: AppColors.success),
+                    SnackBar(content: Text(context.tr('payment_deleted')), backgroundColor: AppColors.success),
                   );
                   if (context.canPop()) context.pop();
                 }
@@ -182,7 +183,7 @@ class PaymentDetailScreen extends ConsumerWidget {
                 }
               }
             },
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -206,7 +207,7 @@ class PaymentDetailScreen extends ConsumerWidget {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Edit Payment'),
+              title: Text(context.tr('edit_payment')),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -214,29 +215,29 @@ class PaymentDetailScreen extends ConsumerWidget {
                     TextField(
                       controller: amountController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Amount (TZS)'),
+                      decoration: InputDecoration(labelText: context.tr('edit_amount_tzs')),
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       value: paymentType,
-                      decoration: const InputDecoration(labelText: 'Payment Type'),
-                      items: const [
-                        DropdownMenuItem(value: 'rent', child: Text('Rent')),
-                        DropdownMenuItem(value: 'water', child: Text('Water')),
-                        DropdownMenuItem(value: 'electricity', child: Text('Electricity')),
-                        DropdownMenuItem(value: 'other', child: Text('Other')),
+                      decoration: InputDecoration(labelText: context.tr('payment_type_label')),
+                      items: [
+                        DropdownMenuItem(value: 'rent', child: Text(context.tr('rent'))),
+                        DropdownMenuItem(value: 'water', child: Text(context.tr('water'))),
+                        DropdownMenuItem(value: 'electricity', child: Text(context.tr('electricity'))),
+                        DropdownMenuItem(value: 'other', child: Text(context.tr('other'))),
                       ],
                       onChanged: (v) => setDialogState(() => paymentType = v ?? 'rent'),
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       value: method,
-                      decoration: const InputDecoration(labelText: 'Method'),
-                      items: const [
-                        DropdownMenuItem(value: 'cash', child: Text('Cash')),
-                        DropdownMenuItem(value: 'mobile_money', child: Text('Mobile Money')),
-                        DropdownMenuItem(value: 'bank_transfer', child: Text('Bank Transfer')),
-                        DropdownMenuItem(value: 'cheque', child: Text('Cheque')),
+                      decoration: InputDecoration(labelText: context.tr('method')),
+                      items: [
+                        DropdownMenuItem(value: 'cash', child: Text(context.tr('cash'))),
+                        DropdownMenuItem(value: 'mobile_money', child: Text(context.tr('mobile_money'))),
+                        DropdownMenuItem(value: 'bank_transfer', child: Text(context.tr('bank_transfer'))),
+                        DropdownMenuItem(value: 'cheque', child: Text(context.tr('cheque'))),
                       ],
                       onChanged: (v) => setDialogState(() => method = v ?? 'cash'),
                     ),
@@ -252,25 +253,25 @@ class PaymentDetailScreen extends ConsumerWidget {
                         if (picked != null) setDialogState(() => paymentDate = picked);
                       },
                       child: InputDecorator(
-                        decoration: const InputDecoration(labelText: 'Payment Date'),
+                        decoration: InputDecoration(labelText: context.tr('payment_date')),
                         child: Text(DateFormat('dd MMM yyyy').format(paymentDate)),
                       ),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: referenceController,
-                      decoration: const InputDecoration(labelText: 'Reference Number'),
+                      decoration: InputDecoration(labelText: context.tr('reference_number')),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: notesController,
-                      decoration: const InputDecoration(labelText: 'Notes'),
+                      decoration: InputDecoration(labelText: context.tr('notes')),
                     ),
                   ],
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('cancel'))),
                 TextButton(
                   onPressed: () async {
                     Navigator.pop(context);
@@ -288,7 +289,7 @@ class PaymentDetailScreen extends ConsumerWidget {
                       ref.invalidate(landlordPaymentsProvider);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Payment updated'), backgroundColor: AppColors.success),
+                          SnackBar(content: Text(context.tr('edit_payment_success')), backgroundColor: AppColors.success),
                         );
                       }
                     } catch (e) {
@@ -299,7 +300,7 @@ class PaymentDetailScreen extends ConsumerWidget {
                       }
                     }
                   },
-                  child: const Text('Save'),
+                  child: Text(context.tr('save')),
                 ),
               ],
             );
@@ -356,7 +357,7 @@ class _PaymentReceiptScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('EFD Receipt', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('efd_receipt'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -385,7 +386,7 @@ class _PaymentReceiptScreen extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _downloadPdf(context),
                     icon: const Icon(Icons.download, size: 18),
-                    label: Text('Download PDF', style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13)),
+                    label: Text(context.tr('download_pdf'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -397,7 +398,7 @@ class _PaymentReceiptScreen extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _sharePdf(context),
                     icon: const Icon(Icons.share, size: 18),
-                    label: Text('Share', style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13)),
+                    label: Text(context.tr('share'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -456,19 +457,19 @@ class _PaymentReceiptScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildReceiptRow('Receipt No.', receiptNo),
-                _buildReceiptRow('Payment ID', paymentId),
+                _buildReceiptRow(context.tr('receipt_no'), receiptNo),
+                _buildReceiptRow(context.tr('payment_id'), paymentId),
                 _buildDivider(),
-                _buildReceiptRow('Tenant', tenantName),
-                _buildReceiptRow('Unit', unitName),
-                _buildReceiptRow('Payment Type', type.toUpperCase()),
+                _buildReceiptRow(context.tr('tenant'), tenantName),
+                _buildReceiptRow(context.tr('unit'), unitName),
+                _buildReceiptRow(context.tr('payment_type_label'), type.toUpperCase()),
                 _buildDivider(),
-                _buildReceiptRow('Amount', 'TZS ${amount.toStringAsFixed(0)}'),
-                _buildReceiptRow('Method', method.toUpperCase()),
-                _buildReceiptRow('Month Covered', monthCovered),
-                _buildReceiptRow('Date', date),
+                _buildReceiptRow(context.tr('amount_label'), 'TZS ${amount.toStringAsFixed(0)}'),
+                _buildReceiptRow(context.tr('method'), method.toUpperCase()),
+                _buildReceiptRow(context.tr('month_covered'), monthCovered),
+                _buildReceiptRow(context.tr('date'), date),
                 _buildDivider(),
-                _buildReceiptRow('Notes', notes),
+                _buildReceiptRow(context.tr('notes'), notes),
                 _buildDivider(),
                 // Total
                 Padding(
@@ -476,7 +477,7 @@ class _PaymentReceiptScreen extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('TOTAL AMOUNT', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
+                      Text(context.tr('total_amount'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
                       Text(
                         'TZS ${amount.toStringAsFixed(0)}',
                         style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary),
@@ -487,9 +488,9 @@ class _PaymentReceiptScreen extends StatelessWidget {
                 _buildDivider(),
                 const SizedBox(height: 12),
                 // Footer
-                Text('This is a computer generated receipt.', style: GoogleFonts.nunito(fontSize: 10, color: isDark ? Colors.white38 : Colors.grey.shade500, fontStyle: FontStyle.italic)),
+                Text(context.tr('computer_generated_receipt'), style: GoogleFonts.nunito(fontSize: 10, color: isDark ? Colors.white38 : Colors.grey.shade500, fontStyle: FontStyle.italic)),
                 const SizedBox(height: 4),
-                Text('Thank you for your payment!', style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white60 : AppColors.textLight)),
+                Text(context.tr('thank_you_payment'), style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white60 : AppColors.textLight)),
               ],
             ),
           ),
@@ -641,7 +642,7 @@ class _PaymentReceiptScreen extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate PDF: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.tr('failed_generate_pdf').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
         );
       }
     }
@@ -659,7 +660,7 @@ class _PaymentReceiptScreen extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share PDF: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.tr('failed_share_pdf').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
         );
       }
     }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -29,7 +30,7 @@ class _MaintenanceRequestsScreenState extends ConsumerState<MaintenanceRequestsS
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Maintenance', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('maintenance'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -44,7 +45,7 @@ class _MaintenanceRequestsScreenState extends ConsumerState<MaintenanceRequestsS
             child: TextField(
               onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
               decoration: InputDecoration(
-                hintText: 'Search requests...',
+                hintText: context.tr('search_requests'),
                 hintStyle: GoogleFonts.nunito(fontSize: 14),
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
@@ -59,15 +60,15 @@ class _MaintenanceRequestsScreenState extends ConsumerState<MaintenanceRequestsS
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildFilterChip('All', 'all'),
+                  _buildFilterChip(context.tr('all'), 'all'),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Open', 'open'),
+                  _buildFilterChip(context.tr('open'), 'open'),
                   const SizedBox(width: 8),
-                  _buildFilterChip('In Progress', 'in_progress'),
+                  _buildFilterChip(context.tr('in_progress'), 'in_progress'),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Resolved', 'resolved'),
+                  _buildFilterChip(context.tr('resolved'), 'resolved'),
                   const SizedBox(width: 8),
-                  _buildFilterChip('Cancelled', 'cancelled'),
+                  _buildFilterChip(context.tr('cancelled'), 'cancelled'),
                 ],
               ),
             ),
@@ -91,7 +92,7 @@ class _MaintenanceRequestsScreenState extends ConsumerState<MaintenanceRequestsS
                   }).toList();
 
                   if (filtered.isEmpty) {
-                    return const EmptyState(message: 'No maintenance requests.', icon: Icons.build_outlined);
+                    return EmptyState(message: context.tr('no_maintenance_requests_landlord'), icon: Icons.build_outlined);
                   }
                   return ListView.builder(
                     padding: const EdgeInsets.all(16),
@@ -163,9 +164,9 @@ class _RequestCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(req['title'] ?? 'Request', style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
+                        Text(req['title'] ?? context.tr('request'), style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
                         const SizedBox(height: 2),
-                        Text(req['tenant']?['full_name'] ?? 'Unknown', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+                        Text(req['tenant']?['full_name'] ?? context.tr('unknown'), style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
                       ],
                     ),
                   ),
@@ -181,18 +182,18 @@ class _RequestCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(createdAt, style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
-                  Text('Unit: ${req['unit']?['name'] ?? req['unit']?['unit_number'] ?? 'N/A'}', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+                  Text('${context.tr('unit')}: ${req['unit']?['name'] ?? req['unit']?['unit_number'] ?? 'N/A'}', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
-                    child: _buildActionButton(context, 'Start', Icons.play_arrow, status == 'open' ? AppColors.info : Colors.grey, () => _updateStatus(context, 'in_progress')),
+                    child: _buildActionButton(context, context.tr('start'), Icons.play_arrow, status == 'open' ? AppColors.info : Colors.grey, () => _updateStatus(context, 'in_progress')),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _buildActionButton(context, 'Resolve', Icons.check_circle, status == 'resolved' ? Colors.grey : AppColors.success, () => _updateStatus(context, 'resolved')),
+                    child: _buildActionButton(context, context.tr('resolve'), Icons.check_circle, status == 'resolved' ? Colors.grey : AppColors.success, () => _updateStatus(context, 'resolved')),
                   ),
                 ],
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 
 class LandlordHelpScreen extends StatelessWidget {
   const LandlordHelpScreen({super.key});
@@ -12,7 +13,7 @@ class LandlordHelpScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('How to Use', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('how_to_use'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -25,32 +26,32 @@ class LandlordHelpScreen extends StatelessWidget {
         children: [
           _buildCard(
             context,
-            title: '1. Subscription Plan',
+            title: context.tr('subscription_plan_help'),
             steps: ['Start with a free trial or choose a plan.', 'Pay to unlock SMS, contracts and full features.', 'View your active plan under Subscription.'],
           ),
           _buildCard(
             context,
-            title: '2. Add Property & Unit',
+            title: context.tr('add_property_unit_help'),
             steps: ['Go to Properties > Add property.', 'Add units with rent and numbers.', 'Units show as vacant or occupied.'],
           ),
           _buildCard(
             context,
-            title: '3. Add Tenant',
+            title: context.tr('add_tenant_help'),
             steps: ['Go to Tenants > Add tenant.', 'Select a vacant unit and move-in date.', 'Tenant receives SMS with login details.'],
           ),
           _buildCard(
             context,
-            title: '4. Record Payments',
+            title: context.tr('record_payments_help'),
             steps: ['Go to Payments > Record.', 'Select tenant, contract and payment type (rent, water, electricity, other).', 'Amount, date and month are saved automatically.'],
           ),
           _buildCard(
             context,
-            title: '5. Contracts & Signatures',
+            title: context.tr('contracts_signatures_help'),
             steps: ['Create digital or manual contract.', 'For manual, download Word template.', 'Sign digital contracts with finger signature and get PDF.'],
           ),
           _buildCard(
             context,
-            title: '6. SMS Broadcast',
+            title: context.tr('sms_broadcast_help'),
             steps: ['Go to More > SMS Broadcast.', 'Choose group: all, active, overdue or custom numbers.', 'Pick a template or type message, then send.'],
           ),
         ],

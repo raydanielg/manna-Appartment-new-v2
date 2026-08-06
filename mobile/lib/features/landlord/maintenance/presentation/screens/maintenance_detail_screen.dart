@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -23,17 +24,21 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
   String? _selectedStatus;
   bool _isLoading = false;
 
-  final List<Map<String, dynamic>> _statusOptions = [
-    {'value': 'open', 'label': 'Open', 'color': Colors.orange, 'icon': Icons.circle},
-    {'value': 'in_progress', 'label': 'In Progress', 'color': AppColors.info, 'icon': Icons.play_arrow},
-    {'value': 'resolved', 'label': 'Resolved', 'color': AppColors.success, 'icon': Icons.check_circle},
-    {'value': 'cancelled', 'label': 'Cancelled', 'color': Colors.grey, 'icon': Icons.cancel},
-  ];
+  List<Map<String, dynamic>> _statusOptions = [];
 
   @override
   void dispose() {
     _notesController.dispose();
     super.dispose();
+  }
+
+  void _initStatusOptions() {
+    _statusOptions = [
+      {'value': 'open', 'label': context.tr('open'), 'color': Colors.orange, 'icon': Icons.circle},
+      {'value': 'in_progress', 'label': context.tr('in_progress'), 'color': AppColors.info, 'icon': Icons.play_arrow},
+      {'value': 'resolved', 'label': context.tr('resolved'), 'color': AppColors.success, 'icon': Icons.check_circle},
+      {'value': 'cancelled', 'label': context.tr('cancelled'), 'color': Colors.grey, 'icon': Icons.cancel},
+    ];
   }
 
   Future<void> _updateStatus(String id, String status) async {
@@ -46,7 +51,7 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
       ref.invalidate(maintenanceRequestsProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Status updated to ${status.replaceAll('_', ' ')}'), backgroundColor: AppColors.success),
+          SnackBar(content: Text(context.tr('status_updated_to').replaceAll('{0}', status.replaceAll('_', ' '))), backgroundColor: AppColors.success),
         );
       }
     } catch (e) {
@@ -63,6 +68,7 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    _initStatusOptions();
     final id = GoRouterState.of(context).pathParameters['id'] ?? '';
     final requestAsync = ref.watch(maintenanceDetailProvider(id));
     final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
@@ -71,7 +77,7 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Request Details', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('request_details'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -110,7 +116,7 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
                         children: [
                           Expanded(
                             child: Text(
-                              req['title'] ?? 'Request',
+                              req['title'] ?? context.tr('request'),
                               style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark),
                             ),
                           ),
@@ -118,11 +124,11 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
                         ],
                       ),
                       const SizedBox(height: 12),
-                      _buildInfoRow(Icons.person, 'Tenant', tenant?['full_name'] ?? tenant?['user']?['full_name'] ?? 'Unknown'),
+                      _buildInfoRow(context, Icons.person, context.tr('tenant'), tenant?['full_name'] ?? tenant?['user']?['full_name'] ?? context.tr('unknown')),
                       const SizedBox(height: 8),
-                      _buildInfoRow(Icons.meeting_room, 'Unit', unit?['name'] ?? unit?['unit_number'] ?? 'N/A'),
+                      _buildInfoRow(context, Icons.meeting_room, context.tr('unit'), unit?['name'] ?? unit?['unit_number'] ?? 'N/A'),
                       const SizedBox(height: 8),
-                      _buildInfoRow(Icons.access_time, 'Submitted', createdAt),
+                      _buildInfoRow(context, Icons.access_time, context.tr('submitted'), createdAt),
                     ],
                   ),
                 ),
@@ -137,15 +143,15 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Description', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                      Text(context.tr('description'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
                       const SizedBox(height: 8),
                       Text(
-                        req['description'] ?? 'No description provided.',
+                        req['description'] ?? context.tr('no_description_provided'),
                         style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textLight),
                       ),
                       if (req['landlord_notes'] != null) ...[
                         const SizedBox(height: 16),
-                        Text('Landlord Notes', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                        Text(context.tr('landlord_notes'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
                         const SizedBox(height: 8),
                         Text(req['landlord_notes'], style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textLight)),
                       ],
@@ -153,7 +159,7 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text('Update Status', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                Text(context.tr('update_status'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 10,
@@ -178,13 +184,13 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
                 ),
                 const SizedBox(height: 16),
                 AppTextField(
-                  label: 'Response / Notes',
+                  label: context.tr('response_notes'),
                   controller: _notesController,
                   maxLines: 4,
                 ),
                 const SizedBox(height: 24),
                 PrimaryButton(
-                  text: 'Update Status',
+                  text: context.tr('update_status'),
                   isLoading: _isLoading,
                   onPressed: () => _updateStatus(id, _selectedStatus!),
                 ),
@@ -192,7 +198,7 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
                 if (req['resolved_at'] != null)
                   Center(
                     child: Text(
-                      'Resolved on ${DateFormat('dd MMM yyyy, HH:mm').format(DateTime.tryParse(req['resolved_at'].toString()) ?? DateTime.now())}',
+                      context.tr('resolved_on').replaceAll('{0}', DateFormat('dd MMM yyyy, HH:mm').format(DateTime.tryParse(req['resolved_at'].toString()) ?? DateTime.now())),
                       style: GoogleFonts.nunito(fontSize: 12, color: AppColors.success),
                     ),
                   ),
@@ -204,7 +210,7 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [

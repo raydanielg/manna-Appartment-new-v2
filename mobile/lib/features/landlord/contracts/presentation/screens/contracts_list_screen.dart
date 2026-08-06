@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -19,7 +20,7 @@ class ContractsListScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text('Contracts'),
+        title: Text(context.tr('contracts')),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
       ),
       body: RefreshIndicator(
@@ -34,7 +35,7 @@ class ContractsListScreen extends ConsumerWidget {
               _buildNewContractCard(context),
               const SizedBox(height: 16),
               if (contracts.isEmpty)
-                const EmptyState(message: 'No contracts yet. Tap above to create one.', icon: Icons.description_outlined)
+                EmptyState(message: context.tr('no_contracts_tap'), icon: Icons.description_outlined)
               else
                 ...contracts.map((c) => ContractCard(contract: c)),
             ],
@@ -74,12 +75,12 @@ class ContractsListScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'New Contract',
+                      context.tr('new_contract'),
                       style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Create a new tenancy contract',
+                      context.tr('create_new_contract'),
                       style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight),
                     ),
                   ],

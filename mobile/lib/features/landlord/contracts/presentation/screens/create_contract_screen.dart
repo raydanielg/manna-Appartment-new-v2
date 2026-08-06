@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/contracts_provider.dart';
@@ -52,16 +53,16 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
 
   String _getTenantName(Map<String, dynamic> t) {
     final userData = t['user'] as Map<String, dynamic>?;
-    return userData?['full_name'] ?? t['full_name'] ?? t['name'] ?? 'Unknown';
+    return userData?['full_name'] ?? t['full_name'] ?? t['name'] ?? context.tr('unknown');
   }
 
   String _getTenantPhone(Map<String, dynamic> t) {
     final userData = t['user'] as Map<String, dynamic>?;
-    return userData?['phone'] ?? t['phone'] ?? 'No phone';
+    return userData?['phone'] ?? t['phone'] ?? context.tr('no_phone');
   }
 
   String _getUnitName(Map<String, dynamic> u) {
-    return u['name'] ?? u['unit_number'] ?? 'Unit';
+    return u['name'] ?? u['unit_number'] ?? context.tr('unit');
   }
 
   String _formatRent(dynamic rent) {
@@ -73,7 +74,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_tenantId == null || _unitId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select tenant and unit'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(context.tr('please_select_tenant_unit')), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -93,7 +94,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
       ref.invalidate(contractsListProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Contract created successfully'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text(context.tr('contract_created')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
         );
         context.pop();
       }
@@ -115,7 +116,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('New Contract', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('new_contract'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -130,15 +131,15 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionLabel('Contract Type'),
+              _buildSectionLabel(context.tr('contract_type')),
               const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
                     child: _buildTypeCard(
                       Icons.auto_awesome_outlined,
-                      'Digital',
-                      'Auto-generated terms',
+                      context.tr('digital'),
+                      context.tr('auto_generated_terms'),
                       'digital',
                     ),
                   ),
@@ -146,23 +147,23 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
                   Expanded(
                     child: _buildTypeCard(
                       Icons.edit_note_outlined,
-                      'Manual',
-                      'Write your own terms',
+                      context.tr('manual'),
+                      context.tr('write_own_terms'),
                       'manual',
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-              _buildSectionLabel('Select Tenant'),
+              _buildSectionLabel(context.tr('select_tenant_label')),
               const SizedBox(height: 8),
               tenantsAsync.when(
                 loading: () => const LinearProgressIndicator(),
-                error: (_, __) => Text('Failed to load tenants', style: GoogleFonts.nunito(color: AppColors.error)),
+                error: (_, __) => Text(context.tr('failed_load_tenants'), style: GoogleFonts.nunito(color: AppColors.error)),
                 data: (tenants) => DropdownButtonFormField<String>(
                   value: _tenantId,
                   isExpanded: true,
-                  decoration: _dropdownDecoration('Select tenant'),
+                  decoration: _dropdownDecoration(context.tr('select_tenant')),
                   items: tenants.map<DropdownMenuItem<String>>((t) {
                     final name = _getTenantName(t);
                     return DropdownMenuItem(value: t['id'].toString(), child: Text(name, style: GoogleFonts.nunito(fontSize: 14)));
@@ -206,7 +207,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'This tenant has no unit assigned.',
+                          context.tr('tenant_no_unit'),
                           style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight),
                         ),
                       ),
@@ -215,34 +216,34 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
                 ),
               ],
               const SizedBox(height: 24),
-              _buildSectionLabel('Contract Dates'),
+              _buildSectionLabel(context.tr('contract_dates')),
               const SizedBox(height: 12),
               AppTextField(
-                label: 'Start Date',
+                label: context.tr('start_date'),
                 hint: 'YYYY-MM-DD',
                 controller: _startDateController,
                 readOnly: true,
                 onTap: () => _pickDate(_startDateController),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                validator: (v) => v == null || v.isEmpty ? context.tr('required') : null,
               ),
               const SizedBox(height: 16),
               AppTextField(
-                label: 'End Date',
+                label: context.tr('end_date'),
                 hint: 'YYYY-MM-DD',
                 controller: _endDateController,
                 readOnly: true,
                 onTap: () => _pickDate(_endDateController),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                validator: (v) => v == null || v.isEmpty ? context.tr('required') : null,
               ),
               const SizedBox(height: 24),
-              _buildSectionLabel('Payment Details'),
+              _buildSectionLabel(context.tr('payment_details')),
               const SizedBox(height: 12),
-              AppTextField(label: 'Monthly Rent (TZS)', controller: _rentController, keyboardType: TextInputType.number, validator: (v) => v == null || v.isEmpty ? 'Required' : null),
+              AppTextField(label: context.tr('monthly_rent_tzs'), controller: _rentController, keyboardType: TextInputType.number, validator: (v) => v == null || v.isEmpty ? context.tr('required') : null),
               const SizedBox(height: 16),
-              AppTextField(label: 'Deposit (TZS)', controller: _depositController, keyboardType: TextInputType.number),
+              AppTextField(label: context.tr('deposit_tzs'), controller: _depositController, keyboardType: TextInputType.number),
               if (_contractType == 'manual') ...[
                 const SizedBox(height: 24),
-                _buildSectionLabel('Contract Terms'),
+                _buildSectionLabel(context.tr('contract_terms')),
                 const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
@@ -256,7 +257,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
                     minLines: 8,
                     style: GoogleFonts.nunito(fontSize: 14, color: AppColors.textDark, height: 1.6),
                     decoration: InputDecoration(
-                      hintText: 'Write your contract terms here...\n\nExample:\n1. The tenant shall pay rent on or before the 5th of each month.\n2. The tenant shall maintain the premises in good condition.\n3. Either party may terminate with one month notice.\n4. ...',
+                      hintText: context.tr('contract_terms_hint'),
                       hintStyle: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.6),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.all(16),
@@ -265,7 +266,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
                 ),
               ],
               const SizedBox(height: 24),
-              PrimaryButton(text: 'Create Contract', isLoading: _isLoading, onPressed: _submit),
+              PrimaryButton(text: context.tr('create_contract'), isLoading: _isLoading, onPressed: _submit),
             ],
           ),
         ),
@@ -382,7 +383,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Unit', style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textLight)),
+                  Text(context.tr('unit'), style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textLight)),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -413,11 +414,11 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
                     children: [
                       Icon(Icons.payments_outlined, size: 14, color: AppColors.textLight),
                       const SizedBox(width: 6),
-                      Text('TZS $rent/month', style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+                      Text('TZS $rent/${context.tr('month')}', style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textDark)),
                       const Spacer(),
                       Icon(isOccupied ? Icons.check_circle_outline : Icons.highlight_off, size: 14, color: isOccupied ? AppColors.success : AppColors.warning),
                       const SizedBox(width: 4),
-                      Text(isOccupied ? 'Occupied' : 'Vacant', style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: isOccupied ? AppColors.success : AppColors.warning)),
+                      Text(isOccupied ? context.tr('occupied') : context.tr('vacant'), style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: isOccupied ? AppColors.success : AppColors.warning)),
                     ],
                   ),
                 ],

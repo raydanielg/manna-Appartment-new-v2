@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/status_badge.dart';
 
 class UnitCard extends StatelessWidget {
@@ -11,7 +12,7 @@ class UnitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = unit['name'] ?? unit['unit_number'] ?? 'Unit';
+    final name = unit['name'] ?? unit['unit_number'] ?? context.tr('unit');
     final rent = unit['monthly_rent'] ?? 0;
     final formattedRent = NumberFormat('#,###').format(rent is num ? rent : (double.tryParse(rent.toString()) ?? 0));
     final status = unit['status'] ?? 'vacant';
@@ -64,7 +65,7 @@ class UnitCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'TZS $formattedRent/month',
+                      'TZS $formattedRent/${context.tr('month')}',
                       style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight),
                     ),
                   ],

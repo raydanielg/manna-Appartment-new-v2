@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/primary_button.dart';
@@ -29,7 +30,7 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text('Contract Details'),
+        title: Text(context.tr('contract_details')),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
       ),
       body: contractAsync.when(
@@ -58,7 +59,7 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Contract', style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
+                      Text(context.tr('contract'), style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -67,7 +68,7 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(8)),
-                            child: Text(isManual ? 'Manual' : 'Digital', style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
+                            child: Text(isManual ? context.tr('manual') : context.tr('digital'), style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
                           ),
                         ],
                       ),
@@ -75,13 +76,13 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                _buildSection('Tenant', tenant?['full_name'] ?? tenant?['user']?['full_name'] ?? 'N/A', Icons.person_outline),
-                _buildSection('Property', property?['name'] ?? 'N/A', Icons.apartment_outlined),
-                _buildSection('Unit', unit?['name'] ?? unit?['unit_number'] ?? 'N/A', Icons.meeting_room_outlined),
-                _buildSection('Start Date', _formatDate(contract['start_date']), Icons.calendar_today_outlined),
-                _buildSection('End Date', _formatDate(contract['end_date']), Icons.event_outlined),
-                _buildSection('Monthly Rent', 'TZS ${_formatNumber(rent)}', Icons.payments_outlined),
-                _buildSection('Deposit', 'TZS ${_formatNumber(deposit)}', Icons.savings_outlined),
+                _buildSection(context.tr('tenant'), tenant?['full_name'] ?? tenant?['user']?['full_name'] ?? 'N/A', Icons.person_outline),
+                _buildSection(context.tr('property'), property?['name'] ?? 'N/A', Icons.apartment_outlined),
+                _buildSection(context.tr('unit'), unit?['name'] ?? unit?['unit_number'] ?? 'N/A', Icons.meeting_room_outlined),
+                _buildSection(context.tr('start_date'), _formatDate(contract['start_date']), Icons.calendar_today_outlined),
+                _buildSection(context.tr('end_date'), _formatDate(contract['end_date']), Icons.event_outlined),
+                _buildSection(context.tr('monthly_rent_label'), 'TZS ${_formatNumber(rent)}', Icons.payments_outlined),
+                _buildSection(context.tr('deposit'), 'TZS ${_formatNumber(deposit)}', Icons.savings_outlined),
                 const SizedBox(height: 24),
                 _buildA4Contract(context, contract),
                 const SizedBox(height: 24),
@@ -89,7 +90,7 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
                   children: [
                     Expanded(
                       child: PrimaryButton(
-                        text: 'View PDF',
+                        text: context.tr('view_pdf'),
                         icon: const Icon(Icons.picture_as_pdf, size: 18),
                         isLoading: _isPdfLoading,
                         onPressed: () => _downloadAndOpen(context, ref, id),
@@ -98,14 +99,14 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: PrimaryButton(
-                        text: 'Terminate',
+                        text: context.tr('terminate'),
                         color: AppColors.error,
                         icon: const Icon(Icons.cancel_outlined, size: 18),
                         onPressed: () async {
                           await ref.read(contractsRepositoryProvider).terminateContract(id);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Contract terminated'), backgroundColor: AppColors.warning, behavior: SnackBarBehavior.floating),
+                              SnackBar(content: Text(context.tr('contract_terminated')), backgroundColor: AppColors.warning, behavior: SnackBarBehavior.floating),
                             );
                             context.pop();
                           }
@@ -129,21 +130,21 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
                         const Icon(Icons.verified, color: AppColors.success, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text('Signed on ${_formatDate(contract['signed_at'])}', style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: AppColors.success, fontSize: 13)),
+                          child: Text(context.tr('signed_on').replaceAll('{0}', _formatDate(contract['signed_at'])), style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: AppColors.success, fontSize: 13)),
                         ),
                       ],
                     ),
                   )
                 else
                   PrimaryButton(
-                    text: 'Sign Contract',
+                    text: context.tr('sign_contract'),
                     icon: const Icon(Icons.draw, size: 18),
                     color: AppColors.info,
                     onPressed: () => context.push('/landlord/contracts/$id/sign'),
                   ),
                 const SizedBox(height: 12),
                 PrimaryButton(
-                  text: 'Delete Contract',
+                  text: context.tr('delete_contract'),
                   color: AppColors.error,
                   icon: const Icon(Icons.delete_outline, size: 18),
                   onPressed: () => _confirmDelete(context, ref, id),
@@ -162,10 +163,10 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Delete Contract', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        content: Text('Are you sure you want to delete this contract?', style: GoogleFonts.nunito(fontSize: 14)),
+        title: Text(context.tr('delete_contract'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        content: Text(context.tr('confirm_delete_contract'), style: GoogleFonts.nunito(fontSize: 14)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('cancel'))),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -174,7 +175,7 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
                 ref.invalidate(contractsListProvider);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Contract deleted'), backgroundColor: AppColors.success),
+                    SnackBar(content: Text(context.tr('contract_deleted')), backgroundColor: AppColors.success),
                   );
                   if (context.canPop()) context.pop();
                 }
@@ -186,7 +187,7 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
                 }
               }
             },
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -237,7 +238,7 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open PDF: $e'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text(context.tr('could_not_open_pdf').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
         );
       }
     } finally {

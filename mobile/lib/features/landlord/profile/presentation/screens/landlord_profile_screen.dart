@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../../core/config/app_config.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../../../../features/auth/data/models/login_response_model.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
@@ -52,16 +53,16 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Update Profile Photo', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800)),
+              Text(context.tr('update_profile_photo'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800)),
               const SizedBox(height: 16),
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: AppColors.primary),
-                title: Text('Camera', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                title: Text(context.tr('camera'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
                 onTap: () => Navigator.pop(context, ImageSource.camera),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library, color: AppColors.primary),
-                title: Text('Gallery', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                title: Text(context.tr('gallery'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
                 onTap: () => Navigator.pop(context, ImageSource.gallery),
               ),
               const SizedBox(height: 8),
@@ -80,10 +81,10 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
     setState(() => _isLoading = false);
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Avatar updated successfully'), backgroundColor: AppColors.primary),
+        SnackBar(content: Text(context.tr('avatar_updated')), backgroundColor: AppColors.primary),
       );
     } else if (mounted) {
-      final error = ref.read(authProvider).error ?? 'Failed to update avatar';
+      final error = ref.read(authProvider).error ?? context.tr('failed_update_avatar');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error), backgroundColor: Colors.red),
       );
@@ -103,10 +104,10 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
     });
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully'), backgroundColor: AppColors.primary),
+        SnackBar(content: Text(context.tr('profile_updated')), backgroundColor: AppColors.primary),
       );
     } else if (mounted) {
-      final error = ref.read(authProvider).error ?? 'Failed to update profile';
+      final error = ref.read(authProvider).error ?? context.tr('failed_update_profile');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error), backgroundColor: Colors.red),
       );
@@ -128,7 +129,7 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
       appBar: AppBar(
         backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
         elevation: 0,
-        title: Text('My Profile', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('my_profile'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -214,7 +215,7 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
                   Icon(kycApproved ? Icons.verified : Icons.pending, size: 14, color: kycApproved ? Colors.green : Colors.amber),
                   const SizedBox(width: 6),
                   Text(
-                    kycApproved ? 'KYC Verified' : 'KYC Pending',
+                    kycApproved ? context.tr('kyc_verified_badge') : context.tr('kyc_pending_status'),
                     style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: kycApproved ? Colors.green : Colors.amber),
                   ),
                 ],
@@ -223,32 +224,32 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
             const SizedBox(height: 32),
 
             // Personal Info Card
-            _buildSectionTitle(context, isDark, 'Personal Information'),
+            _buildSectionTitle(context, isDark, context.tr('personal_information')),
             const SizedBox(height: 12),
             _buildCard(
               context,
               child: Column(
                 children: [
-                  _buildField(context, label: 'Full Name', controller: _nameController, enabled: _isEditing, icon: Icons.person),
+                  _buildField(context, label: context.tr('full_name'), controller: _nameController, enabled: _isEditing, icon: Icons.person),
                   const Divider(height: 1),
-                  _buildField(context, label: 'Phone', controller: _phoneController, enabled: _isEditing, icon: Icons.phone),
+                  _buildField(context, label: context.tr('phone'), controller: _phoneController, enabled: _isEditing, icon: Icons.phone),
                   const Divider(height: 1),
-                  _buildField(context, label: 'Email', controller: _emailController, enabled: _isEditing, icon: Icons.email),
+                  _buildField(context, label: context.tr('email'), controller: _emailController, enabled: _isEditing, icon: Icons.email),
                   const Divider(height: 1),
-                  _buildInfoRow(context, 'Role', user.role.toUpperCase()),
+                  _buildInfoRow(context, context.tr('role'), user.role.toUpperCase()),
                 ],
               ),
             ),
             const SizedBox(height: 24),
 
             // Organization Card
-            _buildSectionTitle(context, isDark, 'Organization'),
+            _buildSectionTitle(context, isDark, context.tr('organization')),
             const SizedBox(height: 12),
             _buildOrgCard(context, user, isDark, kycApproved),
             const SizedBox(height: 24),
 
             if (_isEditing) PrimaryButton(
-              text: _isLoading ? 'Saving...' : 'Save Changes',
+              text: _isLoading ? context.tr('saving') : context.tr('save_changes'),
               icon: _isLoading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.save),
               onPressed: _isLoading ? null : _saveProfile,
             ),
@@ -309,18 +310,18 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    user.businessName ?? 'Organization',
+                    user.businessName ?? context.tr('organization'),
                     style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            _buildOrgRow(context, isDark, 'SMS Balance', '${user.smsBalance ?? 0}', Icons.sms_outlined, const Color(0xFF0EA5E9)),
+            _buildOrgRow(context, isDark, context.tr('sms_balance'), '${user.smsBalance ?? 0}', Icons.sms_outlined, const Color(0xFF0EA5E9)),
             const Divider(height: 24),
-            _buildOrgRow(context, isDark, 'KYC Status', kycApproved ? 'Verified' : 'Pending', kycApproved ? Icons.verified : Icons.pending, kycApproved ? Colors.green : Colors.amber),
+            _buildOrgRow(context, isDark, context.tr('kyc_status_label'), kycApproved ? context.tr('verified') : context.tr('pending'), kycApproved ? Icons.verified : Icons.pending, kycApproved ? Colors.green : Colors.amber),
             const Divider(height: 24),
-            _buildOrgRow(context, isDark, 'Account Status', isActive ? 'Active' : orgStatus, isActive ? Icons.check_circle : Icons.pause_circle, isActive ? Colors.green : Colors.orange),
+            _buildOrgRow(context, isDark, context.tr('account_status'), isActive ? context.tr('active') : orgStatus, isActive ? Icons.check_circle : Icons.pause_circle, isActive ? Colors.green : Colors.orange),
           ],
         ),
       ),
