@@ -85,12 +85,12 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
         return;
       }
 
-      final ref = providerReference ?? reference ?? '';
+      final paymentRef = providerReference ?? reference ?? '';
       setState(() {
         _isPaying = false;
         _showWaiting = true;
         _paymentStatus = 'pending';
-        _currentReference = ref;
+        _currentReference = paymentRef;
       });
 
       // Open checkout URL in browser
@@ -106,8 +106,8 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
       }
 
       // Start polling for payment status after browser opens
-      if (ref.isNotEmpty) {
-        _startPolling(ref);
+      if (paymentRef.isNotEmpty) {
+        _startPolling(paymentRef);
       }
     } catch (e) {
       final message = _extractErrorMessage(e);

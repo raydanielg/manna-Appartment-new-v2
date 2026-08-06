@@ -157,18 +157,39 @@ class SnippeService
     }
 
     /**
+     * Get session status from Snippe.
+     */
+    public function getSessionStatus(string $reference): ?array
+    {
+        try {
+            $response = Http::withHeaders($this->headers())
+                ->withOptions(['verify' => !app()->environment('local')])
+                ->get($this->baseUrl() . '/api/v1/sessions/' . $reference);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+        } catch (\Exception $e) {
+            Log::error('Snippe get session status failed: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
      * Create a hosted checkout session.
      */
     public function createSession(array $data): array
     {
+        $phone = $this->formatPhone($data['phone'] ?? '');
+
         $payload = [
             'amount' => (int) $data['amount'],
             'currency' => $data['currency'] ?? config('snippe.currency', 'TZS'),
-            'allowed_methods' => $data['allowed_methods'] ?? ['mobile_money', 'card', 'qr'],
+            'allowed_methods' => $data['allowed_methods'] ?? ['mobile_money'],
             'customer' => [
                 'name' => $data['customer_name'] ?? 'Manna User',
-                'phone' => $this->formatPhone($data['phone'] ?? ''),
-                'email' => $data['customer_email'] ?? null,
+                'phone' => '+' . $phone,
             ],
             'redirect_url' => $data['redirect_url'] ?? config('snippe.redirect_url'),
             'webhook_url' => $data['webhook_url'] ?? route('snippe.webhook'),
@@ -177,9 +198,8 @@ class SnippeService
             'expires_in' => $data['expires_in'] ?? 3600,
         ];
 
-        // Remove null customer email to avoid validation issues
-        if (empty($payload['customer']['email'])) {
-            unset($payload['customer']['email']);
+        if (!empty($data['customer_email'])) {
+            $payload['customer']['email'] = $data['customer_email'];
         }
 
         try {

@@ -269,10 +269,20 @@ class PaymentGatewayController extends Controller
         }
 
         $providerReference = $event['data']['reference'];
+        $sessionReference = $event['data']['session_reference'] ?? null;
+
         $transaction = PaymentTransaction::where('provider_reference', $providerReference)->first();
 
+        // For session-based payments, also try matching by session reference
+        if (!$transaction && $sessionReference) {
+            $transaction = PaymentTransaction::where('provider_reference', $sessionReference)->first();
+        }
+
         if (!$transaction) {
-            Log::warning('Snippe webhook transaction not found.', ['reference' => $providerReference]);
+            Log::warning('Snippe webhook transaction not found.', [
+                'reference' => $providerReference,
+                'session_reference' => $sessionReference,
+            ]);
             return response('OK', 200);
         }
 
@@ -407,7 +417,14 @@ class PaymentGatewayController extends Controller
     {
         try {
             $service = app(SnippeService::class);
-            $result = $service->getPaymentStatus($transaction->provider_reference);
+            $providerRef = $transaction->provider_reference;
+
+            // If reference looks like a session, use session API
+            if (str_starts_with($providerRef, 'sess_')) {
+                $result = $service->getSessionStatus($providerRef);
+            } else {
+                $result = $service->getPaymentStatus($providerRef);
+            }
 
             if (!$result) {
                 return;
