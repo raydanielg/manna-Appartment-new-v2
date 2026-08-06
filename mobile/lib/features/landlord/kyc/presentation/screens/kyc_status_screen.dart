@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../providers/kyc_provider.dart';
 
 class KycStatusScreen extends ConsumerStatefulWidget {
@@ -43,9 +44,9 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen>
       if (mounted) context.go('/landlord/kyc/verified');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Verification is still in progress. Please wait.'),
-          backgroundColor: Color(0xFF2563EB),
+        SnackBar(
+          content: Text(context.tr('verification_in_progress')),
+          backgroundColor: const Color(0xFF2563EB),
           behavior: SnackBarBehavior.floating,
         ),
       );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/staff_provider.dart';
@@ -38,14 +39,14 @@ class _AddStaffScreenState extends ConsumerState<AddStaffScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Staff member added'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text(context.tr('staff_added')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
         );
         context.pop();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
         );
       }
     } finally {
@@ -58,7 +59,7 @@ class _AddStaffScreenState extends ConsumerState<AddStaffScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      appBar: AppBar(title: const Text('Add Staff'), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      appBar: AppBar(title: Text(context.tr('add_staff')), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -69,21 +70,21 @@ class _AddStaffScreenState extends ConsumerState<AddStaffScreen> {
               const SizedBox(height: 16),
               AppTextField(label: 'Phone', hint: '+255...', controller: _phoneController, keyboardType: TextInputType.phone, validator: (v) => v == null || v.isEmpty ? 'Required' : null),
               const SizedBox(height: 16),
-              Text('Role', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+              Text(context.tr('role'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: _role,
                 decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)), contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
-                items: const [
-                  DropdownMenuItem(value: 'manager', child: Text('Manager')),
-                  DropdownMenuItem(value: 'accountant', child: Text('Accountant')),
-                  DropdownMenuItem(value: 'agent', child: Text('Agent')),
-                  DropdownMenuItem(value: 'caretaker', child: Text('Caretaker')),
+                items: [
+                  DropdownMenuItem(value: 'manager', child: Text(context.tr('manager'))),
+                  DropdownMenuItem(value: 'accountant', child: Text(context.tr('accountant'))),
+                  DropdownMenuItem(value: 'agent', child: Text(context.tr('agent'))),
+                  DropdownMenuItem(value: 'caretaker', child: Text(context.tr('caretaker'))),
                 ],
                 onChanged: (v) => setState(() => _role = v ?? 'manager'),
               ),
               const SizedBox(height: 24),
-              PrimaryButton(text: 'Add Staff', isLoading: _isLoading, onPressed: _submit),
+              PrimaryButton(text: context.tr('add_staff'), isLoading: _isLoading, onPressed: _submit),
             ],
           ),
         ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../auth/providers/auth_provider.dart';
+import '../../../../../core/localization/app_localizations.dart';
 
 class OrganizationSetupScreen extends ConsumerStatefulWidget {
   const OrganizationSetupScreen({super.key});
@@ -32,9 +33,9 @@ class _OrganizationSetupScreenState extends ConsumerState<OrganizationSetupScree
       );
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Organization created successfully!'),
-            backgroundColor: Color(0xFF2563EB),
+          SnackBar(
+            content: Text(context.tr('organization_created_success')),
+            backgroundColor: const Color(0xFF2563EB),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -58,7 +59,7 @@ class _OrganizationSetupScreenState extends ConsumerState<OrganizationSetupScree
           icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827)),
           onPressed: () => context.pop(),
         ),
-        title: Text('Setup Organization', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF111827))),
+        title: Text(context.tr('setup_organization'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF111827))),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -141,7 +142,7 @@ class _OrganizationSetupScreenState extends ConsumerState<OrganizationSetupScree
                     ),
                     child: _isLoading
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text('Create & Continue', style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold)),
+                        : Text(context.tr('create_continue'), style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 40),

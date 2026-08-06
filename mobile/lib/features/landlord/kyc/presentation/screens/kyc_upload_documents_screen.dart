@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../providers/kyc_provider.dart';
 
 class KycUploadDocumentsScreen extends ConsumerStatefulWidget {
@@ -71,9 +72,9 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
   Future<void> _submit() async {
     if (_idController.text.trim().isEmpty || _idFront == null || _idBack == null || _selfie == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in your ID number and all required photos.'),
-          backgroundColor: Color(0xFFEF4444),
+        SnackBar(
+          content: Text(context.tr('fill_id_and_photos')),
+          backgroundColor: const Color(0xFFEF4444),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -90,9 +91,9 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Nyaraka zako zimepokelewa! Tutazikagua na kukupa majibu ndani ya muda mfupi.'),
-          backgroundColor: Color(0xFF2563EB),
+        SnackBar(
+          content: Text(context.tr('documents_received')),
+          backgroundColor: const Color(0xFF2563EB),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -121,7 +122,7 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
             icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827)),
             onPressed: () => context.go('/landlord/kyc'),
           ),
-          title: Text('Verification', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF111827))),
+          title: Text(context.tr('verification'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF111827))),
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -180,7 +181,7 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
                                 padding: const EdgeInsets.symmetric(vertical: 8),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
-                              child: Text('Resolve Now', style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.bold)),
+                              child: Text(context.tr('resolve_now'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.bold)),
                             ),
                           ),
                         ],
@@ -240,7 +241,7 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
                     ),
                     child: kycState.isLoading
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text('Submit Verification', style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold)),
+                        : Text(context.tr('submit_verification'), style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 40),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../providers/subscription_provider.dart';
 import '../widgets/plan_card.dart';
@@ -28,7 +29,7 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
         elevation: 0,
         centerTitle: false,
         title: Text(
-          'Subscription Plans',
+          context.tr('subscription_plans'),
           style: GoogleFonts.nunito(fontWeight: FontWeight.w800, color: AppColors.textDark, fontSize: 18),
         ),
         leading: IconButton(
@@ -67,7 +68,7 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
       final success = await ref.read(freeTrialNotifierProvider.notifier).activate();
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Free trial activated!'), backgroundColor: AppColors.primary, behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text(context.tr('free_trial_activated')), backgroundColor: AppColors.primary, behavior: SnackBarBehavior.floating),
         );
         context.go('/landlord/home');
       }

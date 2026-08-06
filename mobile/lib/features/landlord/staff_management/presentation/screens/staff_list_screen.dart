@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -18,7 +19,7 @@ class StaffListScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      appBar: AppBar(title: const Text('Staff'), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      appBar: AppBar(title: Text(context.tr('staff')), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(staffListProvider),
         color: AppColors.primary,
@@ -57,7 +58,7 @@ class StaffListScreen extends ConsumerWidget {
         onPressed: () => context.push('/landlord/staff/add'),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.person_add),
-        label: const Text('Add Staff'),
+        label: Text(context.tr('add_staff')),
       ),
     );
   }

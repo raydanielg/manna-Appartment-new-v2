@@ -178,7 +178,7 @@ class PaymentDetailScreen extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
                   );
                 }
               }
@@ -295,7 +295,7 @@ class PaymentDetailScreen extends ConsumerWidget {
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
+                          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
                         );
                       }
                     }
@@ -434,9 +434,9 @@ class _PaymentReceiptScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Text('MANNA APARTMENT', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1)),
+                Text(context.tr('manna_apartment'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1)),
                 const SizedBox(height: 4),
-                Text('Electronic Fiscal Device Receipt', style: GoogleFonts.nunito(fontSize: 11, color: Colors.white70, letterSpacing: 0.5)),
+                Text(context.tr('efd_receipt'), style: GoogleFonts.nunito(fontSize: 11, color: Colors.white70, letterSpacing: 0.5)),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

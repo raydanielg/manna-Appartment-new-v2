@@ -9,6 +9,7 @@ import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:signature/signature.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/contracts_provider.dart';
@@ -39,7 +40,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
   Future<void> _placeSignature() async {
     if (_controller.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please draw your signature first'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(context.tr('please_draw_signature')), backgroundColor: AppColors.error),
       );
       return;
     }
@@ -49,7 +50,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
       _isPlaced = true;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Signature placed on document'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
+      SnackBar(content: Text(context.tr('signature_placed')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -64,7 +65,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
   Future<void> _submit() async {
     if (_signatureBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please place your signature first'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(context.tr('please_place_signature')), backgroundColor: AppColors.error),
       );
       return;
     }
@@ -82,7 +83,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
       final pdfUrl = result['pdf_url']?.toString();
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Contract signed successfully'), backgroundColor: AppColors.success),
+          SnackBar(content: Text(context.tr('contract_signed_success')), backgroundColor: AppColors.success),
         );
       }
       if (pdfUrl != null && pdfUrl.isNotEmpty) {
@@ -92,7 +93,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Signing failed: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.tr('signing_failed').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -107,7 +108,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open PDF: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.tr('could_not_open_pdf').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
         );
       }
     }
@@ -121,7 +122,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('Sign Contract', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('sign_contract'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -133,7 +134,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
         children: [
           contractAsync.when(
             loading: () => const LoadingIndicator(),
-            error: (e, _) => Center(child: Text('Failed to load contract', style: GoogleFonts.nunito(color: AppColors.error))),
+            error: (e, _) => Center(child: Text(context.tr('failed_load_contract'), style: GoogleFonts.nunito(color: AppColors.error))),
             data: (contract) => SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 340),
               child: _buildContractPreview(contract),
@@ -196,11 +197,11 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _isPlaced ? 'Signature Placed' : 'Sign Here',
+                        _isPlaced ? context.tr('signature_placed_title') : context.tr('sign_here'),
                         style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark),
                       ),
                       Text(
-                        _isPlaced ? 'Review on document and confirm' : 'Draw your signature below',
+                        _isPlaced ? context.tr('review_and_confirm') : context.tr('draw_signature_below'),
                         style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight),
                       ),
                     ],
@@ -209,7 +210,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
                 TextButton.icon(
                   onPressed: _clearSignature,
                   icon: const Icon(Icons.refresh, size: 16, color: AppColors.error),
-                  label: Text('Clear', style: GoogleFonts.nunito(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 12)),
+                  label: Text(context.tr('clear'), style: GoogleFonts.nunito(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 12)),
                 ),
               ],
             ),
@@ -236,7 +237,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
                     child: IgnorePointer(
                       child: Center(
                         child: Text(
-                          'Sign here',
+                          context.tr('sign_here'),
                           style: GoogleFonts.nunito(fontSize: 16, color: Colors.grey.shade400, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -252,7 +253,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
                 if (!_isPlaced)
                   Expanded(
                     child: PrimaryButton(
-                      text: 'Place Signature',
+                      text: context.tr('place_signature'),
                       icon: const Icon(Icons.check_circle_outline, size: 18),
                       onPressed: _placeSignature,
                     ),
@@ -260,7 +261,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
                 else
                   Expanded(
                     child: PrimaryButton(
-                      text: 'Confirm & Submit',
+                      text: context.tr('confirm_submit'),
                       isLoading: _isLoading,
                       onPressed: _submit,
                     ),
@@ -315,12 +316,12 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
             ),
             child: Column(
               children: [
-                Text('TENANCY AGREEMENT', style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1.5)),
+                Text(context.tr('tenancy_agreement'), style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1.5)),
                 const SizedBox(height: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
-                  child: Text('Contract No: $contractNo', style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white70, letterSpacing: 0.5)),
+                  child: Text(context.tr('contract_no_label').replaceAll('{0}', contractNo), style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white70, letterSpacing: 0.5)),
                 ),
               ],
             ),
@@ -330,30 +331,30 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('This Tenancy Agreement is made and executed on this day between the Landlord and the Tenant named below, whereby the Landlord agrees to let and the Tenant agrees to take on rent the premises described herein, subject to the terms and conditions set forth in this agreement.', style: GoogleFonts.nunito(fontSize: 11, color: Colors.black54, height: 1.6)),
+                Text(context.tr('tenancy_intro'), style: GoogleFonts.nunito(fontSize: 11, color: Colors.black54, height: 1.6)),
                 const SizedBox(height: 24),
                 _buildDocSection('1. PARTIES', [
-                  _buildDocRow('Landlord (Owner)', propertyName),
-                  _buildDocRow('Tenant Name', tenantName),
-                  _buildDocRow('Tenant Phone', tenantPhone),
+                  _buildDocRow(context.tr('landlord_owner'), propertyName),
+                  _buildDocRow(context.tr('tenant_name_label'), tenantName),
+                  _buildDocRow(context.tr('tenant_phone_label'), tenantPhone),
                 ]),
                 const SizedBox(height: 20),
                 _buildDocSection('2. PROPERTY DETAILS', [
-                  _buildDocRow('Property Name', propertyName),
-                  _buildDocRow('Address', propertyAddress),
-                  _buildDocRow('Unit No.', unitName),
+                  _buildDocRow(context.tr('property_name_label'), propertyName),
+                  _buildDocRow(context.tr('address_label'), propertyAddress),
+                  _buildDocRow(context.tr('unit_no_label'), unitName),
                 ]),
                 const SizedBox(height: 20),
                 _buildDocSection('3. TERM OF TENANCY', [
-                  _buildDocRow('Start Date', start),
-                  _buildDocRow('End Date', end),
-                  _buildDocRow('Duration', _calcDuration(contract['start_date']?.toString(), contract['end_date']?.toString())),
+                  _buildDocRow(context.tr('start_date_label'), start),
+                  _buildDocRow(context.tr('end_date_label'), end),
+                  _buildDocRow(context.tr('duration_label'), _calcDuration(contract['start_date']?.toString(), contract['end_date']?.toString())),
                 ]),
                 const SizedBox(height: 20),
                 _buildDocSection('4. RENT AND DEPOSIT', [
-                  _buildDocRow('Monthly Rent', 'TZS ${_formatNumber(rent)}'),
-                  _buildDocRow('Security Deposit', 'TZS ${_formatNumber(deposit)}'),
-                  _buildDocRow('Payment Due', 'On or before 5th of each month'),
+                  _buildDocRow(context.tr('monthly_rent_label'), 'TZS ${_formatNumber(rent)}'),
+                  _buildDocRow(context.tr('security_deposit_label'), 'TZS ${_formatNumber(deposit)}'),
+                  _buildDocRow(context.tr('payment_due_label'), context.tr('payment_due_value')),
                 ]),
                 const SizedBox(height: 20),
                 _buildDocSectionTitle('5. TERMS AND CONDITIONS'),
@@ -373,7 +374,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
                 const SizedBox(height: 24),
                 _buildDocSectionTitle('6. GOVERNING LAW'),
                 const SizedBox(height: 8),
-                Text('This agreement shall be governed by and construed in accordance with the laws of the United Republic of Tanzania. Any dispute arising out of this agreement shall be resolved through arbitration or competent courts of jurisdiction.', style: GoogleFonts.nunito(fontSize: 11, color: Colors.black87, height: 1.6)),
+                Text(context.tr('governing_law_text'), style: GoogleFonts.nunito(fontSize: 11, color: Colors.black87, height: 1.6)),
                 const SizedBox(height: 32),
                 _buildDocSectionTitle('7. SIGNATURES'),
                 const SizedBox(height: 20),
@@ -384,7 +385,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Landlord', style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black87)),
+                          Text(context.tr('landlord_label'), style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black87)),
                           const SizedBox(height: 8),
                           if (_signatureBytes != null)
                             Container(
@@ -397,7 +398,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
                           Container(height: 1, color: Colors.black38),
                           const SizedBox(height: 4),
                           Text(
-                            _signatureBytes != null ? 'Signed on ${_formatDate(DateTime.now().toIso8601String())}' : 'Signature & Date',
+                            _signatureBytes != null ? context.tr('signed_on_label').replaceAll('{0}', _formatDate(DateTime.now().toIso8601String())) : context.tr('signature_date'),
                             style: GoogleFonts.nunito(
                               fontSize: 9,
                               color: _signatureBytes != null ? Colors.green.shade700 : Colors.black54,
@@ -412,11 +413,11 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Tenant', style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black87)),
+                          Text(context.tr('tenant_label'), style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black87)),
                           const SizedBox(height: 24),
                           Container(height: 1, color: Colors.black38),
                           const SizedBox(height: 4),
-                          Text('Signature & Date', style: GoogleFonts.nunito(fontSize: 9, color: Colors.black54)),
+                          Text(context.tr('signature_date'), style: GoogleFonts.nunito(fontSize: 9, color: Colors.black54)),
                         ],
                       ),
                     ),
@@ -427,7 +428,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                   decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(6)),
-                  child: Text('This is a legally binding document. Both parties acknowledge having read and understood all terms and conditions herein.', style: GoogleFonts.nunito(fontSize: 9, color: Colors.black45, fontStyle: FontStyle.italic)),
+                  child: Text(context.tr('legally_binding_notice'), style: GoogleFonts.nunito(fontSize: 9, color: Colors.black45, fontStyle: FontStyle.italic)),
                 ),
               ],
             ),
@@ -507,16 +508,20 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
   }
 
   String _calcDuration(String? start, String? end) {
-    if (start == null || end == null) return 'Custom';
+    if (start == null || end == null) return context.tr('custom_duration');
     final startDate = DateTime.tryParse(start);
     final endDate = DateTime.tryParse(end);
-    if (startDate == null || endDate == null) return 'Custom';
+    if (startDate == null || endDate == null) return context.tr('custom_duration');
     final months = (endDate.year - startDate.year) * 12 + (endDate.month - startDate.month);
-    if (months <= 0) return 'Custom';
+    if (months <= 0) return context.tr('custom_duration');
     if (months % 12 == 0) {
       final years = months ~/ 12;
-      return '$years year${years > 1 ? 's' : ''}';
+      return years > 1
+          ? context.tr('year_plural').replaceAll('{0}', years.toString())
+          : context.tr('year_singular').replaceAll('{0}', years.toString());
     }
-    return '$months month${months > 1 ? 's' : ''}';
+    return months > 1
+        ? context.tr('month_plural').replaceAll('{0}', months.toString())
+        : context.tr('month_singular').replaceAll('{0}', months.toString());
   }
 }

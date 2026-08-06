@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/primary_button.dart';
@@ -184,7 +185,7 @@ class CurrentPlanScreen extends ConsumerWidget {
                               final success = await ref.read(freeTrialNotifierProvider.notifier).activate();
                               if (success && context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Free trial activated! Enjoy the dashboard.'), backgroundColor: Color(0xFF2563EB), behavior: SnackBarBehavior.floating),
+                                  SnackBar(content: Text(context.tr('free_trial_activated_dashboard')), backgroundColor: const Color(0xFF2563EB), behavior: SnackBarBehavior.floating),
                                 );
                                 context.go('/landlord/home');
                               }
@@ -199,7 +200,7 @@ class CurrentPlanScreen extends ConsumerWidget {
                             ),
                             child: isTrialLoading 
                               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                              : Text('Activate Trial', style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 14)),
+                              : Text(context.tr('activate_trial'), style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 14)),
                           ),
                         ),
                       ],
@@ -247,7 +248,7 @@ class CurrentPlanScreen extends ConsumerWidget {
     final invoicesAsync = ref.watch(subscriptionInvoicesProvider);
     return invoicesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
-      error: (e, _) => Text('Could not load history.', style: GoogleFonts.nunito(color: const Color(0xFF6B7280))),
+      error: (e, _) => Text(context.tr('could_not_load_history'), style: GoogleFonts.nunito(color: const Color(0xFF6B7280))),
       data: (invoices) {
         if (invoices.isEmpty) {
           return Container(

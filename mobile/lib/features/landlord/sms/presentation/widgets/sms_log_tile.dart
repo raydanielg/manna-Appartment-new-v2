@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/status_badge.dart';
 
 class SmsLogTile extends StatelessWidget {
@@ -17,7 +18,7 @@ class SmsLogTile extends StatelessWidget {
           decoration: BoxDecoration(color: AppColors.info.withValues(alpha: isDark ? 0.15 : 0.1), borderRadius: BorderRadius.circular(12)),
           child: Image.asset('assets/icons/sms.png', width: 20, height: 20, errorBuilder: (_, __, ___) => const Icon(Icons.sms, color: AppColors.info, size: 20)),
         ),
-        title: Text(log['recipient'] ?? 'Unknown', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+        title: Text(log['recipient'] ?? context.tr('unknown'), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
         subtitle: Text(log['message'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
         trailing: StatusBadge(status: log['status'] ?? 'sent'),
       ),

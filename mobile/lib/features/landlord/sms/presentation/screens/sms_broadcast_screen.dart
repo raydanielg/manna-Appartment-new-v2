@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/sms_provider.dart';
@@ -21,38 +22,42 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
   bool _autoSend = false;
   bool _isLoading = false;
 
-  final _templates = <_SmsTemplate>[
-    _SmsTemplate(
-      icon: Icons.payments,
-      label: 'Rent Reminder',
-      message: 'Habari, hii ni ukumbusho wa kodi yako ya mwezi. Tafadhali lipa mapema ili kuepuka usumbufu. Asante - Manna Apartment.',
-    ),
-    _SmsTemplate(
-      icon: Icons.check_circle,
-      label: 'Payment Received',
-      message: 'Asante kwa malipo yako. Tulipokea kiasi chako cha kodi. Mwisho wa mwezi utapata risiti yako. - Manna Apartment',
-    ),
-    _SmsTemplate(
-      icon: Icons.build,
-      label: 'Maintenance Notice',
-      message: 'Tunakujulisha kuna matengenezo ya maji/umeme kwenye jengo letu tarehe ____. Tafadhali jipangalie. Asante - Manna Apartment',
-    ),
-    _SmsTemplate(
-      icon: Icons.celebration,
-      label: 'General Notice',
-      message: 'Habari, tunakutaarifu kuhusu mabadiliko ya utawala wa jengo. Kwa maelezo zaidi wasiliana nasi. Asante - Manna Apartment',
-    ),
-    _SmsTemplate(
-      icon: Icons.warning,
-      label: 'Overdue Notice',
-      message: 'Kodi yako haijalipwa bado. Tafadhali lipa ndani ya siku 3 zijazo ili kuepuka hatua za kisheria. Asante - Manna Apartment',
-    ),
-    _SmsTemplate(
-      icon: Icons.meeting_room,
-      label: 'Meeting Notice',
-      message: 'Kuna mkutano wa wapangaji tarehe ____ saa ____ kwenye ofisi ya jengo. Kuja ni muhimu. Asante - Manna Apartment',
-    ),
-  ];
+  final _templates = <_SmsTemplate>[];
+
+  void _initTemplates() {
+    _templates.addAll([
+      _SmsTemplate(
+        icon: Icons.payments,
+        label: context.tr('rent_reminder'),
+        message: 'Habari, hii ni ukumbusho wa kodi yako ya mwezi. Tafadhali lipa mapema ili kuepuka usumbufu. Asante - Manna Apartment.',
+      ),
+      _SmsTemplate(
+        icon: Icons.check_circle,
+        label: context.tr('payment_received'),
+        message: 'Asante kwa malipo yako. Tulipokea kiasi chako cha kodi. Mwisho wa mwezi utapata risiti yako. - Manna Apartment',
+      ),
+      _SmsTemplate(
+        icon: Icons.build,
+        label: context.tr('maintenance_notice'),
+        message: 'Tunakujulisha kuna matengenezo ya maji/umeme kwenye jengo letu tarehe ____. Tafadhali jipangalie. Asante - Manna Apartment',
+      ),
+      _SmsTemplate(
+        icon: Icons.celebration,
+        label: context.tr('general_notice'),
+        message: 'Habari, tunakutaarifu kuhusu mabadiliko ya utawala wa jengo. Kwa maelezo zaidi wasiliana nasi. Asante - Manna Apartment',
+      ),
+      _SmsTemplate(
+        icon: Icons.warning,
+        label: context.tr('overdue_notice'),
+        message: 'Kodi yako haijalipwa bado. Tafadhali lipa ndani ya siku 3 zijazo ili kuepuka hatua za kisheria. Asante - Manna Apartment',
+      ),
+      _SmsTemplate(
+        icon: Icons.meeting_room,
+        label: context.tr('meeting_notice'),
+        message: 'Kuna mkutano wa wapangaji tarehe ____ saa ____ kwenye ofisi ya jengo. Kuja ni muhimu. Asante - Manna Apartment',
+      ),
+    ]);
+  }
 
   @override
   void dispose() {
@@ -81,7 +86,7 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
     final message = _messageController.text.trim();
     if (message.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tafadhali andika ujumbe'), backgroundColor: AppColors.error),
+        SnackBar(content: Text(context.tr('please_write_message')), backgroundColor: AppColors.error),
       );
       return;
     }
@@ -96,7 +101,7 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
         final numbers = _customNumbersController.text.split(',').map((n) => n.trim()).where((n) => n.isNotEmpty).toList();
         if (numbers.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tafadhali weka namba ya simu'), backgroundColor: AppColors.error),
+            SnackBar(content: Text(context.tr('please_enter_phone')), backgroundColor: AppColors.error),
           );
           return;
         }
@@ -106,14 +111,14 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
       ref.invalidate(smsBalanceProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ujumbe umetumwa kwa ${result['sent_count'] ?? 0} watu'), backgroundColor: AppColors.success),
+          SnackBar(content: Text(context.tr('message_sent_to').replaceAll('{0}', '${result['sent_count'] ?? 0}')), backgroundColor: AppColors.success),
         );
         _messageController.clear();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Imeshindikana: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.tr('send_failed').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -124,6 +129,7 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    _initTemplates();
     final balanceAsync = ref.watch(smsBalanceProvider);
     final messageText = _messageController.text;
     final smsPerMessage = _calcSmsCount(messageText);
@@ -131,7 +137,7 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('SMS Broadcast', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('sms_broadcast'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -167,7 +173,7 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
                   children: [
                     Icon(Icons.error_outline, color: Colors.red.shade400),
                     const SizedBox(width: 12),
-                    Expanded(child: Text('Imeshindwa kupata salio la SMS', style: GoogleFonts.nunito(fontSize: 13, color: Colors.red.shade700))),
+                    Expanded(child: Text(context.tr('failed_load_sms_balance'), style: GoogleFonts.nunito(fontSize: 13, color: Colors.red.shade700))),
                   ],
                 ),
               ),
@@ -186,12 +192,12 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
                       children: [
                         const Icon(Icons.sms, color: Colors.white, size: 20),
                         const SizedBox(width: 8),
-                        Text('Salio la SMS', style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white70)),
+                        Text(context.tr('sms_balance_label'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white70)),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Text('$balance', style: GoogleFonts.nunito(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white)),
-                    Text('SMS zilizobaki kutoka kwenye usajili wako', style: GoogleFonts.nunito(fontSize: 11, color: Colors.white60)),
+                    Text(context.tr('sms_remaining'), style: GoogleFonts.nunito(fontSize: 11, color: Colors.white60)),
                   ],
                 ),
               ),
@@ -199,22 +205,22 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
             const SizedBox(height: 24),
 
             // Recipients
-            Text('Wapokeaji', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+            Text(context.tr('recipients'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
             const SizedBox(height: 10),
             Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [
-                _buildRecipientChip('Wapangaji Wote', 'all_tenants'),
-                _buildRecipientChip('Waliopo Active', 'active_tenants'),
-                _buildRecipientChip('Walioko Deni', 'overdue_tenants'),
-                _buildRecipientChip('Namba Maalum', 'custom_numbers'),
+                _buildRecipientChip(context.tr('all_tenants'), 'all_tenants'),
+                _buildRecipientChip(context.tr('active_tenants'), 'active_tenants'),
+                _buildRecipientChip(context.tr('overdue_tenants'), 'overdue_tenants'),
+                _buildRecipientChip(context.tr('custom_numbers'), 'custom_numbers'),
               ],
             ),
             if (_recipientType == 'custom_numbers') ...[
               const SizedBox(height: 16),
               AppTextField(
-                label: 'Namba za Simu',
+                label: context.tr('phone_numbers'),
                 hint: '+255712..., +255713...',
                 controller: _customNumbersController,
                 maxLines: 3,
@@ -223,10 +229,10 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
             const SizedBox(height: 24),
 
             // Message
-            Text('Ujumbe', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+            Text(context.tr('message'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
             const SizedBox(height: 8),
             AppTextField(
-              label: 'Andika ujumbe hapa',
+              label: context.tr('type_message_here'),
               controller: _messageController,
               maxLines: 5,
               onChanged: (_) => setState(() {}),
@@ -263,7 +269,7 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
             const SizedBox(height: 20),
 
             // Quick templates
-            Text('Violezo vya Haraka', style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: isDark ? Colors.white60 : AppColors.textLight)),
+            Text(context.tr('quick_templates'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: isDark ? Colors.white60 : AppColors.textLight)),
             const SizedBox(height: 10),
             ListView.separated(
               shrinkWrap: true,
@@ -332,13 +338,13 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text('Hifadhi kama ukumbusho wa otomatiki', style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white : AppColors.textDark)),
+                    child: Text(context.tr('auto_save_reminder'), style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white : AppColors.textDark)),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            PrimaryButton(text: 'Tuma Ujumbe', isLoading: _isLoading, onPressed: _send),
+            PrimaryButton(text: context.tr('send_message'), isLoading: _isLoading, onPressed: _send),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
@@ -346,7 +352,7 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
                 onPressed: () {
                   if (context.canPop()) context.pop();
                 },
-                child: Text('Ghairi', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                child: Text(context.tr('cancel_btn'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
               ),
             ),
           ],

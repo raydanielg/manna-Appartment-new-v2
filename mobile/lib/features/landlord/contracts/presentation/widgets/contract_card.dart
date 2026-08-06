@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/status_badge.dart';
 import '../../providers/contracts_provider.dart';
 
@@ -13,7 +14,7 @@ class ContractCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tenantName = contract['tenant']?['full_name'] ?? contract['tenant']?['user']?['full_name'] ?? 'Unknown';
+    final tenantName = contract['tenant']?['full_name'] ?? contract['tenant']?['user']?['full_name'] ?? context.tr('unknown');
     final unitName = contract['unit']?['name'] ?? contract['unit']?['unit_number'] ?? 'N/A';
     final startDate = _formatDate(contract['start_date']);
     final endDate = _formatDate(contract['end_date']);
@@ -56,7 +57,7 @@ class ContractCard extends ConsumerWidget {
                       children: [
                         Text(tenantName, style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark), maxLines: 1, overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 2),
-                        Text('Unit: $unitName', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text('${context.tr('unit')}: $unitName', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
@@ -72,10 +73,10 @@ class ContractCard extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Expanded(child: _buildDateItem(Icons.play_arrow_outlined, 'Start', startDate)),
+                    Expanded(child: _buildDateItem(Icons.play_arrow_outlined, context.tr('start_label'), startDate)),
                     Container(width: 1, height: 28, color: Colors.grey.shade300),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildDateItem(Icons.stop_outlined, 'End', endDate)),
+                    Expanded(child: _buildDateItem(Icons.stop_outlined, context.tr('end_label'), endDate)),
                   ],
                 ),
               ),
@@ -88,13 +89,13 @@ class ContractCard extends ConsumerWidget {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Download failed: $e'), backgroundColor: AppColors.error),
+                        SnackBar(content: Text(context.tr('download_failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
                       );
                     }
                   }
                 },
                 icon: const Icon(Icons.download, size: 16),
-                label: Text('Download PDF', style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700)),
+                label: Text(context.tr('download_pdf'), style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700)),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),

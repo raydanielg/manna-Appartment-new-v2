@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 
 class InvoiceDetailScreen extends StatelessWidget {
   final Map<String, dynamic> invoice;
@@ -35,7 +36,7 @@ class InvoiceDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('EFD Receipt', style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        title: Text(context.tr('efd_receipt'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -72,7 +73,7 @@ class InvoiceDetailScreen extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _downloadPdf(context, invoice, planName, amountDouble, paid, startDate, endDate, receiptNo, createdAt, invoiceId),
                     icon: const Icon(Icons.download, size: 18),
-                    label: Text('Download PDF', style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13)),
+                    label: Text(context.tr('download_pdf'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -84,7 +85,7 @@ class InvoiceDetailScreen extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _sharePdf(context, invoice, planName, amountDouble, paid, startDate, endDate, receiptNo, createdAt, invoiceId),
                     icon: const Icon(Icons.share, size: 18),
-                    label: Text('Share', style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13)),
+                    label: Text(context.tr('share'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -123,9 +124,9 @@ class InvoiceDetailScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Text('MANNA APARTMENT', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1)),
+                Text(context.tr('manna_apartment'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1)),
                 const SizedBox(height: 4),
-                Text('Electronic Fiscal Device Receipt', style: GoogleFonts.nunito(fontSize: 11, color: Colors.white70, letterSpacing: 0.5)),
+                Text(context.tr('efd_receipt'), style: GoogleFonts.nunito(fontSize: 11, color: Colors.white70, letterSpacing: 0.5)),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -162,9 +163,9 @@ class InvoiceDetailScreen extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('TOTAL AMOUNT', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
+                      Text(context.tr('total_amount'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
                       Text(
-                        amountFormatted == '0' ? 'FREE' : 'TZS $amountFormatted',
+                        amountFormatted == '0' ? context.tr('free_label') : 'TZS $amountFormatted',
                         style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary),
                       ),
                     ],
@@ -173,9 +174,9 @@ class InvoiceDetailScreen extends StatelessWidget {
                 _buildDivider(isDark),
                 const SizedBox(height: 12),
                 // Footer
-                Text('This is a computer generated receipt.', style: GoogleFonts.nunito(fontSize: 10, color: isDark ? Colors.white38 : Colors.grey.shade500, fontStyle: FontStyle.italic)),
+                Text(context.tr('computer_generated_receipt'), style: GoogleFonts.nunito(fontSize: 10, color: isDark ? Colors.white38 : Colors.grey.shade500, fontStyle: FontStyle.italic)),
                 const SizedBox(height: 4),
-                Text('Thank you for your subscription!', style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white60 : AppColors.textLight)),
+                Text(context.tr('thank_you_subscription'), style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white60 : AppColors.textLight)),
               ],
             ),
           ),
@@ -330,7 +331,7 @@ class InvoiceDetailScreen extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate PDF: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.tr('failed_generate_pdf').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
         );
       }
     }
@@ -351,7 +352,7 @@ class InvoiceDetailScreen extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to share PDF: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.tr('failed_share_pdf').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
         );
       }
     }
