@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -28,7 +29,7 @@ class ContractsListScreen extends ConsumerWidget {
         color: AppColors.primary,
         child: contractsAsync.when(
           loading: () => const LoadingIndicator(),
-          error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(contractsListProvider)),
+          error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(contractsListProvider)),
           data: (contracts) => ListView(
             padding: const EdgeInsets.all(16),
             children: [

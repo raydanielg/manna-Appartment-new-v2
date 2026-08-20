@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -29,7 +30,16 @@ class UnitsListScreen extends ConsumerWidget {
         color: AppColors.primary,
         child: unitsAsync.when(
           loading: () => const LoadingIndicator(),
-          error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(unitsListProvider(propertyId))),
+          error: (e, _) {
+            final message = AppError.getMessage(e);
+            final isSetup = AppError.isSetupError(e);
+            return ErrorState(
+              message: message,
+              onRetry: () => ref.invalidate(unitsListProvider(propertyId)),
+              onAction: isSetup ? () => context.go('/landlord/subscription') : null,
+              actionLabel: context.tr('complete_setup'),
+            );
+          },
           data: (units) => ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -80,7 +90,7 @@ class UnitsListScreen extends ConsumerWidget {
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+                          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
                         );
                         ref.invalidate(unitsListProvider(propertyId));
                       }

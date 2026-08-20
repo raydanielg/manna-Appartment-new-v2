@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -157,7 +158,7 @@ class _AdminLandlordsScreenState extends ConsumerState<AdminLandlordsScreen> {
               color: AppColors.primary,
               child: landlordsAsync.when(
                 loading: () => const LoadingIndicator(),
-                error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(adminLandlordsProvider)),
+                error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(adminLandlordsProvider)),
                 data: (landlords) {
                   if (landlords.isEmpty) {
                     return const EmptyState(message: 'No landlords found.');

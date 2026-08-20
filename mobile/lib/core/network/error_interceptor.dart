@@ -41,6 +41,31 @@ class ErrorInterceptor extends Interceptor {
       return;
     }
 
+    // Handle 403 Forbidden - extract clean message from server
+    if (statusCode == 403) {
+      if (data is Map) {
+        final serverMsg = data['message']?.toString() ?? '';
+        if (serverMsg.isNotEmpty) {
+          message = serverMsg;
+        }
+      }
+      err = err.copyWith(error: message);
+      handler.next(err);
+      return;
+    }
+
+    // Handle 404 Not Found
+    if (statusCode == 404) {
+      if (data is Map && data['message'] is String && (data['message'] as String).isNotEmpty) {
+        message = data['message'];
+      } else {
+        message = 'The requested resource was not found.';
+      }
+      err = err.copyWith(error: message);
+      handler.next(err);
+      return;
+    }
+
     if (data is Map) {
       if (data['message'] is String && (data['message'] as String).isNotEmpty) {
         message = data['message'];

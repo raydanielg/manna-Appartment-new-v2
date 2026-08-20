@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/primary_button.dart';
@@ -35,7 +36,7 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
       ),
       body: contractAsync.when(
         loading: () => const LoadingIndicator(),
-        error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(contractDetailProvider(id))),
+        error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(contractDetailProvider(id))),
         data: (contract) {
           final tenant = contract['tenant'];
           final unit = contract['unit'];
@@ -182,7 +183,7 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
                   );
                 }
               }
@@ -238,7 +239,7 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('could_not_open_pdf').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text(context.tr('could_not_open_pdf').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
         );
       }
     } finally {

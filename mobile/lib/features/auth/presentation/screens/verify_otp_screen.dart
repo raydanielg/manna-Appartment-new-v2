@@ -199,7 +199,8 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: AuthColors.primary,
                     disabledForegroundColor: Colors.white,
-                    elevation: 0,
+                    elevation: 4,
+                    shadowColor: AuthColors.primary.withValues(alpha: 0.35),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),

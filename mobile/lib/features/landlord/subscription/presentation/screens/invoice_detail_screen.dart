@@ -9,6 +9,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 
 class InvoiceDetailScreen extends StatelessWidget {
   final Map<String, dynamic> invoice;
@@ -331,7 +332,7 @@ class InvoiceDetailScreen extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_generate_pdf').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.tr('failed_generate_pdf').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
         );
       }
     }
@@ -352,7 +353,7 @@ class InvoiceDetailScreen extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_share_pdf').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.tr('failed_share_pdf').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
         );
       }
     }

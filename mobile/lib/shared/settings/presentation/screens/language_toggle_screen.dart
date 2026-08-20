@@ -49,26 +49,32 @@ class LanguageToggleScreen extends ConsumerWidget {
                 border: selected ? Border.all(color: AppColors.primary, width: 2) : null,
                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
               ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                leading: Text(lang['flag'] ?? '', style: const TextStyle(fontSize: 24)),
-                title: Text(lang['name'] ?? '', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-                subtitle: Text(lang['code'] == 'en' ? 'English' : 'Kiswahili', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
-                trailing: selected
-                    ? Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                        child: const Icon(Icons.check, color: Colors.white, size: 16),
-                      )
-                    : null,
-                onTap: () async {
-                  await ref.read(localeProvider.notifier).setLocale(lang['code']!);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${context.tr('language_changed')} ${lang['name']}'), backgroundColor: AppColors.success),
-                    );
-                  }
-                },
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                clipBehavior: Clip.antiAlias,
+                child: ListTile(
+                  tileColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: Text(lang['flag'] ?? '', style: const TextStyle(fontSize: 24)),
+                  title: Text(lang['name'] ?? '', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+                  subtitle: Text(lang['code'] == 'en' ? 'English' : 'Kiswahili', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+                  trailing: selected
+                      ? Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                          child: const Icon(Icons.check, color: Colors.white, size: 16),
+                        )
+                      : null,
+                  onTap: () async {
+                    await ref.read(localeProvider.notifier).setLocale(lang['code']!);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${context.tr('language_changed')} ${lang['name']}'), backgroundColor: AppColors.success),
+                      );
+                    }
+                  },
+                ),
               ),
             );
           }),

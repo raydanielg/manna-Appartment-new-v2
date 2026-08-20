@@ -11,6 +11,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/status_badge.dart';
@@ -44,7 +45,7 @@ class PaymentDetailScreen extends ConsumerWidget {
       ),
       body: paymentAsync.when(
         loading: () => const LoadingIndicator(),
-        error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(paymentDetailProvider(id))),
+        error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(paymentDetailProvider(id))),
         data: (payment) {
           final rawAmount = payment['amount'];
           final amount = (rawAmount is num
@@ -178,7 +179,7 @@ class PaymentDetailScreen extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
                   );
                 }
               }
@@ -295,7 +296,7 @@ class PaymentDetailScreen extends ConsumerWidget {
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+                          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
                         );
                       }
                     }
@@ -642,7 +643,7 @@ class _PaymentReceiptScreen extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_generate_pdf').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.tr('failed_generate_pdf').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
         );
       }
     }
@@ -660,7 +661,7 @@ class _PaymentReceiptScreen extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_share_pdf').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+          SnackBar(content: Text(context.tr('failed_share_pdf').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
         );
       }
     }

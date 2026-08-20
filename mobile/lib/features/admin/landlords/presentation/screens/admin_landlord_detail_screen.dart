@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -181,7 +182,7 @@ class _AdminLandlordDetailScreenState extends ConsumerState<AdminLandlordDetailS
       ),
       body: landlordAsync.when(
         loading: () => const LoadingIndicator(),
-        error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(adminLandlordDetailProvider(id))),
+        error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(adminLandlordDetailProvider(id))),
         data: (org) {
           final status = org['status'] ?? 'active';
           final owner = org['owner'];

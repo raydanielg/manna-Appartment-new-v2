@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/status_badge.dart';
 import '../../providers/contracts_provider.dart';
 
@@ -89,7 +90,7 @@ class ContractCard extends ConsumerWidget {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(context.tr('download_failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+                        SnackBar(content: Text(context.tr('download_failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
                       );
                     }
                   }

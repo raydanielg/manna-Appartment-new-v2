@@ -98,7 +98,8 @@ class _KycVerifiedScreenState extends ConsumerState<KycVerifiedScreen>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2563EB),
                       foregroundColor: Colors.white,
-                      elevation: 0,
+                      elevation: 4,
+                      shadowColor: const Color(0xFF2563EB).withValues(alpha: 0.35),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

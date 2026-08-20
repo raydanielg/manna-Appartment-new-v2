@@ -29,9 +29,10 @@ class PrimaryButton extends StatelessWidget {
         backgroundColor: backgroundColor ?? color ?? AppColors.primary,
         foregroundColor: foregroundColor ?? Colors.white,
         disabledBackgroundColor: (backgroundColor ?? color)?.withValues(alpha: 0.6) ?? AppColors.primary.withValues(alpha: 0.6),
-        minimumSize: const Size(double.infinity, 52),
+        minimumSize: const Size(double.infinity, 54),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        elevation: 0,
+        elevation: 4,
+        shadowColor: (backgroundColor ?? color ?? AppColors.primary).withValues(alpha: 0.4),
       ),
       child: isLoading
           ? const SizedBox(

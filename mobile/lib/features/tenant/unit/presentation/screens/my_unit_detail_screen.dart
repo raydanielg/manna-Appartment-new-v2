@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/status_badge.dart';
@@ -45,7 +46,7 @@ class MyUnitDetailScreen extends ConsumerWidget {
               ),
             );
           }
-          return ErrorState(message: e.toString(), onRetry: () => ref.invalidate(myUnitProvider));
+          return ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(myUnitProvider));
         },
         data: (unit) => SingleChildScrollView(
           padding: const EdgeInsets.all(20),

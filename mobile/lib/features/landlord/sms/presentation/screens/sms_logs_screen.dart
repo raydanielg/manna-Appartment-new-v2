@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -24,7 +25,7 @@ class SmsLogsScreen extends ConsumerWidget {
         color: AppColors.primary,
         child: logsAsync.when(
           loading: () => const LoadingIndicator(),
-          error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(smsLogsProvider)),
+          error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(smsLogsProvider)),
           data: (logs) => logs.isEmpty
               ? EmptyState(message: context.tr('no_sms_logs'), icon: Icons.sms_outlined)
               : ListView.builder(padding: const EdgeInsets.all(16), itemCount: logs.length, itemBuilder: (c, i) => SmsLogTile(log: logs[i])),

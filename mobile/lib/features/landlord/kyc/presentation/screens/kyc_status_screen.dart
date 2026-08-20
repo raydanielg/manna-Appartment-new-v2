@@ -155,7 +155,8 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen>
                       foregroundColor: Colors.white,
                       disabledBackgroundColor: const Color(0xFF2563EB),
                       disabledForegroundColor: Colors.white,
-                      elevation: 0,
+                      elevation: 4,
+                      shadowColor: const Color(0xFF2563EB).withValues(alpha: 0.35),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

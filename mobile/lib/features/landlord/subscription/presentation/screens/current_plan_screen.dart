@@ -4,9 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
-import '../../../../../core/widgets/loading_indicator.dart';
-import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/subscription_provider.dart';
 
 class CurrentPlanScreen extends ConsumerWidget {
@@ -54,7 +53,7 @@ class CurrentPlanScreen extends ConsumerWidget {
       ),
       body: planAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
-        error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(currentPlanProvider)),
+        error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(currentPlanProvider)),
         data: (plan) {
           final hasActivePlan = plan.isNotEmpty && _isActive(plan);
           final planName = plan['plan']?['name'] ?? plan['plan_name'] ?? 'No Plan';
@@ -169,25 +168,32 @@ class CurrentPlanScreen extends ConsumerWidget {
                           style: GoogleFonts.nunito(fontSize: 13, color: const Color(0xFF2563EB).withValues(alpha: 0.8), fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 16),
-                        if (freeTrialState.hasError)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Text(
-                              freeTrialState.error.toString(),
-                              style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
-                            ),
-                          ),
                         SizedBox(
                           width: double.infinity,
                           height: 48,
                           child: ElevatedButton(
-                            onPressed: isTrialLoading ? () {} : () async {
+                            onPressed: isTrialLoading ? null : () async {
                               final success = await ref.read(freeTrialNotifierProvider.notifier).activate();
                               if (success && context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(context.tr('free_trial_activated_dashboard')), backgroundColor: const Color(0xFF2563EB), behavior: SnackBarBehavior.floating),
+                                  SnackBar(content: Text(context.tr('free_trial_activated_dashboard')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
                                 );
                                 context.go('/landlord/home');
+                              } else if (context.mounted) {
+                                final errState = ref.read(freeTrialNotifierProvider);
+                                final errMsg = errState.maybeWhen(
+                                  error: (e, _) => AppError.getMessage(e),
+                                  orElse: () => 'Failed to activate free trial. You may already have an active subscription.',
+                                );
+                                ref.read(freeTrialNotifierProvider.notifier).clearError();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(errMsg),
+                                    backgroundColor: AppColors.error,
+                                    behavior: SnackBarBehavior.floating,
+                                    duration: const Duration(seconds: 4),
+                                  ),
+                                );
                               }
                             },
                             style: ElevatedButton.styleFrom(
@@ -195,7 +201,8 @@ class CurrentPlanScreen extends ConsumerWidget {
                               foregroundColor: Colors.white,
                               disabledBackgroundColor: const Color(0xFF2563EB),
                               disabledForegroundColor: Colors.white,
-                              elevation: 0,
+                              elevation: 4,
+                              shadowColor: const Color(0xFF2563EB).withValues(alpha: 0.35),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
                             child: isTrialLoading 
@@ -217,7 +224,8 @@ class CurrentPlanScreen extends ConsumerWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: hasActivePlan ? Colors.white : const Color(0xFF2563EB),
                       foregroundColor: hasActivePlan ? const Color(0xFF2563EB) : Colors.white,
-                      elevation: 0,
+                      elevation: hasActivePlan ? 0 : 4,
+                      shadowColor: const Color(0xFF2563EB).withValues(alpha: 0.35),
                       side: hasActivePlan ? const BorderSide(color: Color(0xFF2563EB), width: 1.5) : BorderSide.none,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
@@ -285,6 +293,7 @@ class CurrentPlanScreen extends ConsumerWidget {
                 border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: ListTile(
+                tileColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 leading: Container(
                   width: 40,

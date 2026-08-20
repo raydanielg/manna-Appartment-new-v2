@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/error_state.dart';
@@ -49,7 +50,7 @@ class MyPaymentsScreen extends ConsumerWidget {
                 ),
               );
             }
-            return ErrorState(message: e.toString(), onRetry: () => ref.invalidate(myPaymentsProvider));
+            return ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(myPaymentsProvider));
           },
           data: (payments) => payments.isEmpty
               ? EmptyState(message: context.tr('no_payment_records'), icon: Icons.payments_outlined)

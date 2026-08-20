@@ -237,6 +237,7 @@
   "loading": "Loading...",
   "error": "Error",
   "retry": "Retry",
+  "ok": "OK",
   "close": "Close",
   "yes": "Yes",
   "no": "No",

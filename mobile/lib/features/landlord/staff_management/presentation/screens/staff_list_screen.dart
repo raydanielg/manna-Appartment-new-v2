@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -25,7 +26,7 @@ class StaffListScreen extends ConsumerWidget {
         color: AppColors.primary,
         child: staffAsync.when(
           loading: () => const LoadingIndicator(),
-          error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(staffListProvider)),
+          error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(staffListProvider)),
           data: (staff) => staff.isEmpty
               ? EmptyState(message: context.tr('no_staff_members'), icon: Icons.badge_outlined)
               : ListView.builder(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/status_badge.dart';
@@ -36,7 +37,16 @@ class UnitDetailScreen extends ConsumerWidget {
       ),
       body: unitAsync.when(
         loading: () => const LoadingIndicator(),
-        error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(unitDetailProvider(id))),
+        error: (e, _) {
+          final message = AppError.getMessage(e);
+          final isSetup = AppError.isSetupError(e);
+          return ErrorState(
+            message: message,
+            onRetry: () => ref.invalidate(unitDetailProvider(id)),
+            onAction: isSetup ? () => context.go('/landlord/subscription') : null,
+            actionLabel: context.tr('complete_setup'),
+          );
+        },
         data: (unit) => SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -128,7 +138,7 @@ class UnitDetailScreen extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
                   );
                 }
               }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../providers/properties_provider.dart';
@@ -35,7 +36,7 @@ class PropertyDetailScreen extends ConsumerWidget {
       ),
       body: propertyAsync.when(
         loading: () => const LoadingIndicator(),
-        error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(propertyDetailProvider(id))),
+        error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(propertyDetailProvider(id))),
         data: (property) => SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -140,7 +141,7 @@ class PropertyDetailScreen extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
                   );
                 }
               }

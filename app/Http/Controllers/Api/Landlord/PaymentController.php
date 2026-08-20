@@ -59,15 +59,17 @@ class PaymentController extends Controller
             'reference_number', 'payment_date', 'month_covered', 'notes',
         ]));
 
+        $payment->loadMissing(['tenant.user', 'contract.unit']);
+
+        $rentAmount = (float) ($payment->contract?->rent_amount ?? 0);
         $calc = $service->calculateCoverage(
             (float) $payment->amount,
-            (float) $payment->contract->rent_amount,
+            $rentAmount,
             \Carbon\Carbon::parse($payment->payment_date),
-            $payment->month_covered,
         );
 
         return $this->success('Payment recorded.', [
-            'payment' => $payment->load(['tenant.user', 'contract.unit']),
+            'payment' => $payment,
             'overpayment' => $calc,
         ], 201);
     }

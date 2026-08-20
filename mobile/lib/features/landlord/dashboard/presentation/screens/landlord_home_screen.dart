@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/config/app_config.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../features/auth/data/models/login_response_model.dart';
@@ -42,14 +43,12 @@ class LandlordHomeScreen extends ConsumerWidget {
                 dashboardAsync.when(
                   loading: () => const LoadingIndicator(),
                   error: (e, _) {
-                    final message = e.toString();
-                    final isSetupError = message.toLowerCase().contains('kyc') ||
-                        message.toLowerCase().contains('subscription') ||
-                        message.toLowerCase().contains('organization');
+                    final message = AppError.getMessage(e);
+                    final isSetup = AppError.isSetupError(e);
                     return ErrorState(
                       message: message,
                       onRetry: () => ref.invalidate(landlordDashboardProvider),
-                      onAction: isSetupError ? () => context.go('/landlord/subscription') : null,
+                      onAction: isSetup ? () => context.go('/landlord/subscription') : null,
                       actionLabel: context.tr('complete_setup'),
                     );
                   },

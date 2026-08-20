@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/status_badge.dart';
@@ -39,7 +40,16 @@ class TenantDetailScreen extends ConsumerWidget {
       ),
       body: tenantAsync.when(
         loading: () => const LoadingIndicator(),
-        error: (e, _) => ErrorState(message: e.toString(), onRetry: () => ref.invalidate(tenantDetailProvider(id))),
+        error: (e, _) {
+          final message = AppError.getMessage(e);
+          final isSetup = AppError.isSetupError(e);
+          return ErrorState(
+            message: message,
+            onRetry: () => ref.invalidate(tenantDetailProvider(id)),
+            onAction: isSetup ? () => context.go('/landlord/subscription') : null,
+            actionLabel: context.tr('complete_setup'),
+          );
+        },
         data: (tenant) => SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -401,7 +411,7 @@ class TenantDetailScreen extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
                   );
                 }
               }
@@ -440,7 +450,7 @@ class TenantDetailScreen extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())),
+                      content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))),
                       backgroundColor: AppColors.error,
                       behavior: SnackBarBehavior.floating,
                     ),
@@ -500,7 +510,7 @@ class TenantDetailScreen extends ConsumerWidget {
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+                      SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
                     );
                   }
                 }
@@ -537,7 +547,7 @@ class TenantDetailScreen extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())), backgroundColor: AppColors.error),
+                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
                   );
                 }
               }

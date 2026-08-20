@@ -24,6 +24,7 @@ class PaymentService
         $calc = $this->calculateCoverage($amount, $rentAmount, $paymentDate, $data['month_covered'] ?? null);
 
         $payment = Payment::create(array_merge($data, [
+            'organization_id' => $contract->organization_id ?? Auth::user()?->organization_id,
             'recorded_by' => Auth::id(),
             'status' => 'confirmed',
             'payment_date' => $paymentDate->toDateString(),
@@ -33,7 +34,11 @@ class PaymentService
         ]));
 
         if (($data['payment_type'] ?? '') === 'rent') {
-            $this->notifyLandlordRentPaid($payment, $calc);
+            try {
+                $this->notifyLandlordRentPaid($payment, $contract, $calc);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Rent payment notification error: ' . $e->getMessage());
+            }
         }
 
         return $payment;
@@ -42,17 +47,19 @@ class PaymentService
     /**
      * Send SMS and in-app notification to landlord when rent is paid.
      */
-    private function notifyLandlordRentPaid(Payment $payment, array $calc): void
+    private function notifyLandlordRentPaid(Payment $payment, Contract $contract, array $calc): void
     {
-        $tenant = $payment->tenant;
-        $contract = $payment->contract;
-        $contract->load('unit.property');
+        $tenant = $payment->tenant ?? \App\Models\Tenant::find($payment->tenant_id);
+        $contract->loadMissing('unit.property');
 
         $orgId = $contract->organization_id ?? ($contract->unit?->property?->organization_id) ?? Auth::user()?->organization_id;
 
-        $landlord = User::where('organization_id', $orgId)
-            ->where('role', 'landlord')
-            ->first();
+        $landlord = null;
+        if ($orgId) {
+            $landlord = User::where('organization_id', $orgId)
+                ->where('role', 'landlord')
+                ->first();
+        }
 
         if (!$landlord) {
             $landlord = Auth::user();
@@ -62,7 +69,7 @@ class PaymentService
             return;
         }
 
-        $tenantName = $tenant?->user?->full_name ?? 'Tenant';
+        $tenantName = $tenant?->user?->full_name ?? $tenant?->full_name ?? 'Tenant';
         $unitName = $contract->unit?->name ?? $contract->unit?->unit_number ?? 'N/A';
         $amount = number_format((float) $payment->amount, 0, '.', ',');
         $monthCovered = $calc['month_covered'] ?? $payment->month_covered ?? 'N/A';
@@ -76,32 +83,39 @@ class PaymentService
             . "Njia: {$method}\n"
             . "Tarehe: " . Carbon::parse($payment->payment_date)->format('d/m/Y');
 
-        $smsService = app(SmsService::class);
-
         if ($landlord->phone) {
-            $smsService->send(
-                $landlord->phone,
-                $message,
-                'rent_payment_notification',
-                $orgId
-            );
+            try {
+                $smsService = app(SmsService::class);
+                $smsService->send(
+                    $landlord->phone,
+                    $message,
+                    'rent_payment_notification',
+                    $orgId
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('SMS sending failed in payment notification: ' . $e->getMessage());
+            }
         }
 
-        AppNotification::create([
-            'user_id' => $landlord->id,
-            'title' => 'Rent Payment Received',
-            'body' => "{$tenantName} paid TZS {$amount} for {$unitName}. Month: {$monthCovered}.",
-            'type' => 'rent_payment',
-            'data' => [
-                'payment_id' => $payment->id,
-                'tenant_id' => $tenant?->id,
-                'contract_id' => $contract->id,
-                'amount' => $payment->amount,
-                'month_covered' => $monthCovered,
-                'unit_name' => $unitName,
-            ],
-            'sent_at' => now(),
-        ]);
+        try {
+            AppNotification::create([
+                'user_id' => $landlord->id,
+                'title' => 'Rent Payment Received',
+                'body' => "{$tenantName} paid TZS {$amount} for {$unitName}. Month: {$monthCovered}.",
+                'type' => 'rent_payment',
+                'data' => [
+                    'payment_id' => $payment->id,
+                    'tenant_id' => $tenant?->id,
+                    'contract_id' => $contract->id,
+                    'amount' => $payment->amount,
+                    'month_covered' => $monthCovered,
+                    'unit_name' => $unitName,
+                ],
+                'sent_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('AppNotification creation failed in payment notification: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -127,8 +141,13 @@ class PaymentService
         $isOverpayment = $monthsCount > 1;
 
         // Determine the starting month
-        $startMonth = $providedMonth
-            ? Carbon::parse('first day of ' . $providedMonth)
+        // If providedMonth is a range (e.g. "August 2026 - November 2026"), extract the first part
+        $monthInput = $providedMonth;
+        if ($monthInput && strpos($monthInput, ' - ') !== false) {
+            $monthInput = explode(' - ', $monthInput)[0];
+        }
+        $startMonth = $monthInput
+            ? Carbon::parse('first day of ' . $monthInput)
             : $paymentDate->copy()->startOfMonth();
 
         // Build month_covered label
