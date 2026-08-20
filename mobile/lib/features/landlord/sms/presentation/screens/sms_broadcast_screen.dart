@@ -23,8 +23,11 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
   bool _isLoading = false;
 
   final _templates = <_SmsTemplate>[];
+  bool _templatesInitialized = false;
 
   void _initTemplates() {
+    if (_templatesInitialized) return;
+    _templatesInitialized = true;
     _templates.addAll([
       _SmsTemplate(
         icon: Icons.payments,
@@ -90,23 +93,23 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
       );
       return;
     }
+    final data = <String, dynamic>{
+      'recipient_type': _recipientType,
+      'message': message,
+    };
+    if (_recipientType == 'custom_numbers') {
+      final numbers = _customNumbersController.text.split(',').map((n) => n.trim()).where((n) => n.isNotEmpty).toList();
+      if (numbers.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr('please_enter_phone')), backgroundColor: AppColors.error),
+        );
+        return;
+      }
+      data['custom_numbers'] = numbers;
+    }
     setState(() => _isLoading = true);
     try {
       final repo = ref.read(smsRepositoryProvider);
-      final data = <String, dynamic>{
-        'recipient_type': _recipientType,
-        'message': message,
-      };
-      if (_recipientType == 'custom_numbers') {
-        final numbers = _customNumbersController.text.split(',').map((n) => n.trim()).where((n) => n.isNotEmpty).toList();
-        if (numbers.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.tr('please_enter_phone')), backgroundColor: AppColors.error),
-          );
-          return;
-        }
-        data['custom_numbers'] = numbers;
-      }
       final result = await repo.sendBroadcast(data);
       ref.invalidate(smsBalanceProvider);
       if (mounted) {

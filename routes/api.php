@@ -174,6 +174,7 @@ Route::prefix('v1')->group(function () {
                 Route::get('/tenants/{id}', [TenantController::class, 'show']);
                 Route::patch('/tenants/{id}', [TenantController::class, 'update']);
                 Route::post('/tenants/{id}/move-out', [TenantController::class, 'moveOut']);
+                Route::post('/tenants/{id}/send-credentials', [TenantController::class, 'sendCredentials']);
                 Route::delete('/tenants/{id}', [TenantController::class, 'destroy']);
 
                 Route::get('/contracts', [ContractController::class, 'index']);

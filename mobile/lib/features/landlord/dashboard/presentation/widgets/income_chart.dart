@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 
 class IncomeChart extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -65,7 +66,7 @@ class IncomeChart extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Monthly Income',
+                      context.tr('monthly_income'),
                       style: GoogleFonts.nunito(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -103,7 +104,7 @@ class IncomeChart extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Last ${monthly.length} months',
+                        'Last ${monthly.length} ${context.tr('months_label')}',
                         style: GoogleFonts.nunito(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -125,7 +126,7 @@ class IncomeChart extends StatelessWidget {
                       Icon(Icons.show_chart_rounded, size: 48, color: Colors.grey.shade300),
                       const SizedBox(height: 12),
                       Text(
-                        'No income data yet',
+                        context.tr('no_income_data'),
                         style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey.shade400),
                       ),
                     ],

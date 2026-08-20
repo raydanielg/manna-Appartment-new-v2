@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/loading_indicator.dart';
 import '../../data/notifications_repository.dart';
@@ -84,6 +85,26 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     return DateFormat('MMM d, y HH:mm').format(dt);
   }
 
+  (IconData, Color) _getNotificationIcon(String type, bool read) {
+    if (read) return (Icons.notifications_none, AppColors.textLight);
+    switch (type.toLowerCase()) {
+      case 'expiry':
+      case 'expiring':
+        return (Icons.schedule, AppColors.warning);
+      case 'debt':
+      case 'debts':
+        return (Icons.warning_amber_rounded, AppColors.error);
+      case 'lease':
+        return (Icons.description, AppColors.info);
+      case 'payment':
+        return (Icons.payments, AppColors.success);
+      case 'maintenance':
+        return (Icons.build, AppColors.primary);
+      default:
+        return (Icons.notifications_active, AppColors.primary);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -91,17 +112,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(context.tr('notifications')),
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
         actions: [
           TextButton(
             onPressed: _items.isEmpty ? null : _markAllAsRead,
-            child: const Text('Mark all read', style: TextStyle(fontSize: 12, color: AppColors.gold)),
+            child: Text(context.tr('mark_all_read'), style: const TextStyle(fontSize: 12, color: AppColors.gold)),
           ),
         ],
       ),
       body: _items.isEmpty && !_isLoadingMore
-          ? const EmptyState(message: 'No notifications yet')
+          ? EmptyState(message: context.tr('no_notifications'))
           : RefreshIndicator(
               onRefresh: _refresh,
               color: AppColors.primary,
@@ -121,8 +142,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   final id = item['id'] as String? ?? '';
                   final title = item['title'] as String? ?? 'Notification';
                   final body = item['body'] as String? ?? '';
+                  final type = item['type'] as String? ?? '';
                   final read = item['read_at'] != null;
                   final createdAt = item['created_at'] as String?;
+
+                  final (iconData, iconColor) = _getNotificationIcon(type, read);
 
                   return Dismissible(
                     key: ValueKey(id),
@@ -143,12 +167,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: read ? (isDark ? AppColors.darkInput : Colors.grey.shade200) : AppColors.primary,
+                            color: read ? (isDark ? AppColors.darkInput : Colors.grey.shade200) : iconColor.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            read ? Icons.notifications_none : Icons.notifications_active,
-                            color: read ? AppColors.textLight : Colors.white,
+                            iconData,
+                            color: read ? AppColors.textLight : iconColor,
                           ),
                         ),
                         title: Text(

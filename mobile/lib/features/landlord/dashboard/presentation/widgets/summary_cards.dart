@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 
 class SummaryCards extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -13,33 +14,33 @@ class SummaryCards extends StatelessWidget {
 
     final items = [
       _Item(
-        label: 'Properties',
+        label: context.tr('properties'),
         value: '${data['properties_count'] ?? 0}',
-        sub: 'Total managed',
+        sub: context.tr('total_managed'),
         icon: Icons.apartment_outlined,
         customIcon: 'assets/icons/propertiesicon.png',
         color: const Color(0xFF0EA5E9),
       ),
       _Item(
-        label: 'Tenants',
+        label: context.tr('tenants'),
         value: '${data['tenants_count'] ?? 0}',
-        sub: 'Active tenants',
+        sub: context.tr('active_tenants_short'),
         icon: Icons.people_alt_outlined,
         customIcon: 'assets/icons/tenantsicon.png',
         color: const Color(0xFF2563EB),
       ),
       _Item(
-        label: 'Income',
+        label: context.tr('income'),
         value: _formatAmount(monthIncome),
-        sub: 'This month',
+        sub: context.tr('this_month'),
         icon: Icons.account_balance_wallet_outlined,
         customIcon: 'assets/icons/incomeicon.png',
         color: const Color(0xFFF59E0B),
       ),
       _Item(
-        label: 'Outstanding',
+        label: context.tr('outstanding'),
         value: _formatAmount(outstanding),
-        sub: 'Pending collection',
+        sub: context.tr('pending_collection'),
         icon: Icons.error_outline,
         customIcon: 'assets/icons/outstandingicon.png',
         color: const Color(0xFFEF4444),

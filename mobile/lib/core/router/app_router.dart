@@ -18,6 +18,8 @@ import '../../shared/banned/presentation/screens/banned_screen.dart';
 import '../../shared/settings/presentation/screens/help_support_screen.dart';
 import '../../shared/settings/presentation/screens/privacy_policy_screen.dart';
 import '../../shared/settings/presentation/screens/terms_of_service_screen.dart';
+import '../../features/landlord/finance/presentation/screens/finance_report_screen.dart';
+import '../../features/landlord/finance/presentation/screens/reports_screen.dart';
 import '../../features/landlord/contracts/presentation/screens/contract_detail_screen.dart';
 import '../../features/landlord/contracts/presentation/screens/contract_sign_screen.dart';
 import '../../features/landlord/contracts/presentation/screens/contracts_list_screen.dart';
@@ -131,6 +133,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/landlord/sms/logs', builder: (context, state) => const SmsLogsScreen()),
           GoRoute(path: '/landlord/maintenance', builder: (context, state) => const MaintenanceRequestsScreen()),
           GoRoute(path: '/landlord/maintenance/:id', builder: (context, state) => const MaintenanceDetailScreen()),
+          GoRoute(path: '/landlord/finance-report', builder: (context, state) => const FinanceReportScreen()),
+          GoRoute(path: '/landlord/reports', builder: (context, state) => const ReportsScreen()),
           GoRoute(path: '/landlord/help', builder: (context, state) => const LandlordHelpScreen()),
           GoRoute(path: '/landlord/subscription', builder: (context, state) => const CurrentPlanScreen()),
           GoRoute(path: '/landlord/subscription/plans', builder: (context, state) => const SubscriptionPlansScreen()),

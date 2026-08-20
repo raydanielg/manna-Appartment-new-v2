@@ -58,7 +58,22 @@ class LandlordHomeScreen extends ConsumerWidget {
                     children: [
                       SummaryCards(data: data),
                       const SizedBox(height: 24),
-                      Text(context.tr('income_overview'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(context.tr('income_overview'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+                          GestureDetector(
+                            onTap: () => context.push('/landlord/finance-report'),
+                            child: Row(
+                              children: [
+                                Text(context.tr('view_report'), style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.arrow_forward_ios, size: 10, color: AppColors.primary),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 12),
                       IncomeChart(data: data),
                       const SizedBox(height: 24),

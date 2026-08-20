@@ -35,4 +35,9 @@ class TenantsRepository {
   Future<void> moveOut(String id) async {
     await _client.post('${ApiEndpoints.tenants}/$id/move-out');
   }
+
+  Future<Map<String, dynamic>> sendCredentials(String id) async {
+    final response = await _client.post('${ApiEndpoints.tenants}/$id/send-credentials');
+    return response.data['data'] ?? response.data ?? {};
+  }
 }

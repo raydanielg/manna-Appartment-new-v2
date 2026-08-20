@@ -342,6 +342,18 @@ class TenantDetailScreen extends ConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton.icon(
+                onPressed: () => _sendCredentials(context, ref, id),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.info,
+                  foregroundColor: Colors.white,
+                ),
+                icon: const Icon(Icons.send_outlined, size: 18),
+                label: Text(context.tr('send_credentials'), style: GoogleFonts.nunito(fontSize: 13)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
                 onPressed: () => _confirmMoveOut(context, id, ref),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
@@ -395,6 +407,48 @@ class TenantDetailScreen extends ConsumerWidget {
               }
             },
             child: Text(context.tr('move_out'), style: const TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _sendCredentials(BuildContext context, WidgetRef ref, String id) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(context.tr('send_credentials'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        content: Text(context.tr('send_credentials_confirm'), style: GoogleFonts.nunito(fontSize: 14)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(context.tr('cancel'))),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              try {
+                await ref.read(tenantsRepositoryProvider).sendCredentials(id);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(context.tr('credentials_sent_success')),
+                      backgroundColor: AppColors.success,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())),
+                      backgroundColor: AppColors.error,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(context.tr('send'), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
           ),
         ],
       ),

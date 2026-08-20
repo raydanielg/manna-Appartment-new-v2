@@ -70,6 +70,114 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
     return NumberFormat('#,###').format(n);
   }
 
+  void _showContractCreatedDialog(BuildContext context, WidgetRef ref, Map<String, dynamic>? tenant, String? tenantId) {
+    final tenantName = tenant != null ? _getTenantName(tenant) : '';
+    final tenantPhone = tenant != null ? _getTenantPhone(tenant) : '';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.check_circle, color: AppColors.success, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(context.tr('contract_created'), style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 16))),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(context.tr('contract_created_msg'), style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight)),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.info.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.info.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.person_outline, size: 16, color: AppColors.info),
+                      const SizedBox(width: 8),
+                      Text(context.tr('tenant_credentials'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.info)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  if (tenantName.isNotEmpty)
+                    Text('${context.tr('name')}: $tenantName', style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textDark)),
+                  if (tenantPhone.isNotEmpty)
+                    Text('${context.tr('phone')}: $tenantPhone', style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textDark)),
+                  const SizedBox(height: 8),
+                  Text(context.tr('credentials_sms_hint'), style: GoogleFonts.nunito(fontSize: 11, color: AppColors.textLight, fontStyle: FontStyle.italic)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.pop();
+            },
+            child: Text(context.tr('close')),
+          ),
+          if (tenantId != null && tenantId.isNotEmpty)
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                try {
+                  await ref.read(tenantsRepositoryProvider).sendCredentials(tenantId);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(context.tr('credentials_sent_success')),
+                        backgroundColor: AppColors.success,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(context.tr('failed_msg').replaceAll('{0}', e.toString())),
+                        backgroundColor: AppColors.error,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+                if (context.mounted) context.pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.info,
+                foregroundColor: Colors.white,
+              ),
+              icon: const Icon(Icons.send, size: 16),
+              label: Text(context.tr('send_credentials'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700)),
+            ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_tenantId == null || _unitId == null) {
@@ -93,10 +201,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
       });
       ref.invalidate(contractsListProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('contract_created')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
-        );
-        context.pop();
+        _showContractCreatedDialog(context, ref, _selectedTenant, _tenantId);
       }
     } catch (e) {
       if (mounted) {

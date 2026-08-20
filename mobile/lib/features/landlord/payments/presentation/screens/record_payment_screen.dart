@@ -24,6 +24,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
   final _referenceController = TextEditingController();
   final _monthController = TextEditingController(text: DateFormat('MMMM yyyy').format(DateTime.now()));
   final _notesController = TextEditingController();
+  final _methodController = TextEditingController(text: 'cash');
   String? _selectedTenantId;
   String? _selectedContractId;
   String _paymentType = 'rent';
@@ -78,6 +79,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
     _referenceController.dispose();
     _monthController.dispose();
     _notesController.dispose();
+    _methodController.dispose();
     super.dispose();
   }
 
@@ -238,7 +240,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
             const SizedBox(height: 16),
             AppTextField(
               label: context.tr('method'),
-              controller: TextEditingController(text: _method),
+              controller: _methodController,
               readOnly: true,
               onTap: () => _showMethodPicker(context),
             ),
@@ -427,10 +429,10 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(title: Text(context.tr('cash'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() => _method = 'cash'); Navigator.pop(context); }),
-            ListTile(title: Text(context.tr('bank_transfer'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() => _method = 'bank_transfer'); Navigator.pop(context); }),
-            ListTile(title: Text(context.tr('mobile_money'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() => _method = 'mobile_money'); Navigator.pop(context); }),
-            ListTile(title: Text(context.tr('card'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() => _method = 'card'); Navigator.pop(context); }),
+            ListTile(title: Text(context.tr('cash'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() { _method = 'cash'; _methodController.text = context.tr('cash'); }); Navigator.pop(context); }),
+            ListTile(title: Text(context.tr('bank_transfer'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() { _method = 'bank_transfer'; _methodController.text = context.tr('bank_transfer'); }); Navigator.pop(context); }),
+            ListTile(title: Text(context.tr('mobile_money'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() { _method = 'mobile_money'; _methodController.text = context.tr('mobile_money'); }); Navigator.pop(context); }),
+            ListTile(title: Text(context.tr('card'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() { _method = 'card'; _methodController.text = context.tr('card'); }); Navigator.pop(context); }),
           ],
         ),
       ),

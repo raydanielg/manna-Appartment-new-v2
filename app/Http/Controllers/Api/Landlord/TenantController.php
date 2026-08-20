@@ -96,10 +96,12 @@ class TenantController extends Controller
         ]);
 
         $property = $unit->property;
+        $appLink = config('app.app_download_url', 'https://play.google.com/store/apps/details?id=com.manna.apartment');
         $message = "Karibu Manna Apartment, {$user->full_name}!\n"
+            . "Pakua App: {$appLink}\n"
             . "Namba ya kuingia: {$request->phone}\n"
-            . "Nenosiri lako la muda: {$password}\n"
-            . "Tafadhali badilisha nenosiri lako ukiingia mara ya kwanza.";
+            . "Nenosiri la muda: {$password}\n"
+            . "Badilisha nenosiri baada ya kuingia.";
 
         app(SmsService::class)->send(
             $request->phone,
@@ -224,5 +226,40 @@ class TenantController extends Controller
         $tenant = Tenant::findOrFail($id);
         $tenant->delete();
         return $this->success('Tenant deleted.');
+    }
+
+    public function sendCredentials($id)
+    {
+        $tenant = Tenant::with(['user', 'unit.property'])->findOrFail($id);
+        $user = $tenant->user;
+
+        if (!$user) {
+            return $this->error('Tenant user not found.', 404);
+        }
+
+        $password = Str::random(8);
+        $user->update([
+            'password' => Hash::make($password),
+            'must_change_password' => true,
+            'status' => 'active',
+        ]);
+
+        $appLink = config('app.app_download_url', 'https://play.google.com/store/apps/details?id=com.manna.apartment');
+        $message = "Manna Apartment - Vitambulisho vyako vya kuingia:\n"
+            . "Pakua App: {$appLink}\n"
+            . "Namba ya kuingia: {$user->phone}\n"
+            . "Nenosiri la muda: {$password}\n"
+            . "Badilisha nenosiri baada ya kuingia.";
+
+        app(SmsService::class)->send(
+            $user->phone,
+            $message,
+            'tenant_credentials',
+            Auth::user()->organization_id
+        );
+
+        return $this->success('Credentials sent via SMS.', [
+            'phone' => $user->phone,
+        ]);
     }
 }

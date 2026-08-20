@@ -39,6 +39,8 @@ class LandlordMoreScreen extends ConsumerWidget {
           _buildMenuItem(context, icon: Icons.people, customIcon: 'assets/icons/tenantsicon.png', title: context.tr('tenants'), subtitle: context.tr('view_tenants'), onTap: () => context.push('/landlord/tenants')),
           _buildMenuItem(context, icon: Icons.description_outlined, customIcon: 'assets/icons/contracts.png', title: context.tr('contracts'), subtitle: context.tr('view_contracts'), onTap: () => context.push('/landlord/contracts')),
           _buildMenuItem(context, icon: Icons.payments, customIcon: 'assets/icons/incomeicon.png', title: context.tr('payments'), subtitle: context.tr('record_view_payments'), onTap: () => context.push('/landlord/payments')),
+          _buildMenuItem(context, icon: Icons.bar_chart, title: context.tr('revenue_report'), subtitle: context.tr('view_revenue_report'), onTap: () => context.push('/landlord/finance-report')),
+          _buildMenuItem(context, icon: Icons.assignment_outlined, title: context.tr('reports'), subtitle: context.tr('view_lease_report'), onTap: () => context.push('/landlord/reports')),
           _buildMenuItem(context, icon: Icons.sms_outlined, customIcon: 'assets/icons/sms.png', title: context.tr('sms_broadcast'), subtitle: context.tr('send_reminders'), onTap: () => context.push('/landlord/sms')),
           _buildMenuItem(context, icon: Icons.build_outlined, customIcon: 'assets/icons/maintainance.png', title: context.tr('maintenance'), subtitle: context.tr('respond_requests'), onTap: () => context.push('/landlord/maintenance')),
           if (user?.role == 'super_admin') ...[
