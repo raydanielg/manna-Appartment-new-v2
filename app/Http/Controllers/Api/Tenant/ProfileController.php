@@ -42,6 +42,12 @@ class ProfileController extends Controller
             'password' => Hash::make($request->new_password),
             'must_change_password' => false,
         ]);
+
+        // Revoke every other session/device token — only the one used for this
+        // request stays valid — so a leaked/old token can't survive a password change.
+        $currentTokenId = $user->currentAccessToken()?->id;
+        $user->tokens()->when($currentTokenId, fn ($q) => $q->where('id', '!=', $currentTokenId))->delete();
+
         return $this->success('Password changed successfully.');
     }
 

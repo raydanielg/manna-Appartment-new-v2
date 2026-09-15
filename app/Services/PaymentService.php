@@ -17,6 +17,13 @@ class PaymentService
     public function record(array $data): Payment
     {
         $contract = Contract::findOrFail($data['contract_id']);
+
+        if (!empty($data['tenant_id']) && (string) $data['tenant_id'] !== (string) $contract->tenant_id) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'tenant_id' => ['The selected tenant does not match this contract.'],
+            ]);
+        }
+
         $rentAmount = (float) ($contract->rent_amount ?? 0);
         $amount = (float) ($data['amount'] ?? 0);
         $paymentDate = isset($data['payment_date']) ? Carbon::parse($data['payment_date']) : now();

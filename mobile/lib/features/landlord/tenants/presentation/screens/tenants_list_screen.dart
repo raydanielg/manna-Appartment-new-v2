@@ -8,6 +8,7 @@ import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
+import '../../../properties/providers/properties_provider.dart';
 import '../../providers/tenants_provider.dart';
 import '../widgets/tenant_card.dart';
 
@@ -21,10 +22,11 @@ class TenantsListScreen extends ConsumerStatefulWidget {
 class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
   String _searchQuery = '';
   String _filterStatus = 'all'; // all, active, moved_out
+  String? _selectedPropertyId;
 
   @override
   Widget build(BuildContext context) {
-    final tenantsAsync = ref.watch(tenantsListProvider);
+    final tenantsAsync = ref.watch(tenantsListProvider(_selectedPropertyId));
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -79,13 +81,18 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: _buildPropertyFilter(),
+          ),
           const SizedBox(height: 16),
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async => ref.invalidate(tenantsListProvider),
               color: const Color(0xFF2563EB),
               child: tenantsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF2563EB))),
+                loading: () => const LoadingIndicator(),
                 error: (e, _) {
                   final message = AppError.getMessage(e);
                   final isSetup = AppError.isSetupError(e);
@@ -181,6 +188,49 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
         icon: const Icon(Icons.person_add_rounded),
         label: Text(context.tr('add_tenant'), style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
       ),
+    );
+  }
+
+  Widget _buildPropertyFilter() {
+    final propertiesAsync = ref.watch(propertiesListProvider);
+    return propertiesAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (properties) {
+        if (properties.isEmpty) return const SizedBox.shrink();
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String?>(
+              value: _selectedPropertyId,
+              isExpanded: true,
+              icon: const Icon(Icons.expand_more_rounded, size: 20, color: Color(0xFF6B7280)),
+              hint: Row(
+                children: [
+                  const Icon(Icons.apartment_rounded, size: 16, color: Color(0xFF6B7280)),
+                  const SizedBox(width: 8),
+                  Text(context.tr('select_property_all'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))),
+                ],
+              ),
+              items: [
+                DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text(context.tr('select_property_all'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600)),
+                ),
+                ...properties.map((p) => DropdownMenuItem<String?>(
+                      value: p.id,
+                      child: Text(p.name, style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600)),
+                    )),
+              ],
+              onChanged: (v) => setState(() => _selectedPropertyId = v),
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/status_badge.dart';
 
 class TenantCard extends StatelessWidget {
@@ -20,7 +21,9 @@ class TenantCard extends StatelessWidget {
     final userData = tenant['user'] as Map<String, dynamic>?;
     final name = userData?['full_name'] ?? userData?['name'] ?? tenant['full_name'] ?? tenant['name'] ?? 'Unknown Tenant';
     final phone = userData?['phone'] ?? tenant['phone'] ?? 'No phone';
-    final unit = tenant['unit']?['name'] ?? tenant['unit']?['unit_number'] ?? tenant['unit_name'] ?? 'No unit assigned';
+    final unit = tenant['unit'] as Map<String, dynamic>?;
+    final unitName = unit?['name'] ?? unit?['unit_number'] ?? tenant['unit_name'] ?? 'No unit assigned';
+    final propertyName = unit?['property']?['name'] ?? tenant['property_name'] ?? context.tr('no_property_assigned');
     final status = (tenant['status'] ?? 'active').toString().toLowerCase();
     final balanceDue = _parseAmount(tenant['balance_due']);
     final tenantId = tenant['id']?.toString() ?? '';
@@ -88,10 +91,17 @@ class TenantCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          const Icon(Icons.apartment_rounded, size: 12, color: Color(0xFF4B5563)),
+                          const SizedBox(width: 4),
+                          Text(
+                            propertyName,
+                            style: GoogleFonts.nunito(fontSize: 11, color: const Color(0xFF4B5563), fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(width: 8),
                           const Icon(Icons.meeting_room_rounded, size: 12, color: Color(0xFF4B5563)),
                           const SizedBox(width: 4),
                           Text(
-                            unit,
+                            unitName,
                             style: GoogleFonts.nunito(fontSize: 11, color: const Color(0xFF4B5563), fontWeight: FontWeight.w700),
                           ),
                         ],

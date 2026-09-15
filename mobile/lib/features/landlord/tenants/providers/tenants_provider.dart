@@ -4,9 +4,9 @@ import '../data/tenants_repository.dart';
 
 final tenantsRepositoryProvider = Provider((ref) => TenantsRepository(ref.read(apiClientProvider)));
 
-final tenantsListProvider = FutureProvider.autoDispose((ref) async {
+final tenantsListProvider = FutureProvider.autoDispose.family<List<dynamic>, String?>((ref, propertyId) async {
   final repo = ref.watch(tenantsRepositoryProvider);
-  return repo.getTenants();
+  return repo.getTenants(propertyId: propertyId);
 });
 
 final tenantDetailProvider = FutureProvider.autoDispose.family<Map<String, dynamic>, String>((ref, id) async {

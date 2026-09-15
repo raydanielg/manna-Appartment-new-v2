@@ -146,7 +146,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final tenantsAsync = ref.watch(tenantsListProvider);
+    final tenantsAsync = ref.watch(tenantsListProvider(null));
     final contractsAsync = ref.watch(contractsListProvider);
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,

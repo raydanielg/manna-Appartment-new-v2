@@ -56,7 +56,7 @@ return [
 
     'asset_url' => env('ASSET_URL', null),
 
-    'app_download_url' => env('APP_DOWNLOAD_URL', 'https://play.google.com/store/apps/details?id=com.manna.apartment'),
+    'app_download_url' => env('APP_DOWNLOAD_URL', 'https://play.google.com/store/apps/details?id=com.mannaapartment.app'),
 
     /*
     |--------------------------------------------------------------------------

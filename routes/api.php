@@ -76,12 +76,12 @@ Route::prefix('v1')->group(function () {
     });
 
     // Public auth
-    Route::post('/auth/login', [LoginController::class, 'login']);
+    Route::post('/auth/login', [LoginController::class, 'login'])->middleware('throttle:6,1');
     Route::get('/app-settings', [\App\Http\Controllers\Api\AppSettingController::class, 'index']);
     Route::post('/auth/register-landlord', [RegisterLandlordController::class, 'register']);
-    Route::post('/auth/forgot-password', [ForgotPasswordController::class, 'forgot']);
-    Route::post('/auth/verify-otp', [ForgotPasswordController::class, 'verifyOtp']);
-    Route::post('/auth/reset-password', [ForgotPasswordController::class, 'reset']);
+    Route::post('/auth/forgot-password', [ForgotPasswordController::class, 'forgot'])->middleware('throttle:6,1');
+    Route::post('/auth/verify-otp', [ForgotPasswordController::class, 'verifyOtp'])->middleware('throttle:6,1');
+    Route::post('/auth/reset-password', [ForgotPasswordController::class, 'reset'])->middleware('throttle:6,1');
 
     // Authenticated routes
     Route::middleware('auth:sanctum')->group(function () {
@@ -126,11 +126,11 @@ Route::prefix('v1')->group(function () {
         // Staff (web only)
         Route::middleware(['ensure.platform:web', 'role:staff'])->prefix('staff')->group(function () {
             Route::get('/dashboard', [StaffDashboardController::class, 'index']);
-            Route::get('/tenants', [StaffTenantController::class, 'index']);
-            Route::get('/tenants/{id}', [StaffTenantController::class, 'show']);
-            Route::get('/payments', [StaffPaymentController::class, 'index']);
-            Route::post('/payments', [StaffPaymentController::class, 'store']);
-            Route::get('/units', [\App\Http\Controllers\Api\Landlord\UnitController::class, 'allUnits']);
+            Route::get('/tenants', [StaffTenantController::class, 'index'])->middleware('staff.permission:view_tenants');
+            Route::get('/tenants/{id}', [StaffTenantController::class, 'show'])->middleware('staff.permission:view_tenants');
+            Route::get('/payments', [StaffPaymentController::class, 'index'])->middleware('staff.permission:view_payments');
+            Route::post('/payments', [StaffPaymentController::class, 'store'])->middleware('staff.permission:record_payments');
+            Route::get('/units', [\App\Http\Controllers\Api\Landlord\UnitController::class, 'allUnits'])->middleware('staff.permission:view_properties');
         });
 
         // Landlord (mobile only)
@@ -198,6 +198,7 @@ Route::prefix('v1')->group(function () {
                 Route::get('/tenants/{id}/payments', [PaymentController::class, 'tenantPayments']);
 
                 Route::get('/finance/summary', [FinanceController::class, 'summary']);
+                Route::get('/finance/report', [FinanceController::class, 'report']);
                 Route::get('/finance/income-trend', [FinanceController::class, 'incomeTrend']);
                 Route::get('/finance/outstanding-balances', [FinanceController::class, 'outstandingBalances']);
                 Route::get('/finance/export', [FinanceController::class, 'export']);
@@ -227,6 +228,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/my-unit', [MyUnitController::class, 'show']);
             Route::get('/my-contract', [MyContractController::class, 'show']);
             Route::get('/my-contract/pdf', [MyContractController::class, 'pdf']);
+            Route::post('/my-contract/sign', [MyContractController::class, 'sign']);
             Route::get('/my-payments', [MyPaymentController::class, 'index']);
             Route::post('/maintenance-requests', [TenantMaintenanceRequestController::class, 'store']);
             Route::get('/maintenance-requests', [TenantMaintenanceRequestController::class, 'index']);

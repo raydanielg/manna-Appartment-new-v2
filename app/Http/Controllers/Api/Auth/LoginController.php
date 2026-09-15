@@ -22,12 +22,8 @@ class LoginController extends Controller
             'platform' => 'required|in:web,mobile',
         ]);
 
-        $phone = $this->normalizePhone($request->phone);
-        $user = User::where('phone', $phone)->first();
-
-        if (!$user) {
-            $user = User::where('phone', $request->phone)->first();
-        }
+        $candidates = $this->phoneCandidates($request->phone);
+        $user = User::whereIn('phone', $candidates)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
@@ -87,22 +83,25 @@ class LoginController extends Controller
         }
     }
 
-    private function normalizePhone(string $phone): string
+    private function phoneCandidates(string $phone): array
     {
-        $phone = preg_replace('/\D/', '', $phone);
+        $raw = $phone;
+        $digits = preg_replace('/\D/', '', $phone);
 
-        if (str_starts_with($phone, '0')) {
-            $phone = '255' . substr($phone, 1);
+        $candidates = [$raw, $digits, ltrim($raw, '+')];
+
+        if (str_starts_with($digits, '0')) {
+            $candidates[] = '255' . substr($digits, 1);
         }
 
-        if (strlen($phone) === 9) {
-            $phone = '255' . $phone;
+        if (strlen($digits) === 9) {
+            $candidates[] = '255' . $digits;
         }
 
-        if (str_starts_with($phone, '+')) {
-            $phone = ltrim($phone, '+');
+        if (str_starts_with($digits, '255')) {
+            $candidates[] = '0' . substr($digits, 3);
         }
 
-        return $phone;
+        return array_values(array_unique(array_filter($candidates)));
     }
 }

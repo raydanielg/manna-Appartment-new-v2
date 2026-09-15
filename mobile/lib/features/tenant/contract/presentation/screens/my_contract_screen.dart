@@ -83,9 +83,39 @@ class MyContractScreen extends ConsumerWidget {
                 icon: const Icon(Icons.picture_as_pdf),
                 onPressed: () => context.push('/tenant/contract/pdf'),
               ),
+              const SizedBox(height: 12),
+              if (contract['signed_at'] == null)
+                PrimaryButton(
+                  text: context.tr('sign_contract'),
+                  icon: const Icon(Icons.draw_outlined),
+                  onPressed: () => context.push('/tenant/contract/sign'),
+                )
+              else
+                _buildSignedBadge(context),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSignedBadge(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle, color: AppColors.success, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            context.tr('contract_signed'),
+            style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.success),
+          ),
+        ],
       ),
     );
   }

@@ -13,6 +13,8 @@ use App\Services\SubscriptionService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -303,14 +305,30 @@ class PaymentGatewayController extends Controller
 
     private function completeTransaction(PaymentTransaction $transaction, array $event)
     {
-        if ($transaction->status === 'completed') {
+        // Re-fetch and lock the row so concurrent webhook/verify calls for the same
+        // transaction can't both pass the "not yet completed" check and double-run
+        // the side effects below (double subscription grant, double SMS credit, etc.).
+        $alreadyCompleted = DB::transaction(function () use ($transaction) {
+            $locked = PaymentTransaction::where('id', $transaction->id)->lockForUpdate()->first();
+
+            if (!$locked || $locked->status === 'completed') {
+                return true;
+            }
+
+            $locked->update([
+                'status' => 'completed',
+                'paid_at' => now(),
+            ]);
+
+            $transaction->status = 'completed';
+            $transaction->paid_at = $locked->paid_at;
+
+            return false;
+        });
+
+        if ($alreadyCompleted) {
             return;
         }
-
-        $transaction->update([
-            'status' => 'completed',
-            'paid_at' => now(),
-        ]);
 
         $organization = Organization::find($transaction->organization_id);
         $plan = SubscriptionPlan::find($transaction->reference_id);
@@ -391,9 +409,10 @@ class PaymentGatewayController extends Controller
 
     public function verify($ref)
     {
-        $transaction = PaymentTransaction::where(function ($query) use ($ref) {
-            $query->where('id', $ref)->orWhere('provider_reference', $ref);
-        })->first();
+        $transaction = PaymentTransaction::where('user_id', Auth::id())
+            ->where(function ($query) use ($ref) {
+                $query->where('id', $ref)->orWhere('provider_reference', $ref);
+            })->first();
 
         if (!$transaction) {
             return $this->error('Transaction not found.', null, 404);

@@ -94,6 +94,10 @@ class ForgotPasswordController extends Controller
 
         $user->update(['password' => Hash::make($request->password)]);
 
+        // A password reset means the old password (and whoever holds a token from
+        // before it) should no longer have access — revoke every existing session.
+        $user->tokens()->delete();
+
         app(OtpService::class)->clear($request->phone);
         Cache::forget('otp_verified_' . $request->phone);
 

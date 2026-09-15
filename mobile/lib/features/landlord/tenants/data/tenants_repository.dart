@@ -5,8 +5,13 @@ class TenantsRepository {
   final ApiClient _client;
   TenantsRepository(this._client);
 
-  Future<List<dynamic>> getTenants() async {
-    final response = await _client.get(ApiEndpoints.tenants);
+  Future<List<dynamic>> getTenants({String? propertyId}) async {
+    final response = await _client.get(
+      ApiEndpoints.tenants,
+      queryParameters: {
+        if (propertyId != null) 'property_id': propertyId,
+      },
+    );
     final data = response.data['data'];
     if (data is Map && data['data'] is List) return data['data'];
     if (data is List) return data;

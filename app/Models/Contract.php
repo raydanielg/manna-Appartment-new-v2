@@ -35,6 +35,7 @@ class Contract extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'signed_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -62,6 +63,11 @@ class Contract extends Model
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'unit_id');
+    }
+
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class, 'organization_id');
     }
 
     public function payments()

@@ -82,6 +82,10 @@ class ContractController extends Controller
             'end_date' => $request->end_date,
             'duration_type' => $request->duration_type ?? $contract->duration_type,
             'status' => 'active',
+            // A renewal is a new term — any prior signature belongs to the old term
+            // and must not be shown as covering the renewed period.
+            'signature_path' => null,
+            'signed_at' => null,
         ]);
 
         return $this->success('Contract renewed.', $contract);
@@ -113,6 +117,11 @@ class ContractController extends Controller
         ]);
 
         $contract = Contract::with(['tenant.user', 'unit.property'])->findOrFail($id);
+
+        if ($contract->signed_at) {
+            return $this->error('This contract has already been signed.', null, 409);
+        }
+
         $file = $request->file('signature');
         $path = $file->store('signatures', 'public');
 

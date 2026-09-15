@@ -217,7 +217,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final tenantsAsync = ref.watch(tenantsListProvider);
+    final tenantsAsync = ref.watch(tenantsListProvider(null));
 
     return Scaffold(
       backgroundColor: AppColors.lightBackground,

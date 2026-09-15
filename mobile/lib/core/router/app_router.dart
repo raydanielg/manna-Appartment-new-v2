@@ -62,6 +62,7 @@ import '../../features/tenant/maintenance/presentation/screens/my_maintenance_re
 import '../../features/tenant/maintenance/presentation/screens/submit_maintenance_screen.dart';
 import '../../features/tenant/contract/presentation/screens/contract_pdf_viewer_screen.dart';
 import '../../features/tenant/contract/presentation/screens/my_contract_screen.dart';
+import '../../features/tenant/contract/presentation/screens/tenant_contract_sign_screen.dart';
 import '../../features/tenant/payments/presentation/screens/my_payments_screen.dart';
 import '../../features/tenant/payments/presentation/screens/payment_receipt_screen.dart';
 import '../../features/tenant/profile/presentation/screens/change_password_screen.dart';
@@ -155,6 +156,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/tenant/my-unit', builder: (context, state) => const MyUnitDetailScreen()),
           GoRoute(path: '/tenant/contract', builder: (context, state) => const MyContractScreen()),
           GoRoute(path: '/tenant/contract/pdf', builder: (context, state) => const ContractPdfViewerScreen()),
+          GoRoute(path: '/tenant/contract/sign', builder: (context, state) => const TenantContractSignScreen()),
           GoRoute(path: '/tenant/payments', builder: (context, state) => const MyPaymentsScreen()),
           GoRoute(path: '/tenant/payments/:id/receipt', builder: (context, state) => const PaymentReceiptScreen()),
           GoRoute(path: '/tenant/maintenance', builder: (context, state) => const SubmitMaintenanceScreen()),

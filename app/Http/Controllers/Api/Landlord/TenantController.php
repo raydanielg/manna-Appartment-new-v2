@@ -20,7 +20,10 @@ class TenantController extends Controller
 
     public function index(Request $request)
     {
-        $query = Tenant::with(['user', 'unit.property'])->latest();
+        $query = Tenant::with(['user', 'unit.property'])
+            ->when($request->filled('property_id'), fn ($q) => $q->whereHas('unit', fn ($u) => $u->where('property_id', $request->property_id)))
+            ->when($request->filled('unit_id'), fn ($q) => $q->where('unit_id', $request->unit_id))
+            ->latest();
         return $this->paginated($query->paginate($request->get('per_page', 20)));
     }
 
@@ -35,8 +38,10 @@ class TenantController extends Controller
             'moved_in_date' => 'required|date',
         ]);
 
+        $phone = $this->normalizePhone($request->phone);
+
         $user = User::withoutGlobalScope('organization')
-            ->where('phone', $request->phone)
+            ->where('phone', $phone)
             ->first();
 
         $password = Str::random(8);
@@ -74,7 +79,7 @@ class TenantController extends Controller
         } else {
             $user = User::create([
                 'full_name' => $request->full_name,
-                'phone' => $request->phone,
+                'phone' => $phone,
                 'password' => Hash::make($password),
                 'role' => 'tenant',
                 'status' => 'active',
@@ -96,15 +101,16 @@ class TenantController extends Controller
         ]);
 
         $property = $unit->property;
-        $appLink = config('app.app_download_url', 'https://play.google.com/store/apps/details?id=com.manna.apartment');
+        $localPhone = $this->toLocalPhone($phone);
+        $appLink = config('app.app_download_url', 'https://play.google.com/store/apps/details?id=com.mannaapartment.app');
         $message = "Karibu Manna Apartment, {$user->full_name}!\n"
-            . "Pakua App: {$appLink}\n"
-            . "Namba ya kuingia: {$request->phone}\n"
-            . "Nenosiri la muda: {$password}\n"
+            . "Pakua app: {$appLink}\n"
+            . "Namba: {$localPhone}\n"
+            . "Nenosiri: {$password}\n"
             . "Badilisha nenosiri baada ya kuingia.";
 
         app(SmsService::class)->send(
-            $request->phone,
+            $phone,
             $message,
             'tenant_invite',
             Auth::user()->organization_id
@@ -228,6 +234,36 @@ class TenantController extends Controller
         return $this->success('Tenant deleted.');
     }
 
+    private function normalizePhone(string $phone): string
+    {
+        $phone = preg_replace('/\D/', '', $phone);
+
+        if (str_starts_with($phone, '0')) {
+            $phone = '255' . substr($phone, 1);
+        }
+
+        if (strlen($phone) === 9) {
+            $phone = '255' . $phone;
+        }
+
+        return $phone;
+    }
+
+    private function toLocalPhone(string $phone): string
+    {
+        $digits = preg_replace('/\D/', '', $phone);
+
+        if (str_starts_with($digits, '255') && strlen($digits) > 3) {
+            return '0' . substr($digits, 3);
+        }
+
+        if (strlen($digits) === 9) {
+            return '0' . $digits;
+        }
+
+        return $phone;
+    }
+
     public function sendCredentials($id)
     {
         $tenant = Tenant::with(['user', 'unit.property'])->findOrFail($id);
@@ -244,11 +280,12 @@ class TenantController extends Controller
             'status' => 'active',
         ]);
 
-        $appLink = config('app.app_download_url', 'https://play.google.com/store/apps/details?id=com.manna.apartment');
-        $message = "Manna Apartment - Vitambulisho vyako vya kuingia:\n"
-            . "Pakua App: {$appLink}\n"
-            . "Namba ya kuingia: {$user->phone}\n"
-            . "Nenosiri la muda: {$password}\n"
+        $localPhone = $this->toLocalPhone($user->phone);
+        $appLink = config('app.app_download_url', 'https://play.google.com/store/apps/details?id=com.mannaapartment.app');
+        $message = "Manna Apartment - Vitambulisho vya kuingia:\n"
+            . "Pakua app: {$appLink}\n"
+            . "Namba: {$localPhone}\n"
+            . "Nenosiri: {$password}\n"
             . "Badilisha nenosiri baada ya kuingia.";
 
         app(SmsService::class)->send(

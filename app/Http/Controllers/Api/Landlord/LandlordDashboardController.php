@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\Property;
 use App\Models\Tenant;
 use App\Traits\ApiResponse;
+use Illuminate\Support\Facades\Auth;
 
 class LandlordDashboardController extends Controller
 {
@@ -16,17 +17,20 @@ class LandlordDashboardController extends Controller
 
     public function index()
     {
-        $propertiesCount = Property::count();
-        $tenantsCount = Tenant::where('status', 'active')->count();
-        $vacantUnitsCount = \App\Models\Unit::where('status', 'vacant')->count();
+        $orgId = Auth::user()->organization_id;
 
-        $monthIncome = Payment::where('status', 'confirmed')
+        $propertiesCount = Property::where('organization_id', $orgId)->count();
+        $tenantsCount = Tenant::where('organization_id', $orgId)->where('status', 'active')->count();
+        $vacantUnitsCount = \App\Models\Unit::where('organization_id', $orgId)->where('status', 'vacant')->count();
+
+        $monthIncome = Payment::where('organization_id', $orgId)
+            ->where('status', 'confirmed')
             ->whereMonth('payment_date', now()->month)
             ->whereYear('payment_date', now()->year)
             ->sum('amount');
 
-        $totalIncome = Payment::where('status', 'confirmed')->sum('amount');
-        $totalExpected = Contract::where('status', 'active')->sum('rent_amount');
+        $totalIncome = Payment::where('organization_id', $orgId)->where('status', 'confirmed')->sum('amount');
+        $totalExpected = Contract::where('organization_id', $orgId)->where('status', 'active')->sum('rent_amount');
         $outstanding = max(0, $totalExpected - $totalIncome);
 
         $monthlyIncome = collect();
@@ -34,7 +38,8 @@ class LandlordDashboardController extends Controller
             $date = now()->subMonths($i);
             $monthLabel = $date->format('M');
 
-            $amount = Payment::where('status', 'confirmed')
+            $amount = Payment::where('organization_id', $orgId)
+                ->where('status', 'confirmed')
                 ->whereYear('payment_date', $date->year)
                 ->whereMonth('payment_date', $date->month)
                 ->sum('amount');
@@ -46,6 +51,7 @@ class LandlordDashboardController extends Controller
         }
 
         $recentPayments = Payment::with(['tenant.user', 'tenant.unit'])
+            ->where('organization_id', $orgId)
             ->where('status', 'confirmed')
             ->latest('payment_date')
             ->limit(3)
@@ -59,6 +65,7 @@ class LandlordDashboardController extends Controller
             ]);
 
         $recentMaintenance = MaintenanceRequest::with(['tenant.user', 'unit'])
+            ->where('organization_id', $orgId)
             ->latest()
             ->limit(2)
             ->get()

@@ -90,6 +90,7 @@ class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
       ),
       child: Row(
         children: [
+          _buildPeriodTab('Weekly', 'weekly'),
           _buildPeriodTab(context.tr('monthly_view'), 'monthly'),
           _buildPeriodTab(context.tr('yearly_view'), 'yearly'),
           _buildPeriodTab(context.tr('multi_year_view'), 'multi_year'),
@@ -128,6 +129,34 @@ class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
   }
 
   Widget _buildMonthYearPicker(bool isDark) {
+    if (_period == 'weekly') {
+      return Row(
+        children: [
+          Expanded(
+            child: _buildDropdown(
+              isDark,
+              'Week',
+              _selectedMonth,
+              List.generate(52, (i) => i + 1),
+              (v) => setState(() => _selectedMonth = v),
+              (v) => 'Week $v',
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildDropdown(
+              isDark,
+              context.tr('select_year'),
+              _selectedYear,
+              List.generate(10, (i) => DateTime.now().year - 4 + i),
+              (v) => setState(() => _selectedYear = v),
+              (v) => '$v',
+            ),
+          ),
+        ],
+      );
+    }
+
     return Row(
       children: [
         Expanded(
@@ -503,10 +532,11 @@ class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final item = breakdown[index];
-        final name = item['name'] ?? item['property_name'] ?? item['unit_name'] ?? 'Unknown';
-        final collected = _parseAmount(item['collected'] ?? item['amount']);
-        final expected = _parseAmount(item['expected']);
-        final outstanding = _parseAmount(item['outstanding']);
+        // The finance report's breakdown is a date-bucketed series (same shape as
+        // chart_data: label/date|month/amount/revenue) — it has no per-property
+        // name or expected/outstanding fields, so read what's actually returned.
+        final name = (item['label'] ?? item['date'] ?? item['month'] ?? 'Unknown').toString();
+        final collected = _parseAmount(item['amount'] ?? item['revenue']);
         return Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -522,14 +552,8 @@ class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
               Row(
                 children: [
                   _buildBreakdownItem(context.tr('collected_revenue'), _formatAmount(collected), AppColors.success),
-                  const SizedBox(width: 12),
-                  _buildBreakdownItem(context.tr('outstanding_revenue'), _formatAmount(outstanding), AppColors.error),
                 ],
               ),
-              if (expected > 0) ...[
-                const SizedBox(height: 4),
-                _buildBreakdownItem(context.tr('expected_revenue'), _formatAmount(expected), AppColors.info),
-              ],
             ],
           ),
         );

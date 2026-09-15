@@ -245,8 +245,8 @@ class SnippeService
         $secret = config('snippe.webhook_secret');
 
         if (empty($secret)) {
-            Log::warning('Snippe webhook secret not configured. Skipping signature verification.');
-            return true;
+            Log::critical('Snippe webhook secret not configured. Rejecting webhook — refusing to process unsigned payment callbacks.');
+            return false;
         }
 
         // Prevent replay attacks (5 minutes tolerance)

@@ -199,7 +199,7 @@ class LandlordHomeScreen extends ConsumerWidget {
   }
 
   Widget _buildTenantsSection(BuildContext context, WidgetRef ref) {
-    final tenantsAsync = ref.watch(tenantsListProvider);
+    final tenantsAsync = ref.watch(tenantsListProvider(null));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

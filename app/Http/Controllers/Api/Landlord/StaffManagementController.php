@@ -16,7 +16,10 @@ class StaffManagementController extends Controller
 
     public function index(Request $request)
     {
-        $staff = User::where('role', 'staff')->latest()->paginate($request->get('per_page', 20));
+        $staff = User::where('role', 'staff')
+            ->where('organization_id', auth()->user()->organization_id)
+            ->latest()
+            ->paginate($request->get('per_page', 20));
         return $this->paginated($staff);
     }
 
@@ -70,7 +73,9 @@ class StaffManagementController extends Controller
     public function updatePermissions(Request $request, $id)
     {
         $request->validate(['permissions_json' => 'required|array']);
-        $staff = User::where('role', 'staff')->findOrFail($id);
+        $staff = User::where('role', 'staff')
+            ->where('organization_id', auth()->user()->organization_id)
+            ->findOrFail($id);
 
         StaffPermission::updateOrCreate(
             ['staff_user_id' => $staff->id],
@@ -82,7 +87,9 @@ class StaffManagementController extends Controller
 
     public function destroy($id)
     {
-        $staff = User::where('role', 'staff')->findOrFail($id);
+        $staff = User::where('role', 'staff')
+            ->where('organization_id', auth()->user()->organization_id)
+            ->findOrFail($id);
         $staff->update(['status' => 'inactive']);
         return $this->success('Staff deactivated.');
     }
