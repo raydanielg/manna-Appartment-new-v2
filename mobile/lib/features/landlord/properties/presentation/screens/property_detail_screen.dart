@@ -107,8 +107,6 @@ class PropertyDetailScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildImageGallery(context, property, colors, typography),
-          const SizedBox(height: 20),
           Text(
             property.name,
             style: typography.display.lg.copyWith(fontWeight: FontWeight.w800),
@@ -385,87 +383,6 @@ class PropertyDetailScreen extends ConsumerWidget {
             context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
       }
     }
-  }
-
-  Widget _buildImageGallery(
-      BuildContext context, property, FColors colors, FTypography typography) {
-    final images =
-        property.images is List ? property.images as List<String> : <String>[];
-    final hasImages = images.isNotEmpty;
-    final radii = context.theme.style.borderRadius;
-
-    if (!hasImages) {
-      return Container(
-        width: double.infinity,
-        height: 180,
-        decoration: BoxDecoration(
-          color: colors.secondary.withValues(alpha: 0.4),
-          borderRadius: radii.lg,
-          border: Border.all(color: colors.border),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            HugeIcon(
-              icon: HugeIcons.strokeRoundedBuilding03,
-              size: 48,
-              color: colors.mutedForeground.withValues(alpha: 0.4),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.tr('no_photos'),
-              style: typography.body.xs.copyWith(color: colors.mutedForeground),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      children: [
-        ClipRRect(
-          borderRadius: radii.lg,
-          child: SizedBox(
-            height: 220,
-            child: PageView.builder(
-              itemCount: images.length,
-              itemBuilder: (context, index) => Image.network(
-                images[index],
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => Container(
-                  color: colors.secondary.withValues(alpha: 0.4),
-                  child: Center(
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedBuilding03,
-                      size: 40,
-                      color: colors.mutedForeground.withValues(alpha: 0.4),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        if (images.length > 1) ...[
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              images.length,
-              (index) => Container(
-                width: 6,
-                height: 6,
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                decoration: BoxDecoration(
-                  color: index == 0 ? colors.primary : colors.border,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
   }
 
   Widget _divider(FColors colors) =>

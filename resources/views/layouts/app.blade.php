@@ -44,7 +44,9 @@
 <body class="font-['Nunito',sans-serif] antialiased text-slate-800 min-h-screen">
 
     {{-- Loading Screen --}}
-    @include('partials.loading-screen')
+    @unless(request()->routeIs('login'))
+        @include('partials.loading-screen')
+    @endunless
 
     {{-- Auth Background --}}
     <div class="fixed inset-0 z-0 bg-white">

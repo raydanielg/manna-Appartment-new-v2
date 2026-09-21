@@ -52,7 +52,7 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
       final repo = ref.read(unitsRepositoryProvider);
       final unit = await repo.getUnit(widget.unitId!);
       _nameController.text = unit['name'] ?? unit['unit_number'] ?? '';
-      _rentController.text = (unit['monthly_rent'] ?? '').toString();
+      _rentController.text = (unit['rent_amount'] ?? unit['monthly_rent'] ?? '').toString();
       _sizeController.text = unit['size']?.toString() ?? '';
       _type = unit['type'] ?? 'bedsitter';
       _bedrooms = unit['bedrooms'] ?? 0;
@@ -96,7 +96,7 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
       final repo = ref.read(unitsRepositoryProvider);
       final data = {
         'name': _nameController.text.trim(),
-        'monthly_rent': double.tryParse(_rentController.text) ?? 0,
+        'rent_amount': double.tryParse(_rentController.text) ?? 0,
         'size': _sizeController.text.trim(),
         'type': _type,
         'bedrooms': _bedrooms,

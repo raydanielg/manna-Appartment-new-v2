@@ -75,7 +75,7 @@ class UnitDetailScreen extends ConsumerWidget {
         data: (unit) {
           final status = (unit['status'] ?? 'vacant').toString();
           final isOccupied = status == 'occupied';
-          final rent = unit['monthly_rent'] ?? 0;
+          final rent = unit['rent_amount'] ?? unit['monthly_rent'] ?? 0;
           final formattedRent = NumberFormat('#,###').format(
               rent is num ? rent : (double.tryParse(rent.toString()) ?? 0));
 

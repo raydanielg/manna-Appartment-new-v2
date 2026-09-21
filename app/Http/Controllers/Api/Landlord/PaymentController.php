@@ -15,7 +15,11 @@ class PaymentController extends Controller
 
     public function index(Request $request)
     {
-        $query = Payment::with(['tenant.user', 'contract'])->latest();
+        $query = Payment::with(['tenant.user', 'contract'])
+            ->when($request->filled('property_id'), fn ($q) => $q->whereHas('contract.unit', fn ($u) => $u->where('property_id', $request->property_id)))
+            ->when($request->filled('unit_id'), fn ($q) => $q->whereHas('contract', fn ($c) => $c->where('unit_id', $request->unit_id)))
+            ->when($request->filled('tenant_id'), fn ($q) => $q->where('tenant_id', $request->tenant_id))
+            ->latest();
         return $this->paginated($query->paginate($request->get('per_page', 20)));
     }
 

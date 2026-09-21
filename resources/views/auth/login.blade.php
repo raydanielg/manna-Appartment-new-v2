@@ -3,11 +3,10 @@
 @section('title', 'Login - Manna Apartment')
 
 @section('content')
-<div class="w-full max-w-[400px] relative z-10" style="animation: simpleFadeIn 0.4s ease-out both;">
+<div class="w-full max-w-[400px] relative z-10">
     <div class="bg-white rounded-xl border border-gray-200 p-8 sm:p-10">
-        {{-- Logo & Header --}}
+        {{-- Header --}}
         <div class="text-center mb-8">
-            <img src="{{ asset('file_000000001cdc7230acd3b9659475e375.png') }}" alt="Manna Apartment" class="w-14 h-14 object-cover rounded-xl mx-auto mb-5">
             <h2 class="text-xl font-bold text-gray-900">Manna Apartment</h2>
             <p class="text-gray-400 text-xs mt-1 font-semibold uppercase tracking-widest">Admin Portal</p>
         </div>

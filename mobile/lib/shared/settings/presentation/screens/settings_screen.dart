@@ -86,7 +86,7 @@ class SettingsScreen extends ConsumerWidget {
             typography,
             icon: HugeIcons.strokeRoundedInformationCircle,
             title: context.tr('about'),
-            subtitle: 'Manna Apartment v3.1.0+5',
+            subtitle: 'Manna Apartment v3.4.0+9',
             onTap: () => context.push('/settings/about'),
           ),
           _menuItem(

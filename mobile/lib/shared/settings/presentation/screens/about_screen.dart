@@ -56,7 +56,7 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Center(
             child: Text(
-              '${context.tr('version')} 3.1.0+5',
+              '${context.tr('version')} 3.4.0+9',
               style:
                   typography.body.xs2.copyWith(color: colors.mutedForeground),
             ),

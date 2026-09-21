@@ -14,7 +14,7 @@ class UnitCard extends StatelessWidget {
     final typography = context.theme.typography;
 
     final name = unit['name'] ?? unit['unit_number'] ?? context.tr('unit');
-    final rent = unit['monthly_rent'] ?? 0;
+    final rent = unit['rent_amount'] ?? unit['monthly_rent'] ?? 0;
     final formattedRent = NumberFormat('#,###')
         .format(rent is num ? rent : (double.tryParse(rent.toString()) ?? 0));
     final status = (unit['status'] ?? 'vacant').toString();
