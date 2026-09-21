@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
@@ -35,22 +35,34 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('reports'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('reports'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () => context.pop(),
+          child: context.theme.icons.arrowLeft(context),
         ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.textLight,
-          indicatorColor: AppColors.primary,
-          labelStyle: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700),
+          labelColor: colors.primary,
+          unselectedLabelColor: colors.mutedForeground,
+          indicatorColor: colors.primary,
+          indicatorSize: TabBarIndicatorSize.label,
+          labelStyle: typography.body.xs2.copyWith(fontWeight: FontWeight.w700),
+          unselectedLabelStyle:
+              typography.body.xs2.copyWith(fontWeight: FontWeight.w500),
           tabs: [
             Tab(text: context.tr('expiry_reports')),
             Tab(text: context.tr('debt_reports')),
@@ -70,10 +82,22 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen>
   }
 }
 
+double _parseAmount(dynamic v) {
+  if (v == null) return 0;
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v) ?? 0.0;
+  return 0.0;
+}
+
+String _fmt(double amount) {
+  if (amount >= 1000000) return '${(amount / 1000000).toStringAsFixed(1)}M';
+  if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(0)}K';
+  return amount.toStringAsFixed(0);
+}
+
 class _ExpiryReportTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final reportAsync = ref.watch(expiryReportProvider(30));
 
     return reportAsync.when(
@@ -91,18 +115,19 @@ class _ExpiryReportTab extends ConsumerWidget {
         }
 
         return ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           children: [
             if (expired.isNotEmpty) ...[
-              _buildSectionHeader(context, context.tr('expired_contracts'), expired.length, AppColors.error),
-              const SizedBox(height: 12),
-              ...expired.map((item) => _buildExpiryCard(context, item, isDark, isExpired: true)),
-              const SizedBox(height: 24),
+              _header(context, context.tr('expired_contracts'), expired.length,
+                  context.theme.colors.error),
+              ...expired.map((item) =>
+                  _expiryRow(context, item, isExpired: true)),
             ],
             if (expiring.isNotEmpty) ...[
-              _buildSectionHeader(context, context.tr('expiring_contracts'), expiring.length, AppColors.warning),
-              const SizedBox(height: 12),
-              ...expiring.map((item) => _buildExpiryCard(context, item, isDark, isExpired: false)),
+              _header(context, context.tr('expiring_contracts'),
+                  expiring.length, const Color(0xFFD97706)),
+              ...expiring.map((item) =>
+                  _expiryRow(context, item, isExpired: false)),
             ],
           ],
         );
@@ -110,69 +135,119 @@ class _ExpiryReportTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, int count, Color color) {
-    return Row(
-      children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 8),
-        Text(title, style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-          child: Text('$count', style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
-        ),
-      ],
+  Widget _header(BuildContext context, String title, int count, Color color) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title.toUpperCase(),
+            style: typography.body.xs3.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+              color: colors.mutedForeground,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '($count)',
+            style: typography.body.xs3
+                .copyWith(fontWeight: FontWeight.w700, color: color),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildExpiryCard(BuildContext context, dynamic item, bool isDark, {required bool isExpired}) {
+  Widget _expiryRow(BuildContext context, dynamic item,
+      {required bool isExpired}) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     final map = item as Map<String, dynamic>;
-    final tenantName = map['tenant_name'] ?? map['tenant']?['full_name'] ?? 'Unknown';
+    final tenantName =
+        map['tenant_name'] ?? map['tenant']?['full_name'] ?? 'Unknown';
     final propertyName = map['property_name'] ?? map['property']?['name'] ?? '';
     final unitName = map['unit_name'] ?? map['unit']?['name'] ?? '';
     final endDate = map['end_date'] ?? map['lease_end'];
     final endDateStr = endDate != null
-        ? DateFormat('dd MMM yyyy').format(DateTime.tryParse(endDate.toString()) ?? DateTime.now())
+        ? DateFormat('dd MMM yyyy')
+            .format(DateTime.tryParse(endDate.toString()) ?? DateTime.now())
         : '-';
+    final color = isExpired ? colors.error : const Color(0xFFD97706);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: (isExpired ? AppColors.error : AppColors.warning).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              isExpired ? Icons.error_outline : Icons.schedule,
-              color: isExpired ? AppColors.error : AppColors.warning,
-              size: 20,
-            ),
+    return FTappable(
+      onPress: () {},
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: colors.border.withValues(alpha: 0.5)),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(tenantName, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-                if (propertyName.isNotEmpty || unitName.isNotEmpty)
-                  Text('$propertyName - $unitName', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
-                const SizedBox(height: 4),
-                Text('${context.tr('lease_end')}: $endDateStr', style: GoogleFonts.nunito(fontSize: 11, color: isExpired ? AppColors.error : AppColors.warning, fontWeight: FontWeight.w600)),
-              ],
-            ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              HugeIcon(
+                icon: isExpired
+                    ? HugeIcons.strokeRoundedAlert02
+                    : HugeIcons.strokeRoundedClock01,
+                size: 17,
+                color: color,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tenantName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.sm
+                          .copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    if (propertyName.isNotEmpty || unitName.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '$propertyName · $unitName',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: typography.body.xs3
+                            .copyWith(color: colors.mutedForeground),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    endDateStr,
+                    style: typography.body.xs3.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                  Text(
+                    context.tr('lease_end'),
+                    style: typography.body.xs3
+                        .copyWith(color: colors.mutedForeground),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -181,7 +256,6 @@ class _ExpiryReportTab extends ConsumerWidget {
 class _DebtReportTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final reportAsync = ref.watch(debtReportProvider);
 
     return reportAsync.when(
@@ -199,100 +273,115 @@ class _DebtReportTab extends ConsumerWidget {
         }
 
         return ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 22),
+            // Summary header — plain, no card
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.tr('total_debts').toUpperCase(),
+                        style: context.theme.typography.body.xs3.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                          color: context.theme.colors.mutedForeground,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'TZS ${_fmt(totalDebts)}',
+                        style: context.theme.typography.display.md.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: context.theme.colors.error,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(context.tr('total_debts'), style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight, fontWeight: FontWeight.w600)),
-                        Text('TZS ${_formatAmount(totalDebts)}', style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.error)),
-                      ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: context.theme.colors.error.withValues(alpha: 0.1),
+                    borderRadius: context.theme.style.borderRadius.pill,
+                  ),
+                  child: Text(
+                    '${debts.length} ${context.tr('tenants_in_debt')}',
+                    style: context.theme.typography.body.xs3.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: context.theme.colors.error,
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
-                    child: Text('${debts.length} ${context.tr('tenants_in_debt')}', style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.error)),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            ...debts.map((item) => _buildDebtCard(item, isDark)),
+            const SizedBox(height: 8),
+            ...debts.map((item) => _debtRow(context, item)),
           ],
         );
       },
     );
   }
 
-  Widget _buildDebtCard(dynamic item, bool isDark) {
+  Widget _debtRow(BuildContext context, dynamic item) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     final map = item as Map<String, dynamic>;
-    final tenantName = map['tenant_name'] ?? map['tenant']?['full_name'] ?? 'Unknown';
+    final tenantName =
+        map['tenant_name'] ?? map['tenant']?['full_name'] ?? 'Unknown';
     final propertyName = map['property_name'] ?? map['property']?['name'] ?? '';
     final unitName = map['unit_name'] ?? map['unit']?['name'] ?? '';
     final amount = _parseAmount(map['amount'] ?? map['outstanding']);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+        border: Border(
+          bottom: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.person_outline, color: AppColors.error, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(tenantName, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-                if (propertyName.isNotEmpty || unitName.isNotEmpty)
-                  Text('$propertyName - $unitName', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
-              ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tenantName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: typography.body.sm
+                        .copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  if (propertyName.isNotEmpty || unitName.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      '$propertyName · $unitName',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.xs3
+                          .copyWith(color: colors.mutedForeground),
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
-          Text('TZS ${_formatAmount(amount)}', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.error)),
-        ],
+            const SizedBox(width: 8),
+            Text(
+              'TZS ${_fmt(amount)}',
+              style: typography.body.sm.copyWith(
+                fontWeight: FontWeight.w800,
+                color: colors.error,
+              ),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  double _parseAmount(dynamic v) {
-    if (v == null) return 0;
-    if (v is num) return v.toDouble();
-    if (v is String) return double.tryParse(v) ?? 0.0;
-    return 0.0;
-  }
-
-  String _formatAmount(double amount) {
-    if (amount >= 1000000) return '${(amount / 1000000).toStringAsFixed(1)}M';
-    if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(0)}K';
-    return amount.toStringAsFixed(0);
   }
 }
 
@@ -306,33 +395,44 @@ class _LeaseReportTabState extends ConsumerState<_LeaseReportTab> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     final reportAsync = ref.watch(leaseReportProvider(_selectedYear));
+    final years =
+        List.generate(5, (i) => DateTime.now().year - 2 + i);
 
     return Column(
       children: [
+        // Year selector — FButton chips
         Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: Row(
             children: [
-              Text(context.tr('select_year'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textLight)),
+              Text(
+                context.tr('select_year'),
+                style: typography.body.xs2
+                    .copyWith(color: colors.mutedForeground),
+              ),
               const SizedBox(width: 12),
               Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkSurface : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-                  ),
-                  child: DropdownButton<int>(
-                    value: _selectedYear,
-                    isExpanded: true,
-                    underline: const SizedBox(),
-                    items: List.generate(5, (i) => DateTime.now().year - 2 + i).map((y) {
-                      return DropdownMenuItem(value: y, child: Text('$y', style: GoogleFonts.nunito(fontSize: 14)));
-                    }).toList(),
-                    onChanged: (v) { if (v != null) setState(() => _selectedYear = v); },
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final y in years)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: FButton(
+                            variant:
+                                y == _selectedYear ? .primary : .outline,
+                            size: .xs,
+                            mainAxisSize: MainAxisSize.min,
+                            onPress: () =>
+                                setState(() => _selectedYear = y),
+                            child: Text('$y'),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -344,27 +444,54 @@ class _LeaseReportTabState extends ConsumerState<_LeaseReportTab> {
             loading: () => const LoadingIndicator(),
             error: (e, _) => ErrorState(
               message: e.toString(),
-              onRetry: () => ref.invalidate(leaseReportProvider(_selectedYear)),
+              onRetry: () =>
+                  ref.invalidate(leaseReportProvider(_selectedYear)),
             ),
             data: (data) {
               final expected = _parseAmount(data['expected']);
               final collected = _parseAmount(data['collected']);
               final outstanding = _parseAmount(data['outstanding']);
-              final leases = data['leases'] is List ? data['leases'] as List : [];
+              final leases =
+                  data['leases'] is List ? data['leases'] as List : [];
 
-              if (expected == 0 && collected == 0 && outstanding == 0 && leases.isEmpty) {
+              if (expected == 0 &&
+                  collected == 0 &&
+                  outstanding == 0 &&
+                  leases.isEmpty) {
                 return EmptyState(message: context.tr('no_revenue_data'));
               }
 
               return ListView(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
                 children: [
-                  _buildLeaseSummary(context, expected, collected, outstanding, isDark),
-                  const SizedBox(height: 20),
+                  // Summary — plain stat rows
+                  _statRow(context, context.tr('lease_expected'),
+                      'TZS ${_fmt(expected)}', const Color(0xFF0EA5E9),
+                      HugeIcons.strokeRoundedWallet01),
+                  Divider(
+                      height: 20,
+                      color: colors.border.withValues(alpha: 0.6)),
+                  _statRow(context, context.tr('lease_collected'),
+                      'TZS ${_fmt(collected)}', const Color(0xFF16A34A),
+                      HugeIcons.strokeRoundedCheckmarkCircle02),
+                  Divider(
+                      height: 20,
+                      color: colors.border.withValues(alpha: 0.6)),
+                  _statRow(context, context.tr('lease_outstanding'),
+                      'TZS ${_fmt(outstanding)}', colors.error,
+                      HugeIcons.strokeRoundedAlert02),
                   if (leases.isNotEmpty) ...[
-                    Text(context.tr('lease_reports'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-                    const SizedBox(height: 12),
-                    ...leases.map((item) => _buildLeaseCard(item, isDark)),
+                    const SizedBox(height: 20),
+                    Text(
+                      context.tr('lease_reports').toUpperCase(),
+                      style: typography.body.xs3.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        color: colors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...leases.map((item) => _leaseRow(context, item)),
                   ],
                 ],
               );
@@ -375,106 +502,105 @@ class _LeaseReportTabState extends ConsumerState<_LeaseReportTab> {
     );
   }
 
-  Widget _buildLeaseSummary(BuildContext context, double expected, double collected, double outstanding, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        children: [
-          _buildLeaseRow(context.tr('lease_expected'), _formatAmount(expected), AppColors.info, Icons.account_balance_wallet_outlined),
-          const Divider(height: 24),
-          _buildLeaseRow(context.tr('lease_collected'), _formatAmount(collected), AppColors.success, Icons.check_circle_outline),
-          const Divider(height: 24),
-          _buildLeaseRow(context.tr('lease_outstanding'), _formatAmount(outstanding), AppColors.error, Icons.error_outline),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLeaseRow(String label, String value, Color color, IconData icon) {
+  Widget _statRow(BuildContext context, String label, String value,
+      Color color, List<List<dynamic>> icon) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     return Row(
       children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-          child: Icon(icon, color: color, size: 18),
+        HugeIcon(icon: icon, size: 17, color: color),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(label,
+              style: typography.body.xs2
+                  .copyWith(color: colors.mutedForeground)),
         ),
-        const SizedBox(width: 12),
-        Expanded(child: Text(label, style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textLight))),
-        Text('TZS $value', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
+        Text(
+          value,
+          style: typography.body.md
+              .copyWith(fontWeight: FontWeight.w800, color: color),
+        ),
       ],
     );
   }
 
-  Widget _buildLeaseCard(dynamic item, bool isDark) {
+  Widget _leaseRow(BuildContext context, dynamic item) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     final map = item as Map<String, dynamic>;
-    final tenantName = map['tenant_name'] ?? map['tenant']?['full_name'] ?? 'Unknown';
+    final tenantName =
+        map['tenant_name'] ?? map['tenant']?['full_name'] ?? 'Unknown';
     final propertyName = map['property_name'] ?? map['property']?['name'] ?? '';
     final unitName = map['unit_name'] ?? map['unit']?['name'] ?? '';
     final expected = _parseAmount(map['expected']);
     final collected = _parseAmount(map['collected']);
     final outstanding = _parseAmount(map['outstanding']);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+        border: Border(
+          bottom: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(tenantName, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-          if (propertyName.isNotEmpty || unitName.isNotEmpty)
-            Text('$propertyName - $unitName', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _buildLeaseChip(context.tr('lease_expected'), _formatAmount(expected), AppColors.info),
-              const SizedBox(width: 8),
-              _buildLeaseChip(context.tr('lease_collected'), _formatAmount(collected), AppColors.success),
-              const SizedBox(width: 8),
-              _buildLeaseChip(context.tr('lease_outstanding'), _formatAmount(outstanding), AppColors.error),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLeaseChip(String label, String value, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: GoogleFonts.nunito(fontSize: 9, color: AppColors.textLight, fontWeight: FontWeight.w600), textAlign: TextAlign.center),
-            const SizedBox(height: 2),
-            Text(value, style: GoogleFonts.nunito(fontSize: 12, color: color, fontWeight: FontWeight.w800), textAlign: TextAlign.center),
+            Text(
+              tenantName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style:
+                  typography.body.sm.copyWith(fontWeight: FontWeight.w600),
+            ),
+            if (propertyName.isNotEmpty || unitName.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                '$propertyName · $unitName',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: typography.body.xs3
+                    .copyWith(color: colors.mutedForeground),
+              ),
+            ],
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _mini(context, context.tr('lease_expected'),
+                    _fmt(expected), const Color(0xFF0EA5E9)),
+                _mini(context, context.tr('lease_collected'),
+                    _fmt(collected), const Color(0xFF16A34A)),
+                _mini(context, context.tr('lease_outstanding'),
+                    _fmt(outstanding), colors.error),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  double _parseAmount(dynamic v) {
-    if (v == null) return 0;
-    if (v is num) return v.toDouble();
-    if (v is String) return double.tryParse(v) ?? 0.0;
-    return 0.0;
-  }
-
-  String _formatAmount(double amount) {
-    if (amount >= 1000000) return '${(amount / 1000000).toStringAsFixed(1)}M';
-    if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(0)}K';
-    return amount.toStringAsFixed(0);
+  Widget _mini(BuildContext context, String label, String value, Color color) {
+    final typography = context.theme.typography;
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: typography.body.xs3.copyWith(
+                color: context.theme.colors.mutedForeground),
+          ),
+          Text(
+            value,
+            style: typography.body.xs2
+                .copyWith(fontWeight: FontWeight.w800, color: color),
+          ),
+        ],
+      ),
+    );
   }
 }

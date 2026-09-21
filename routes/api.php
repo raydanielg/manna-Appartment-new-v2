@@ -214,6 +214,7 @@ Route::prefix('v1')->group(function () {
                 Route::delete('/staff/{id}', [StaffManagementController::class, 'destroy']);
 
                 Route::get('/maintenance-requests', [\App\Http\Controllers\Api\Landlord\MaintenanceRequestController::class, 'index']);
+                Route::get('/maintenance-requests/{id}', [\App\Http\Controllers\Api\Landlord\MaintenanceRequestController::class, 'show']);
                 Route::patch('/maintenance-requests/{id}/status', [\App\Http\Controllers\Api\Landlord\MaintenanceRequestController::class, 'updateStatus']);
             });
         });

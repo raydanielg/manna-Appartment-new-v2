@@ -1,52 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../providers/subscription_provider.dart';
 import '../widgets/plan_card.dart';
 
 import 'package:manna_apartment/core/utils/app_toast.dart';
+
 class SubscriptionPlansScreen extends ConsumerStatefulWidget {
   const SubscriptionPlansScreen({super.key});
 
   @override
-  ConsumerState<SubscriptionPlansScreen> createState() => _SubscriptionPlansScreenState();
+  ConsumerState<SubscriptionPlansScreen> createState() =>
+      _SubscriptionPlansScreenState();
 }
 
-class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScreen> {
+class _SubscriptionPlansScreenState
+    extends ConsumerState<SubscriptionPlansScreen> {
   bool _isActivating = false;
 
   @override
   Widget build(BuildContext context) {
     final plansAsync = ref.watch(subscriptionPlansProvider);
     final currentPlanAsync = ref.watch(currentPlanProvider);
-    final currentPlanId = currentPlanAsync.maybeWhen(data: (d) => d['plan_id'], orElse: () => null);
+    final currentPlanId =
+        currentPlanAsync.maybeWhen(data: (d) => d['plan_id'], orElse: () => null);
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        centerTitle: false,
         title: Text(
           context.tr('subscription_plans'),
-          style: GoogleFonts.nunito(fontWeight: FontWeight.w800, color: AppColors.textDark, fontSize: 18),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textDark),
-          onPressed: () {
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () {
             if (context.canPop()) {
               context.pop();
             } else {
               context.go('/landlord/subscription');
             }
           },
+          child: context.theme.icons.arrowLeft(context),
         ),
       ),
       body: plansAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        loading: () => const Center(child: FCircularProgress()),
         error: (e, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
@@ -54,38 +62,42 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 64,
-                  height: 64,
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.1),
+                    color: colors.error.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.cloud_off_rounded, color: AppColors.error, size: 28),
+                  child: Center(
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedAlert02,
+                      size: 24,
+                      color: colors.error,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Failed to load plans',
-                  style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark),
+                  style:
+                      typography.body.md.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   e.toString(),
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight),
+                  style: typography.body.xs2
+                      .copyWith(color: colors.mutedForeground),
                 ),
                 const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: () => ref.invalidate(subscriptionPlansProvider),
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: Text(context.tr('retry'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    elevation: 4,
-                    shadowColor: AppColors.primary.withValues(alpha: 0.35),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
+                FButton(
+                  variant: .outline,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  prefix: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedRefresh, size: null),
+                  onPress: () => ref.invalidate(subscriptionPlansProvider),
+                  child: Text(context.tr('retry')),
                 ),
               ],
             ),
@@ -103,12 +115,14 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
                   children: [
                     Text(
                       'Choose Your Plan',
-                      style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                      style: typography.display.lg
+                          .copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'Select a plan that fits your needs. You can upgrade or cancel anytime.',
-                      style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.4),
+                      style: typography.body.xs2
+                          .copyWith(color: colors.mutedForeground, height: 1.5),
                     ),
                   ],
                 ),
@@ -132,7 +146,8 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
       if (_isActivating) return;
       setState(() => _isActivating = true);
 
-      final success = await ref.read(freeTrialNotifierProvider.notifier).activate();
+      final success =
+          await ref.read(freeTrialNotifierProvider.notifier).activate();
 
       if (!mounted) return;
       setState(() => _isActivating = false);
@@ -144,7 +159,8 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
         final errorState = ref.read(freeTrialNotifierProvider);
         final errorMsg = errorState.maybeWhen(
           error: (e, _) => e.toString(),
-          orElse: () => 'Failed to activate free trial. You may already have an active subscription.',
+          orElse: () =>
+              'Failed to activate free trial. You may already have an active subscription.',
         );
         ref.read(freeTrialNotifierProvider.notifier).clearError();
         _showErrorAlert(context, errorMsg);
@@ -155,39 +171,53 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
   }
 
   void _showErrorAlert(BuildContext context, String message) {
-    showDialog(
+    showFDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+      builder: (context, style, animation) => FDialog(
+        animation: animation,
+        builder: (context, style) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: context.theme.colors.error.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedAlert02,
+                        size: 16,
+                        color: context.theme.colors.error,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text('Oops!', style: style.titleTextStyle),
+                ],
               ),
-              child: const Icon(Icons.error_outline, color: AppColors.error, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Text('Oops!', style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
-          ],
-        ),
-        content: Text(
-          message,
-          style: GoogleFonts.nunito(fontSize: 14, color: AppColors.textLight, height: 1.4),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              textStyle: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 14),
-            ),
-            child: Text(context.tr('ok')),
+              const SizedBox(height: 10),
+              Text(message, style: style.bodyTextStyle),
+              const SizedBox(height: 20),
+              Align(
+                alignment: Alignment.centerRight,
+                child: FButton(
+                  variant: .primary,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => Navigator.pop(context),
+                  child: Text(context.tr('ok')),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

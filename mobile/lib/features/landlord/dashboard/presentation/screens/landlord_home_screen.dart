@@ -68,8 +68,8 @@ class LandlordHomeScreen extends ConsumerWidget {
                             style: typography.display.lg.copyWith(fontWeight: FontWeight.w700),
                           ),
                           FButton(
-                            variant: .ghost,
-                            size: .sm,
+                            variant: .outline,
+                            size: .xs,
                             mainAxisSize: MainAxisSize.min,
                             onPress: () => context.push('/landlord/finance-report'),
                             suffix: context.theme.icons.chevronRight(context),
@@ -112,38 +112,71 @@ class LandlordHomeScreen extends ConsumerWidget {
                     width: 46,
                     height: 46,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Text(initials),
+                    loadingBuilder: (context, child, progress) {
+                      if (progress == null) return child;
+                      return Container(
+                        width: 46,
+                        height: 46,
+                        color: colors.secondary,
+                        child: Center(
+                          child: Text(
+                            initials,
+                            style: typography.display.sm.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colors.secondaryForeground,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (_, _, _) => Container(
+                      width: 46,
+                      height: 46,
+                      color: colors.secondary,
+                      child: Center(
+                        child: Text(
+                          initials,
+                          style: typography.display.sm.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: colors.secondaryForeground,
+                          ),
+                        ),
+                      ),
+                    ),
                   )
-                : Text(initials),
+                : Container(
+                    width: 46,
+                    height: 46,
+                    color: colors.secondary,
+                    child: Center(
+                      child: Text(
+                        initials,
+                        style: typography.display.sm.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colors.secondaryForeground,
+                        ),
+                      ),
+                    ),
+                  ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${context.tr('hello')}, $name',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: typography.body.lg.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                context.tr('welcome_back'),
-                style: typography.body.xs.copyWith(color: colors.mutedForeground),
-              ),
-            ],
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: typography.body.lg.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
         Stack(
           clipBehavior: Clip.none,
           children: [
             FButton.icon(
-              variant: .outline,
+              variant: .ghost,
               size: .sm,
               onPress: () => context.push('/notifications'),
-              child: const HugeIcon(icon: HugeIcons.strokeRoundedNotification02, size: null),
+              child: const HugeIcon(icon: HugeIcons.strokeRoundedNotification02, size: 20),
             ),
             if (unreadCount > 0)
               Positioned(
@@ -192,8 +225,8 @@ class LandlordHomeScreen extends ConsumerWidget {
               style: typography.display.lg.copyWith(fontWeight: FontWeight.w700),
             ),
             FButton(
-              variant: .ghost,
-              size: .sm,
+              variant: .outline,
+              size: .xs,
               mainAxisSize: MainAxisSize.min,
               onPress: () => context.push('/landlord/tenants'),
               suffix: context.theme.icons.chevronRight(context),
@@ -240,7 +273,9 @@ class LandlordHomeScreen extends ConsumerWidget {
     if (avatar.isEmpty) return avatar;
     if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar;
     final base = AppConfig.apiBaseUrl.replaceAll(RegExp(r'/api(/v1)?/?$'), '');
-    final separator = avatar.startsWith('/') ? '' : '/';
-    return '$base$separator$avatar';
+    var path = avatar.startsWith('/') ? avatar : '/$avatar';
+    // Laravel served from project root — /storage/* lives under /public/storage/*
+    if (path.startsWith('/storage/')) path = '/public$path';
+    return '$base$path';
   }
 }

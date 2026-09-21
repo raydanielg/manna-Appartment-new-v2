@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
+import '../../../../../core/widgets/confirm_dialog.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../providers/tenants_provider.dart';
@@ -96,11 +97,12 @@ class TenantDetailScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    FBadge(
-                      variant: isActive ? .primary : .destructive,
-                      child: Text(isActive
-                          ? context.tr('active').toUpperCase()
-                          : context.tr('moved_out').toUpperCase()),
+                    _statusPill(
+                      context,
+                      isActive
+                          ? context.tr('active')
+                          : context.tr('moved_out'),
+                      isActive,
                     ),
                   ],
                 ),
@@ -230,6 +232,29 @@ class TenantDetailScreen extends ConsumerWidget {
   Widget _divider(FColors colors) =>
       Divider(height: 1, indent: 14, color: colors.border.withValues(alpha: 0.6));
 
+  Widget _statusPill(BuildContext context, String label, bool positive) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final color = positive ? const Color(0xFF16A34A) : colors.mutedForeground;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: positive
+            ? const Color(0xFF16A34A).withValues(alpha: 0.1)
+            : colors.secondary,
+        borderRadius: context.theme.style.borderRadius.pill,
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: typography.body.xs3.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+          color: color,
+        ),
+      ),
+    );
+  }
+
   Widget _row(
     FColors colors,
     FTypography typography,
@@ -298,28 +323,23 @@ class TenantDetailScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
         if (contracts.isEmpty)
-          FCard(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  context.tr('no_contracts_yet'),
-                  style:
-                      typography.body.xs2.copyWith(color: colors.mutedForeground),
-                ),
-              ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              context.tr('no_contracts_yet'),
+              style: typography.body.xs2.copyWith(color: colors.mutedForeground),
             ),
           )
         else
           ...contracts.map((c) {
             final contract = c is Map<String, dynamic> ? c : <String, dynamic>{};
-            return _buildContractCard(context, contract, ref, colors, typography);
+            return _buildContractRow(context, contract, ref, colors, typography);
           }),
       ],
     );
   }
 
-  Widget _buildContractCard(
+  Widget _buildContractRow(
     BuildContext context,
     Map<String, dynamic> contract,
     WidgetRef ref,
@@ -332,67 +352,66 @@ class TenantDetailScreen extends ConsumerWidget {
     final endDate = _formatDate(contract['end_date']);
     final status = (contract['status'] ?? 'active').toString();
     final contractId = contract['id']?.toString() ?? '';
+    final statusColor =
+        status == 'active' ? const Color(0xFF16A34A) : colors.mutedForeground;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: FTappable(
-        onPress: () => context.push('/landlord/contracts/$contractId'),
-        child: FCard(
-          child: Padding(
-            padding: const EdgeInsets.all(4),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-              Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: colors.primary.withValues(alpha: 0.1),
-                      borderRadius: context.theme.style.borderRadius.md,
+    return FTappable(
+      onPress: () => context.push('/landlord/contracts/$contractId'),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedFile01,
+                size: 17,
+                color: colors.mutedForeground,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${context.tr('unit')}: $unitName',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.sm
+                          .copyWith(fontWeight: FontWeight.w600),
                     ),
-                    child: Center(
-                      child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedFile01,
-                        size: 18,
-                        color: colors.primary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 2),
+                    Row(
                       children: [
-                        Text(
-                          '${context.tr('unit')}: $unitName',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: typography.body.sm
-                              .copyWith(fontWeight: FontWeight.w700),
+                        Expanded(
+                          child: Text(
+                            '$startDate → $endDate',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: typography.body.xs3
+                                .copyWith(color: colors.mutedForeground),
+                          ),
                         ),
-                        const SizedBox(height: 2),
                         Text(
-                          '$startDate - $endDate',
-                          style: typography.body.xs3
-                              .copyWith(color: colors.mutedForeground),
+                          status.toUpperCase(),
+                          style: typography.body.xs3.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: statusColor,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  FBadge(
-                    variant: status == 'active' ? .primary : .secondary,
-                    child: Text(status.toUpperCase()),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              FButton(
-                variant: .outline,
+              const SizedBox(width: 4),
+              FButton.icon(
+                variant: .ghost,
                 size: .sm,
-                prefix: const HugeIcon(
-                    icon: HugeIcons.strokeRoundedDownload04, size: null),
                 onPress: () async {
                   try {
                     final path = await ref
@@ -406,10 +425,10 @@ class TenantDetailScreen extends ConsumerWidget {
                     }
                   }
                 },
-                child: Text(context.tr('download_pdf')),
+                child: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedDownload04, size: 16),
               ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -426,54 +445,13 @@ class TenantDetailScreen extends ConsumerWidget {
     final payments = (tenant['payments'] ?? []) as List<dynamic>;
     final id = GoRouterState.of(context).pathParameters['id'] ?? '';
 
-    return FTappable(
+    return FButton(
+      variant: .outline,
+      prefix: const HugeIcon(icon: HugeIcons.strokeRoundedMoney01, size: null),
+      suffix: context.theme.icons.chevronRight(context),
       onPress: () => context.push('/landlord/tenants/$id/payments'),
-      child: FCard(
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.1),
-                  borderRadius: context.theme.style.borderRadius.md,
-                ),
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedMoney01,
-                    size: 18,
-                    color: colors.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('payment_history'),
-                      style: typography.body.sm.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${payments.length} ${context.tr('payments')}',
-                      style: typography.body.xs3
-                          .copyWith(color: colors.mutedForeground),
-                    ),
-                  ],
-                ),
-              ),
-              HugeIcon(
-                icon: HugeIcons.strokeRoundedArrowRight01,
-                size: 18,
-                color: colors.mutedForeground.withValues(alpha: 0.6),
-              ),
-            ],
-          ),
-        ),
+      child: Text(
+        '${context.tr('payment_history')} (${payments.length})',
       ),
     );
   }
@@ -549,48 +527,20 @@ class TenantDetailScreen extends ConsumerWidget {
     }
   }
 
-  Future<bool?> _confirmDialog(
+  Future<bool> _confirmDialog(
     BuildContext context, {
     required String title,
     required String body,
     required String confirmLabel,
     bool destructive = false,
   }) {
-    return showFDialog<bool>(
-      context: context,
-      builder: (context, style, animation) => FDialog(
-        animation: animation,
-        builder: (context, style) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: style.titleTextStyle),
-            const SizedBox(height: 8),
-            Text(body, style: style.bodyTextStyle),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FButton(
-                  variant: .outline,
-                  size: .sm,
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: () => Navigator.pop(context, false),
-                  child: Text(context.tr('cancel')),
-                ),
-                const SizedBox(width: 8),
-                FButton(
-                  variant: destructive ? .destructive : .primary,
-                  size: .sm,
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: () => Navigator.pop(context, true),
-                  child: Text(confirmLabel),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+    return showConfirmDialog(
+      context,
+      title: title,
+      message: body,
+      confirmText: confirmLabel,
+      cancelText: context.tr('cancel'),
+      isDestructive: destructive,
     );
   }
 
@@ -612,6 +562,7 @@ class TenantDetailScreen extends ConsumerWidget {
       builder: (context, style, animation) => FDialog(
         animation: animation,
         builder: (context, style) => SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

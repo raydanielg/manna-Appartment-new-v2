@@ -1,222 +1,274 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../../core/config/app_config.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/widgets/confirm_dialog.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
 import '../../../../../features/landlord/subscription/providers/subscription_provider.dart';
 
 class LandlordMoreScreen extends ConsumerWidget {
-  LandlordMoreScreen({super.key});
+  const LandlordMoreScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     final user = ref.watch(authProvider).user;
     final planAsync = ref.watch(currentPlanProvider);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('more'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
         automaticallyImplyLeading: false,
+        title: Text(
+          context.tr('more'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         children: [
-          _buildProfileHeader(context, user?.fullName ?? context.tr('landlord'), user?.phone ?? '', user?.avatar),
-          const SizedBox(height: 20),
+          // Profile header — plain row
+          _profileRow(context, colors, typography,
+              user?.fullName ?? context.tr('landlord'), user?.phone ?? '',
+              user?.avatar),
+          const SizedBox(height: 8),
+
+          // Current plan row
           planAsync.when(
-            loading: () => const SizedBox(),
-            error: (_, __) => const SizedBox(),
-            data: (plan) => _buildPlanCard(context, plan),
+            loading: () => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
+            data: (plan) =>
+                _planRow(context, colors, typography, plan),
           ),
-          const SizedBox(height: 20),
-          _buildSectionTitle(context, context.tr('management')),
-          _buildMenuItem(context, icon: Icons.apartment, customIcon: 'assets/icons/propertiesicon.png', title: context.tr('properties'), subtitle: context.tr('manage_properties'), onTap: () => context.push('/landlord/properties')),
-          _buildMenuItem(context, icon: Icons.people, customIcon: 'assets/icons/tenantsicon.png', title: context.tr('tenants'), subtitle: context.tr('view_tenants'), onTap: () => context.push('/landlord/tenants')),
-          _buildMenuItem(context, icon: Icons.description_outlined, customIcon: 'assets/icons/contracts.png', title: context.tr('contracts'), subtitle: context.tr('view_contracts'), onTap: () => context.push('/landlord/contracts')),
-          _buildMenuItem(context, icon: Icons.payments, customIcon: 'assets/icons/incomeicon.png', title: context.tr('payments'), subtitle: context.tr('record_view_payments'), onTap: () => context.push('/landlord/payments')),
-          _buildMenuItem(context, icon: Icons.bar_chart, title: context.tr('revenue_report'), subtitle: context.tr('view_revenue_report'), onTap: () => context.push('/landlord/finance-report')),
-          _buildMenuItem(context, icon: Icons.assignment_outlined, title: context.tr('reports'), subtitle: context.tr('view_lease_report'), onTap: () => context.push('/landlord/reports')),
-          _buildMenuItem(context, icon: Icons.sms_outlined, customIcon: 'assets/icons/sms.png', title: context.tr('sms_broadcast'), subtitle: context.tr('send_reminders'), onTap: () => context.push('/landlord/sms')),
-          _buildMenuItem(context, icon: Icons.build_outlined, customIcon: 'assets/icons/maintainance.png', title: context.tr('maintenance'), subtitle: context.tr('respond_requests'), onTap: () => context.push('/landlord/maintenance')),
+
+          _sectionLabel(context, context.tr('management')),
+          _row(context,
+              icon: HugeIcons.strokeRoundedBuilding03,
+              title: context.tr('properties'),
+              onPress: () => context.push('/landlord/properties')),
+          _row(context,
+              icon: HugeIcons.strokeRoundedUserGroup,
+              title: context.tr('tenants'),
+              onPress: () => context.push('/landlord/tenants')),
+          _row(context,
+              icon: HugeIcons.strokeRoundedFile01,
+              title: context.tr('contracts'),
+              onPress: () => context.push('/landlord/contracts')),
+          _row(context,
+              icon: HugeIcons.strokeRoundedMoney01,
+              title: context.tr('payments'),
+              onPress: () => context.push('/landlord/payments')),
+          _row(context,
+              icon: HugeIcons.strokeRoundedAnalytics01,
+              title: context.tr('revenue_report'),
+              onPress: () => context.push('/landlord/finance-report')),
+          _row(context,
+              icon: HugeIcons.strokeRoundedFileSearch,
+              title: context.tr('reports'),
+              onPress: () => context.push('/landlord/reports')),
+          _row(context,
+              icon: HugeIcons.strokeRoundedMessage01,
+              title: context.tr('sms_broadcast'),
+              onPress: () => context.push('/landlord/sms')),
+          _row(context,
+              icon: HugeIcons.strokeRoundedWrench01,
+              title: context.tr('maintenance'),
+              onPress: () => context.push('/landlord/maintenance'),
+              last: true),
+
           if (user?.role == 'super_admin') ...[
-            const SizedBox(height: 20),
-            _buildSectionTitle(context, context.tr('admin')),
-            _buildMenuItem(context, icon: Icons.admin_panel_settings, title: context.tr('manage_landlords'), subtitle: context.tr('view_all_owners'), onTap: () => context.push('/admin/landlords')),
+            _sectionLabel(context, context.tr('admin')),
+            _row(context,
+                icon: HugeIcons.strokeRoundedUserShield01,
+                title: context.tr('manage_landlords'),
+                onPress: () => context.push('/admin/landlords'),
+                last: true),
           ],
-          const SizedBox(height: 20),
-          _buildSectionTitle(context, context.tr('account')),
-          _buildMenuItem(context, icon: Icons.subscriptions_outlined, title: context.tr('subscription'), subtitle: context.tr('current_plan'), onTap: () => context.push('/landlord/subscription')),
-          _buildMenuItem(context, icon: Icons.settings_outlined, title: context.tr('settings'), subtitle: context.tr('app_preferences'), onTap: () => context.push('/settings')),
-          _buildMenuItem(context, icon: Icons.help_outline, title: context.tr('how_to_use'), subtitle: context.tr('help_subtitle'), onTap: () => context.push('/landlord/help')),
-          _buildMenuItem(
+
+          _sectionLabel(context, context.tr('account')),
+          _row(context,
+              icon: HugeIcons.strokeRoundedCrown,
+              title: context.tr('subscription'),
+              onPress: () => context.push('/landlord/subscription')),
+          _row(context,
+              icon: HugeIcons.strokeRoundedSetting07,
+              title: context.tr('settings'),
+              onPress: () => context.push('/settings')),
+          _row(context,
+              icon: HugeIcons.strokeRoundedHelpCircle,
+              title: context.tr('how_to_use'),
+              onPress: () => context.push('/landlord/help')),
+          _row(
             context,
-            icon: Icons.logout,
+            icon: HugeIcons.strokeRoundedLogout01,
             title: context.tr('logout'),
-            subtitle: context.tr('sign_out_account'),
-            color: AppColors.error,
-            onTap: () => _showLogoutConfirmation(context, ref),
+            destructive: true,
+            onPress: () => _logout(context, ref),
+            last: true,
           ),
         ],
       ),
     );
   }
 
-  void _showLogoutConfirmation(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              icon: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.1), shape: BoxShape.circle),
-                child: const Icon(Icons.logout, color: AppColors.error, size: 32),
-              ),
-              title: Text(context.tr('logout'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800)),
-              content: Text(context.tr('confirm_logout'), textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 14, color: AppColors.textLight)),
-              actionsAlignment: MainAxisAlignment.center,
-              actions: [
-                SizedBox(
-                  width: 120,
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    child: Text(context.tr('cancel'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-                  ),
-                ),
-                SizedBox(
-                  width: 120,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-                    onPressed: () async {
-                      setDialogState(() => _isLoggingOut = true);
-                      await ref.read(authProvider.notifier).logout();
-                      setDialogState(() => _isLoggingOut = false);
-                      if (dialogContext.mounted) {
-                        Navigator.pop(dialogContext);
-                      }
-                      if (context.mounted) {
-                        context.go('/auth/login');
-                      }
-                    },
-                    child: _isLoggingOut
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text(context.tr('logout'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: Colors.white)),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: context.tr('logout'),
+      message: context.tr('confirm_logout'),
+      confirmText: context.tr('logout'),
+      cancelText: context.tr('cancel'),
+      isDestructive: true,
     );
+    if (!confirmed) return;
+    await ref.read(authProvider.notifier).logout();
+    if (context.mounted) context.go('/auth/login');
   }
 
-  bool _isLoggingOut = false;
-
-  Widget _buildProfileHeader(BuildContext context, String name, String phone, String? avatarUrl) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppColors.primary, AppColors.info]),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.25),
-              shape: BoxShape.circle,
-            ),
-            child: ClipOval(
-              child: avatarUrl != null && avatarUrl.isNotEmpty
-                  ? Image.network(
-                      avatarUrl.startsWith('http') ? avatarUrl : '${AppConfig.apiBaseUrl.replaceAll(RegExp(r'/api(/v1)?/?$'), '')}/$avatarUrl',
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Image.asset('assets/icons/avatar.png'),
-                      ),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Image.asset('assets/icons/avatar.png'),
-                    ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  phone,
-                  style: GoogleFonts.nunito(fontSize: 13, color: Colors.white70),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.white70),
-            onPressed: () => context.push('/landlord/profile'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlanCard(BuildContext context, Map<String, dynamic> plan) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final planName = plan['plan']?['name'] ?? plan['plan_name'] ?? 'No Plan';
-    final status = plan['status']?.toString() ?? 'inactive';
-    final isActive = status == 'active';
-    return InkWell(
-      onTap: () => context.push('/landlord/subscription'),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+  Widget _sectionLabel(BuildContext context, String label) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    return Padding(
+      padding: const EdgeInsets.only(top: 20, bottom: 2, left: 4),
+      child: Text(
+        label.toUpperCase(),
+        style: typography.body.xs3.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.6,
+          color: colors.mutedForeground,
         ),
+      ),
+    );
+  }
+
+  Widget _row(
+    BuildContext context, {
+    required List<List<dynamic>> icon,
+    required String title,
+    bool destructive = false,
+    bool last = false,
+    VoidCallback? onPress,
+  }) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final fg = destructive ? colors.error : colors.foreground;
+    final iconColor = destructive ? colors.error : colors.mutedForeground;
+
+    return FTappable(
+      onPress: onPress,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: last
+              ? null
+              : Border(
+                  bottom: BorderSide(
+                      color: colors.border.withValues(alpha: 0.5)),
+                ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 13),
+          child: Row(
+            children: [
+              HugeIcon(icon: icon, size: 19, color: iconColor),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: typography.body.sm.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: fg,
+                  ),
+                ),
+              ),
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                size: 15,
+                color: destructive
+                    ? colors.error.withValues(alpha: 0.6)
+                    : colors.mutedForeground.withValues(alpha: 0.6),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _planRow(BuildContext context, FColors colors,
+      FTypography typography, Map<String, dynamic> plan) {
+    final planName = plan['plan']?['name'] ?? plan['plan_name'] ?? 'No Plan';
+    final isActive = (plan['status']?.toString() ?? '') == 'active';
+    final statusColor =
+        isActive ? const Color(0xFF16A34A) : colors.error;
+
+    return FTappable(
+      onPress: () => context.push('/landlord/subscription'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.workspace_premium, color: AppColors.primary),
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: colors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedCrown,
+                  size: 16,
+                  color: colors.primary,
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(context.tr('current_plan'), style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
-                  Text(planName, style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
+                  Text(
+                    planName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: typography.body.sm
+                        .copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    context.tr('current_plan'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: typography.body.xs3
+                        .copyWith(color: colors.mutedForeground),
+                  ),
                 ],
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(color: isActive ? AppColors.success.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.1),
+                borderRadius: context.theme.style.borderRadius.pill,
+              ),
               child: Text(
-                isActive ? context.tr('active') : context.tr('inactive'),
-                style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w800, color: isActive ? AppColors.success : Colors.red),
+                isActive
+                    ? context.tr('active').toUpperCase()
+                    : context.tr('inactive').toUpperCase(),
+                style: typography.body.xs3.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: statusColor,
+                ),
               ),
             ),
           ],
@@ -225,47 +277,82 @@ class LandlordMoreScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8, left: 4),
-      child: Text(
-        title,
-        style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: isDark ? Colors.white60 : AppColors.textLight, letterSpacing: 0.5),
+  Widget _profileRow(BuildContext context, FColors colors,
+      FTypography typography, String name, String phone, String? avatarUrl) {
+    var avatarSrc = avatarUrl != null && avatarUrl.isNotEmpty
+        ? (avatarUrl.startsWith('http')
+            ? avatarUrl
+            : '${AppConfig.apiBaseUrl.replaceAll(RegExp(r'/api(/v1)?/?$'), '')}${avatarUrl.startsWith('/') ? '' : '/'}$avatarUrl')
+        : null;
+    if (avatarSrc != null &&
+        avatarSrc.contains('/storage/') &&
+        !avatarSrc.contains('/public/storage/')) {
+      avatarSrc = avatarSrc.replaceFirst('/storage/', '/public/storage/');
+    }
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'L';
+
+    return FTappable(
+      onPress: () => context.push('/landlord/profile'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            FAvatar.raw(
+              size: 44,
+              child: avatarSrc != null
+                  ? Image.network(
+                      avatarSrc,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => _initial(
+                          colors, typography, initial),
+                    )
+                  : _initial(colors, typography, initial),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: typography.body.sm
+                        .copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    phone,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: typography.body.xs3
+                        .copyWith(color: colors.mutedForeground),
+                  ),
+                ],
+              ),
+            ),
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedArrowRight01,
+              size: 16,
+              color: colors.mutedForeground.withValues(alpha: 0.6),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildMenuItem(
-    BuildContext context, {
-    required IconData icon,
-    String? customIcon,
-    required String title,
-    required String subtitle,
-    Color? color,
-    VoidCallback? onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconColor = color ?? AppColors.primary;
+  Widget _initial(FColors colors, FTypography typography, String initial) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: iconColor.withValues(alpha: isDark ? 0.15 : 0.1), borderRadius: BorderRadius.circular(8)),
-          child: customIcon != null
-              ? Image.asset(customIcon, width: 20, height: 20, errorBuilder: (_, __, ___) => Icon(icon, color: iconColor))
-              : Icon(icon, color: iconColor),
+      color: colors.secondary,
+      child: Center(
+        child: Text(
+          initial,
+          style: typography.display.sm.copyWith(
+            fontWeight: FontWeight.w700,
+            color: colors.secondaryForeground,
+          ),
         ),
-        title: Text(title, style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: color ?? (isDark ? Colors.white : AppColors.textDark))),
-        subtitle: Text(subtitle, style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: onTap,
       ),
     );
   }

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
-import '../../../../../core/widgets/status_badge.dart';
 
 class UnitCard extends StatelessWidget {
   final Map<String, dynamic> unit;
@@ -12,68 +11,86 @@ class UnitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+
     final name = unit['name'] ?? unit['unit_number'] ?? context.tr('unit');
     final rent = unit['monthly_rent'] ?? 0;
-    final formattedRent = NumberFormat('#,###').format(rent is num ? rent : (double.tryParse(rent.toString()) ?? 0));
-    final status = unit['status'] ?? 'vacant';
+    final formattedRent = NumberFormat('#,###')
+        .format(rent is num ? rent : (double.tryParse(rent.toString()) ?? 0));
+    final status = (unit['status'] ?? 'vacant').toString();
     final isOccupied = status == 'occupied';
+    final statusColor =
+        isOccupied ? const Color(0xFF16A34A) : const Color(0xFFD97706);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/landlord/units/${unit['id']}'),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: (isOccupied ? AppColors.success : AppColors.warning).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  isOccupied ? Icons.check_circle_outline : Icons.meeting_room_outlined,
-                  color: isOccupied ? AppColors.success : AppColors.warning,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: FTappable(
+        onPress: () => context.push('/landlord/units/${unit['id']}'),
+        child: FCard(
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: HugeIcon(
+                      icon: isOccupied
+                          ? HugeIcons.strokeRoundedCheckmarkCircle02
+                          : HugeIcons.strokeRoundedDoor01,
+                      size: 20,
+                      color: statusColor,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'TZS $formattedRent/${context.tr('month')}',
-                      style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              StatusBadge(status: status),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: typography.body.sm
+                            .copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'TZS $formattedRent/${context.tr('month')}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: typography.body.xs2
+                            .copyWith(color: colors.mutedForeground),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: context.theme.style.borderRadius.pill,
+                  ),
+                  child: Text(
+                    status.toUpperCase(),
+                    style: typography.body.xs3.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.4,
+                      color: statusColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

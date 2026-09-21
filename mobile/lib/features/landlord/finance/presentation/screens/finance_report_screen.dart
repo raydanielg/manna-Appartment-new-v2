@@ -1,10 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
@@ -17,7 +17,8 @@ class FinanceReportScreen extends ConsumerStatefulWidget {
   const FinanceReportScreen({super.key});
 
   @override
-  ConsumerState<FinanceReportScreen> createState() => _FinanceReportScreenState();
+  ConsumerState<FinanceReportScreen> createState() =>
+      _FinanceReportScreenState();
 }
 
 class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
@@ -26,11 +27,24 @@ class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
   int _selectedMonth = DateTime.now().month;
   String? _selectedPropertyId;
   String? _selectedUnitId;
-  bool _showUnitFilter = false;
+
+  double _parseAmount(dynamic v) {
+    if (v == null) return 0;
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v) ?? 0.0;
+    return 0.0;
+  }
+
+  String _fmt(double amount) {
+    if (amount >= 1000000) return '${(amount / 1000000).toStringAsFixed(1)}M';
+    if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(0)}K';
+    return amount.toStringAsFixed(0);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     final params = RevenueReportParams(
       period: _period,
       year: _selectedYear,
@@ -41,38 +55,298 @@ class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
     final reportAsync = ref.watch(revenueReportProvider(params));
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('revenue_report'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('revenue_report'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () => context.pop(),
+          child: context.theme.icons.arrowLeft(context),
+        ),
+        actions: [
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
+            onPress: () => _showFilterSheet(context),
+            child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedFilterHorizontal, size: null),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: reportAsync.when(
+        loading: () => const LoadingIndicator(),
+        error: (e, _) => ErrorState(
+          message: e.toString(),
+          onRetry: () => ref.invalidate(revenueReportProvider(params)),
+        ),
+        data: (data) => RefreshIndicator(
+          color: colors.primary,
+          onRefresh: () async =>
+              ref.invalidate(revenueReportProvider(params)),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            children: [
+              _activeFilterLabel(context),
+              const SizedBox(height: 12),
+              _reportContent(context, data),
+            ],
+          ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPeriodFilter(isDark),
-            const SizedBox(height: 16),
-            if (_period == 'monthly') _buildMonthYearPicker(isDark),
-            if (_period == 'yearly') _buildYearPicker(isDark),
-            if (_period == 'multi_year') _buildMultiYearPicker(isDark),
-            const SizedBox(height: 16),
-            _buildPropertyFilter(isDark),
-            if (_showUnitFilter) ...[
-              const SizedBox(height: 16),
-              _buildUnitFilter(isDark),
-            ],
-            const SizedBox(height: 24),
-            reportAsync.when(
-              loading: () => const LoadingIndicator(),
-              error: (e, _) => ErrorState(
-                message: e.toString(),
-                onRetry: () => ref.invalidate(revenueReportProvider(params)),
+    );
+  }
+
+  // ---- filter sheet ----
+
+  Future<void> _showFilterSheet(BuildContext context) async {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.card,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        String period = _period;
+        int year = _selectedYear;
+        int month = _selectedMonth;
+        String? propertyId = _selectedPropertyId;
+        String? unitId = _selectedUnitId;
+        final currentYear = DateTime.now().year;
+        final years = List.generate(10, (i) => currentYear - 4 + i);
+
+        return StatefulBuilder(
+          builder: (context, setSheet) {
+            return SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: colors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      context.tr('filter'),
+                      style: typography.body.md
+                          .copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Period
+                    _sheetLabel(context, context.tr('period')),
+                    Wrap(
+                      spacing: 6,
+                      children: [
+                        _sheetChip(context, 'Weekly', period == 'weekly',
+                            () => setSheet(() => period = 'weekly')),
+                        _sheetChip(
+                            context,
+                            context.tr('monthly_view'),
+                            period == 'monthly',
+                            () => setSheet(() => period = 'monthly')),
+                        _sheetChip(
+                            context,
+                            context.tr('yearly_view'),
+                            period == 'yearly',
+                            () => setSheet(() => period = 'yearly')),
+                        _sheetChip(
+                            context,
+                            context.tr('multi_year_view'),
+                            period == 'multi_year',
+                            () => setSheet(() => period = 'multi_year')),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Date selectors
+                    Row(
+                      children: [
+                        if (period == 'monthly' || period == 'weekly')
+                          _sheetPicker(
+                            context,
+                            label: period == 'weekly' ? 'Week' : context.tr('select_month'),
+                            value: period == 'weekly'
+                                ? 'Week $month'
+                                : DateFormat('MMMM')
+                                    .format(DateTime(2020, month, 1)),
+                            items: List.generate(
+                                period == 'weekly' ? 52 : 12, (i) => i + 1),
+                            labelOf: (v) => period == 'weekly'
+                                ? 'Week $v'
+                                : DateFormat('MMMM')
+                                    .format(DateTime(2020, v, 1)),
+                            onSelected: (v) =>
+                                setSheet(() => month = v),
+                          ),
+                        if (period == 'monthly' || period == 'weekly')
+                          const SizedBox(width: 8),
+                        _sheetPicker(
+                          context,
+                          label: context.tr('select_year'),
+                          value: '$year',
+                          items: years,
+                          labelOf: (v) => '$v',
+                          onSelected: (v) => setSheet(() => year = v),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Property
+                    _sheetLabel(context, context.tr('property')),
+                    _propertyPicker(context, propertyId,
+                        (v) => setSheet(() {
+                              propertyId = v;
+                              unitId = null;
+                            })),
+                    const SizedBox(height: 16),
+
+                    // Unit (only if property selected)
+                    if (propertyId != null) ...[
+                      _sheetLabel(context, context.tr('unit')),
+                      _unitPicker(context, propertyId, unitId,
+                          (v) => setSheet(() => unitId = v)),
+                      const SizedBox(height: 16),
+                    ],
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FButton(
+                            variant: .outline,
+                            onPress: () {
+                              setSheet(() {
+                                period = 'monthly';
+                                year = DateTime.now().year;
+                                month = DateTime.now().month;
+                                propertyId = null;
+                                unitId = null;
+                              });
+                            },
+                            child: Text(context.tr('clear')),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: FButton(
+                            variant: .primary,
+                            onPress: () {
+                              setState(() {
+                                _period = period;
+                                _selectedYear = year;
+                                _selectedMonth = month;
+                                _selectedPropertyId = propertyId;
+                                _selectedUnitId = unitId;
+                              });
+                              Navigator.pop(context);
+                            },
+                            child: Text(context.tr('apply')),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              data: (data) => _buildReportContent(data, isDark),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _sheetLabel(BuildContext context, String label) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        label.toUpperCase(),
+        style: typography.body.xs3.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+          color: colors.mutedForeground,
+        ),
+      ),
+    );
+  }
+
+  Widget _sheetChip(BuildContext context, String label, bool selected,
+      VoidCallback onTap) {
+    return FButton(
+      variant: selected ? .primary : .outline,
+      size: .xs,
+      mainAxisSize: MainAxisSize.min,
+      onPress: onTap,
+      child: Text(label),
+    );
+  }
+
+  Widget _sheetPicker<T>(
+    BuildContext context, {
+    required String label,
+    required String value,
+    required List<T> items,
+    required String Function(T) labelOf,
+    required ValueChanged<T> onSelected,
+  }) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    return PopupMenuButton<T>(
+      offset: const Offset(0, 40),
+      color: colors.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: context.theme.style.borderRadius.lg,
+      ),
+      onSelected: onSelected,
+      itemBuilder: (context) => [
+        for (final v in items)
+          PopupMenuItem(
+            value: v,
+            child: Text(labelOf(v), style: typography.body.xs2),
+          ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          border: Border.all(color: colors.border),
+          borderRadius: context.theme.style.borderRadius.md,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: typography.body.xs2
+                  .copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 6),
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedArrowDown01,
+              size: 12,
+              color: colors.mutedForeground,
             ),
           ],
         ),
@@ -80,285 +354,178 @@ class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
     );
   }
 
-  Widget _buildPeriodFilter(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        children: [
-          _buildPeriodTab('Weekly', 'weekly'),
-          _buildPeriodTab(context.tr('monthly_view'), 'monthly'),
-          _buildPeriodTab(context.tr('yearly_view'), 'yearly'),
-          _buildPeriodTab(context.tr('multi_year_view'), 'multi_year'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPeriodTab(String label, String value) {
-    final isSelected = _period == value;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() {
-          _period = value;
-          _selectedUnitId = null;
-        }),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.nunito(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: isSelected ? Colors.white : AppColors.textLight,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMonthYearPicker(bool isDark) {
-    if (_period == 'weekly') {
-      return Row(
-        children: [
-          Expanded(
-            child: _buildDropdown(
-              isDark,
-              'Week',
-              _selectedMonth,
-              List.generate(52, (i) => i + 1),
-              (v) => setState(() => _selectedMonth = v),
-              (v) => 'Week $v',
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildDropdown(
-              isDark,
-              context.tr('select_year'),
-              _selectedYear,
-              List.generate(10, (i) => DateTime.now().year - 4 + i),
-              (v) => setState(() => _selectedYear = v),
-              (v) => '$v',
-            ),
-          ),
-        ],
-      );
-    }
-
-    return Row(
-      children: [
-        Expanded(
-          child: _buildDropdown(
-            isDark,
-            context.tr('select_month'),
-            _selectedMonth,
-            List.generate(12, (i) => i + 1),
-            (v) => setState(() => _selectedMonth = v),
-            (v) => DateFormat('MMMM').format(DateTime(2020, v, 1)),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildDropdown(
-            isDark,
-            context.tr('select_year'),
-            _selectedYear,
-            List.generate(10, (i) => DateTime.now().year - 4 + i),
-            (v) => setState(() => _selectedYear = v),
-            (v) => '$v',
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildYearPicker(bool isDark) {
-    return _buildDropdown(
-      isDark,
-      context.tr('select_year'),
-      _selectedYear,
-      List.generate(10, (i) => DateTime.now().year - 4 + i),
-      (v) => setState(() => _selectedYear = v),
-      (v) => '$v',
-    );
-  }
-
-  Widget _buildMultiYearPicker(bool isDark) {
-    final currentYear = DateTime.now().year;
-    final years = List.generate(5, (i) => currentYear - 4 + i);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(context.tr('select_year'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textLight)),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: years.map((y) {
-              final isSelected = y <= _selectedYear && y >= _selectedYear - 2;
-              return ChoiceChip(
-                label: Text('$y', style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: isSelected ? Colors.white : AppColors.textLight)),
-                selected: y == _selectedYear,
-                selectedColor: AppColors.primary,
-                backgroundColor: isDark ? AppColors.darkInput : AppColors.lightInput,
-                onSelected: (_) => setState(() => _selectedYear = y),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDropdown(bool isDark, String hint, int value, List<int> items, ValueChanged<int> onChanged, String Function(int) labelBuilder) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-      ),
-      child: DropdownButton<int>(
-        value: value,
-        isExpanded: true,
-        underline: const SizedBox(),
-        items: items.map((v) => DropdownMenuItem(value: v, child: Text(labelBuilder(v), style: GoogleFonts.nunito(fontSize: 14)))).toList(),
-        onChanged: (v) { if (v != null) onChanged(v); },
-      ),
-    );
-  }
-
-  Widget _buildPropertyFilter(bool isDark) {
+  Widget _propertyPicker(BuildContext context, String? current,
+      ValueChanged<String?> onSelected) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     final propertiesAsync = ref.watch(propertiesListProvider);
     return propertiesAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (properties) {
         if (properties.isEmpty) return const SizedBox.shrink();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(context.tr('all_properties'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textLight)),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+        final names = <String?, String>{
+          null: context.tr('select_property_all'),
+          for (final p in properties) p.id: p.name,
+        };
+        return PopupMenuButton<String?>(
+          offset: const Offset(0, 40),
+          color: colors.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: context.theme.style.borderRadius.lg,
+          ),
+          onSelected: onSelected,
+          itemBuilder: (context) => [
+            for (final e in names.entries)
+              PopupMenuItem(
+                value: e.key,
+                child: Text(e.value, style: typography.body.xs2),
               ),
-              child: DropdownButton<String>(
-                value: _selectedPropertyId,
-                isExpanded: true,
-                underline: const SizedBox(),
-                hint: Text(context.tr('select_property_all'), style: GoogleFonts.nunito(fontSize: 14)),
-                items: [
-                  DropdownMenuItem(value: null, child: Text(context.tr('select_property_all'), style: GoogleFonts.nunito(fontSize: 14))),
-                  ...properties.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name, style: GoogleFonts.nunito(fontSize: 14)))),
-                ],
-                onChanged: (v) => setState(() {
-                  _selectedPropertyId = v;
-                  _selectedUnitId = null;
-                  _showUnitFilter = v != null;
-                }),
-              ),
-            ),
           ],
+          child: _pickerBox(context, colors, typography,
+              names[current] ?? context.tr('select_property_all')),
         );
       },
     );
   }
 
-  Widget _buildUnitFilter(bool isDark) {
-    final unitsAsync = ref.watch(unitsListProvider(_selectedPropertyId));
+  Widget _unitPicker(BuildContext context, String? propertyId, String? current,
+      ValueChanged<String?> onSelected) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final unitsAsync = ref.watch(unitsListProvider(propertyId));
     return unitsAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (units) {
         if (units.isEmpty) return const SizedBox.shrink();
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(context.tr('select_unit_all'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textLight)),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+        final names = <String?, String>{
+          null: context.tr('select_unit_all'),
+          for (final u in units)
+            u['id']?.toString(): (u['name'] ?? u['unit_number'] ?? 'Unit').toString(),
+        };
+        return PopupMenuButton<String?>(
+          offset: const Offset(0, 40),
+          color: colors.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: context.theme.style.borderRadius.lg,
+          ),
+          onSelected: onSelected,
+          itemBuilder: (context) => [
+            for (final e in names.entries)
+              PopupMenuItem(
+                value: e.key,
+                child: Text(e.value, style: typography.body.xs2),
               ),
-              child: DropdownButton<String>(
-                value: _selectedUnitId,
-                isExpanded: true,
-                underline: const SizedBox(),
-                hint: Text(context.tr('select_unit_all'), style: GoogleFonts.nunito(fontSize: 14)),
-                items: [
-                  DropdownMenuItem(value: null, child: Text(context.tr('select_unit_all'), style: GoogleFonts.nunito(fontSize: 14))),
-                  ...units.map((u) => DropdownMenuItem(
-                    value: u['id']?.toString(),
-                    child: Text(u['name'] ?? u['unit_number'] ?? 'Unit', style: GoogleFonts.nunito(fontSize: 14)),
-                  )),
-                ],
-                onChanged: (v) => setState(() => _selectedUnitId = v),
-              ),
-            ),
           ],
+          child: _pickerBox(context, colors, typography,
+              names[current] ?? context.tr('select_unit_all')),
         );
       },
     );
   }
 
-  Widget _buildReportContent(Map<String, dynamic> data, bool isDark) {
-    final totalRevenue = _parseAmount(data['total_revenue']);
-    final expectedRevenue = _parseAmount(data['expected_revenue']);
-    final collectedRevenue = _parseAmount(data['collected_revenue']);
-    final outstandingRevenue = _parseAmount(data['outstanding_revenue']);
+  Widget _pickerBox(BuildContext context, FColors colors,
+      FTypography typography, String label) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        border: Border.all(color: colors.border),
+        borderRadius: context.theme.style.borderRadius.md,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style:
+                  typography.body.xs2.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowDown01,
+            size: 14,
+            color: colors.mutedForeground,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---- content ----
+
+  Widget _activeFilterLabel(BuildContext context) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final parts = <String>[
+      switch (_period) {
+        'weekly' => 'Weekly',
+        'monthly' => context.tr('monthly_view'),
+        'yearly' => context.tr('yearly_view'),
+        _ => context.tr('multi_year_view'),
+      },
+      '$_selectedYear',
+    ];
+    return Text(
+      parts.join(' · '),
+      style: typography.body.xs3.copyWith(color: colors.mutedForeground),
+    );
+  }
+
+  Widget _reportContent(BuildContext context, Map<String, dynamic> data) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final expected = _parseAmount(data['expected_revenue']);
+    final collected = _parseAmount(data['collected_revenue']);
+    final outstanding = _parseAmount(data['outstanding_revenue']);
     final collectionRate = data['collection_rate'];
     final rateStr = collectionRate is num
         ? '${collectionRate.toStringAsFixed(1)}%'
         : '$collectionRate%';
 
-    final breakdown = data['breakdown'] is List ? data['breakdown'] as List : [];
-    final chartData = data['chart_data'] is List ? data['chart_data'] as List : [];
+    final breakdown =
+        data['breakdown'] is List ? data['breakdown'] as List : [];
+    final chartData =
+        data['chart_data'] is List ? data['chart_data'] as List : [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSummaryCards(expectedRevenue, collectedRevenue, outstandingRevenue, rateStr, isDark),
-        const SizedBox(height: 24),
+        // Summary stats — plain row
+        Row(
+          children: [
+            _stat(context, context.tr('expected_revenue'), _fmt(expected),
+                const Color(0xFF0EA5E9)),
+            _stat(context, context.tr('collected_revenue'), _fmt(collected),
+                const Color(0xFF16A34A)),
+            _stat(context, context.tr('outstanding_revenue'),
+                _fmt(outstanding), colors.error),
+            _stat(context, context.tr('collection_rate'), rateStr,
+                const Color(0xFFD97706)),
+          ],
+        ),
+        const SizedBox(height: 20),
         if (chartData.isNotEmpty) ...[
-          Text(context.tr('revenue_overview'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+          Text(
+            context.tr('revenue_overview'),
+            style: typography.body.sm.copyWith(fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 12),
-          _buildRevenueChart(chartData, isDark),
-          const SizedBox(height: 24),
+          _chart(context, chartData),
+          const SizedBox(height: 20),
         ],
         if (breakdown.isNotEmpty) ...[
           Text(
-            _selectedUnitId != null ? context.tr('revenue_by_unit') : context.tr('revenue_by_property'),
-            style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark),
+            _selectedUnitId != null
+                ? context.tr('revenue_by_unit')
+                : context.tr('revenue_by_property'),
+            style: typography.body.sm.copyWith(fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 12),
-          _buildBreakdownList(breakdown, isDark),
+          const SizedBox(height: 8),
+          ...breakdown.map((item) => _breakdownRow(context, item)),
         ],
         if (chartData.isEmpty && breakdown.isEmpty)
           EmptyState(message: context.tr('no_revenue_data')),
@@ -366,60 +533,56 @@ class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
     );
   }
 
-  Widget _buildSummaryCards(double expected, double collected, double outstanding, String rate, bool isDark) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      childAspectRatio: 1.4,
-      children: [
-        _buildSummaryCard(context.tr('expected_revenue'), _formatAmount(expected), AppColors.info, Icons.account_balance_wallet_outlined, isDark),
-        _buildSummaryCard(context.tr('collected_revenue'), _formatAmount(collected), AppColors.success, Icons.check_circle_outline, isDark),
-        _buildSummaryCard(context.tr('outstanding_revenue'), _formatAmount(outstanding), AppColors.error, Icons.error_outline, isDark),
-        _buildSummaryCard(context.tr('collection_rate'), rate, AppColors.warning, Icons.pie_chart_outline, isDark),
-      ],
-    );
-  }
-
-  Widget _buildSummaryCard(String label, String value, Color color, IconData icon, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-      ),
+  Widget _stat(BuildContext context, String label, String value, Color color) {
+    final typography = context.theme.typography;
+    final colors = context.theme.colors;
+    return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                child: Icon(icon, color: color, size: 16),
+                width: 8,
+                height: 8,
+                decoration:
+                    BoxDecoration(color: color, shape: BoxShape.circle),
               ),
-              const SizedBox(width: 8),
-              Expanded(child: Text(label, style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textLight))),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: typography.body.xs3
+                      .copyWith(color: colors.mutedForeground),
+                ),
+              ),
             ],
           ),
-          Text(value, style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style:
+                typography.body.md.copyWith(fontWeight: FontWeight.w800),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRevenueChart(List<dynamic> chartData, bool isDark) {
+  Widget _chart(BuildContext context, List<dynamic> chartData) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     final spots = <FlSpot>[];
     final labels = <String>[];
     double maxVal = 0;
 
     for (var i = 0; i < chartData.length; i++) {
-      final amount = _parseAmount(chartData[i]['amount'] ?? chartData[i]['revenue']);
+      final amount =
+          _parseAmount(chartData[i]['amount'] ?? chartData[i]['revenue']);
       spots.add(FlSpot(i.toDouble(), amount));
       labels.add(chartData[i]['label'] ?? chartData[i]['month'] ?? '');
       if (amount > maxVal) maxVal = amount;
@@ -427,164 +590,172 @@ class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
 
     final maxY = maxVal > 0 ? maxVal * 1.2 : 100.0;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(context.tr('total_revenue'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textLight)),
-          if (spots.isNotEmpty)
-            Text('TZS ${_formatAmount(spots.last.y)}', style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.primary)),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 200,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: maxY / 4,
-                  getDrawingHorizontalLine: (_) => FlLine(color: isDark ? Colors.white10 : const Color(0xFFF1F5F9), strokeWidth: 1),
-                ),
-                titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 38,
-                      interval: maxY / 3,
-                      getTitlesWidget: (value, _) => Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: Text(_formatAmount(value), style: GoogleFonts.nunito(fontSize: 9, color: AppColors.textLight)),
+    return SizedBox(
+      height: 180,
+      child: LineChart(
+        LineChartData(
+          minY: 0,
+          maxY: maxY,
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: maxY / 3,
+            getDrawingHorizontalLine: (_) => FlLine(
+              color: colors.border.withValues(alpha: 0.5),
+              strokeWidth: 1,
+              dashArray: [4, 4],
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          titlesData: FlTitlesData(
+            topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false)),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 38,
+                interval: maxY / 3,
+                getTitlesWidget: (value, meta) {
+                  if (value <= 0) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: Text(
+                      _fmt(value),
+                      textAlign: TextAlign.right,
+                      style: typography.body.xs3.copyWith(
+                        color: colors.mutedForeground,
+                        fontSize: 9,
                       ),
                     ),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 28,
-                      getTitlesWidget: (value, _) {
-                        final i = value.toInt();
-                        if (i < 0 || i >= labels.length) return const SizedBox.shrink();
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(labels[i], style: GoogleFonts.nunito(fontSize: 10, color: AppColors.textLight)),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                minX: 0,
-                maxX: (spots.length - 1).toDouble(),
-                minY: 0,
-                maxY: maxY,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: spots,
-                    isCurved: true,
-                    curveSmoothness: 0.35,
-                    barWidth: 3,
-                    color: AppColors.primary,
-                    dotData: FlDotData(show: true, getDotPainter: (spot, _, __, index) {
-                      final isLast = index == spots.length - 1;
-                      return FlDotCirclePainter(radius: isLast ? 6 : 4, color: Colors.white, strokeWidth: 2.5, strokeColor: AppColors.primary);
-                    }),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [AppColors.primary.withValues(alpha: 0.15), AppColors.primary.withValues(alpha: 0.0)],
+                  );
+                },
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 26,
+                getTitlesWidget: (value, meta) {
+                  final i = value.toInt();
+                  if (i < 0 || i >= labels.length) {
+                    return const SizedBox.shrink();
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      labels[i],
+                      style: typography.body.xs3.copyWith(
+                        color: colors.mutedForeground,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
-                ],
-                lineTouchData: LineTouchData(
-                  enabled: true,
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipColor: (_) => AppColors.textDark,
-                    tooltipRoundedRadius: 8,
-                    getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
-                      return LineTooltipItem('TZS ${_formatAmount(spot.y)}', GoogleFonts.nunito(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700));
-                    }).toList(),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBreakdownList(List<dynamic> breakdown, bool isDark) {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: breakdown.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final item = breakdown[index];
-        // The finance report's breakdown is a date-bucketed series (same shape as
-        // chart_data: label/date|month/amount/revenue) — it has no per-property
-        // name or expected/outstanding fields, so read what's actually returned.
-        final name = (item['label'] ?? item['date'] ?? item['month'] ?? 'Unknown').toString();
-        final collected = _parseAmount(item['amount'] ?? item['revenue']);
-        return Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(name, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  _buildBreakdownItem(context.tr('collected_revenue'), _formatAmount(collected), AppColors.success),
-                ],
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: true,
+              curveSmoothness: 0.3,
+              color: colors.primary,
+              barWidth: 2.5,
+              isStrokeCapRound: true,
+              dotData: FlDotData(
+                show: true,
+                getDotPainter: (spot, percent, bar, index) =>
+                    FlDotCirclePainter(
+                  radius: index == spots.length - 1 ? 4 : 3,
+                  color: colors.primary,
+                  strokeWidth: 2,
+                  strokeColor: colors.background,
+                ),
               ),
-            ],
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    colors.primary.withValues(alpha: 0.15),
+                    colors.primary.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          lineTouchData: LineTouchData(
+            enabled: true,
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipColor: (_) => colors.foreground,
+              tooltipRoundedRadius: 8,
+              tooltipPadding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              getTooltipItems: (spots) => [
+                for (final s in spots)
+                  LineTooltipItem(
+                    '${labels[s.x.toInt()]}\n',
+                    typography.body.xs3.copyWith(
+                      color: colors.background.withValues(alpha: 0.7),
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'TZS ${_fmt(s.y)}',
+                        style: typography.body.xs2.copyWith(
+                          color: colors.background,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildBreakdownItem(String label, String value, Color color) {
-    return Expanded(
-      child: Row(
-        children: [
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text('$label: $value', style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textLight)),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  double _parseAmount(dynamic v) {
-    if (v == null) return 0;
-    if (v is num) return v.toDouble();
-    if (v is String) return double.tryParse(v) ?? 0.0;
-    return 0.0;
-  }
+  Widget _breakdownRow(BuildContext context, dynamic item) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final name =
+        (item['label'] ?? item['date'] ?? item['month'] ?? 'Unknown')
+            .toString();
+    final collected = _parseAmount(item['amount'] ?? item['revenue']);
 
-  String _formatAmount(double amount) {
-    if (amount >= 1000000) return '${(amount / 1000000).toStringAsFixed(1)}M';
-    if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(0)}K';
-    return amount.toStringAsFixed(0);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: typography.body.xs2
+                    .copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+            Text(
+              'TZS ${_fmt(collected)}',
+              style: typography.body.xs2.copyWith(
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF16A34A),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

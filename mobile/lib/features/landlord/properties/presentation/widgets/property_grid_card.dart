@@ -22,34 +22,57 @@ class PropertyGridCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.1),
-                  borderRadius: radii.md,
-                ),
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedBuilding03,
-                    size: 20,
-                    color: colors.primary,
+              Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: colors.primary.withValues(alpha: 0.1),
+                      borderRadius: radii.md,
+                    ),
+                    child: Center(
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedBuilding03,
+                        size: 17,
+                        color: colors.primary,
+                      ),
+                    ),
                   ),
-                ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: colors.secondary,
+                      borderRadius: radii.xs,
+                    ),
+                    child: Text(
+                      _capitalize(property.type ?? 'N/A'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.xs3.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.secondaryForeground,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Text(
                 property.name,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: typography.body.sm.copyWith(fontWeight: FontWeight.w700),
+                style: typography.body.xs2
+                    .copyWith(fontWeight: FontWeight.w700, height: 1.3),
               ),
-              const SizedBox(height: 4),
+              const Spacer(),
               Row(
                 children: [
                   HugeIcon(
                     icon: HugeIcons.strokeRoundedLocation01,
-                    size: 12,
+                    size: 11,
                     color: colors.mutedForeground,
                   ),
                   const SizedBox(width: 4),
@@ -58,25 +81,11 @@ class PropertyGridCard extends StatelessWidget {
                       property.address ?? 'No location',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: typography.body.xs3.copyWith(color: colors.mutedForeground),
+                      style: typography.body.xs3
+                          .copyWith(color: colors.mutedForeground),
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: colors.secondary,
-                  borderRadius: radii.sm,
-                ),
-                child: Text(
-                  _capitalize(property.type ?? 'N/A'),
-                  style: typography.body.xs3.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: colors.secondaryForeground,
-                  ),
-                ),
               ),
             ],
           ),

@@ -5,12 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
+import '../../../../../core/widgets/confirm_dialog.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../providers/properties_provider.dart';
 import '../widgets/property_card.dart';
-import '../widgets/property_grid_card.dart';
 
 import 'package:manna_apartment/core/utils/app_toast.dart';
 
@@ -22,7 +22,6 @@ class PropertiesListScreen extends ConsumerStatefulWidget {
 }
 
 class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
-  bool _isGrid = false;
   bool _showVacantOnly = false;
   String _searchQuery = '';
 
@@ -56,15 +55,6 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
             size: .sm,
             onPress: () => setState(() => _showVacantOnly = !_showVacantOnly),
             child: const HugeIcon(icon: HugeIcons.strokeRoundedFilterHorizontal, size: null),
-          ),
-          FButton.icon(
-            variant: .ghost,
-            size: .sm,
-            onPress: () => setState(() => _isGrid = !_isGrid),
-            child: HugeIcon(
-              icon: _isGrid ? HugeIcons.strokeRoundedListView : HugeIcons.strokeRoundedGridView,
-              size: null,
-            ),
           ),
           const SizedBox(width: 8),
         ],
@@ -112,20 +102,6 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
 
                   if (filtered.isEmpty) {
                     return EmptyState(message: context.tr('no_properties_found'));
-                  }
-
-                  if (_isGrid) {
-                    return GridView.builder(
-                      padding: const EdgeInsets.all(16),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 0.78,
-                      ),
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) => PropertyGridCard(property: filtered[index]),
-                    );
                   }
 
                   return ListView.builder(
@@ -190,42 +166,14 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
     );
   }
 
-  Future<bool?> _confirmDelete(BuildContext context) {
-    return showFDialog<bool>(
-      context: context,
-      builder: (context, style, animation) => FDialog(
-        animation: animation,
-        builder: (context, style) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(context.tr('delete_property'), style: style.titleTextStyle),
-            const SizedBox(height: 8),
-            Text(context.tr('confirm_delete_property'), style: style.bodyTextStyle),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FButton(
-                  variant: .outline,
-                  size: .sm,
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: () => Navigator.pop(context, false),
-                  child: Text(context.tr('cancel')),
-                ),
-                const SizedBox(width: 8),
-                FButton(
-                  variant: .destructive,
-                  size: .sm,
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: () => Navigator.pop(context, true),
-                  child: Text(context.tr('delete')),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+  Future<bool> _confirmDelete(BuildContext context) {
+    return showConfirmDialog(
+      context,
+      title: context.tr('delete_property'),
+      message: context.tr('confirm_delete_property'),
+      confirmText: context.tr('delete'),
+      cancelText: context.tr('cancel'),
+      isDestructive: true,
     );
   }
 }

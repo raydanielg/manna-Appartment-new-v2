@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/loading_indicator.dart';
-import '../../data/notifications_repository.dart';
 import '../../providers/notifications_provider.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
 }
 
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
@@ -78,56 +79,85 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     _loadMore();
   }
 
-  String _formatDate(String? date) {
+  String _dayLabel(String? date) {
     if (date == null) return '';
     final dt = DateTime.tryParse(date);
     if (dt == null) return '';
-    return DateFormat('MMM d, y HH:mm').format(dt);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final that = DateTime(dt.year, dt.month, dt.day);
+    final diff = today.difference(that).inDays;
+    if (diff == 0) return context.tr('today');
+    if (diff == 1) return context.tr('yesterday');
+    return DateFormat('dd MMM yyyy').format(dt);
   }
 
-  (IconData, Color) _getNotificationIcon(String type, bool read) {
-    if (read) return (Icons.notifications_none, AppColors.textLight);
-    switch (type.toLowerCase()) {
-      case 'expiry':
-      case 'expiring':
-        return (Icons.schedule, AppColors.warning);
-      case 'debt':
-      case 'debts':
-        return (Icons.warning_amber_rounded, AppColors.error);
-      case 'lease':
-        return (Icons.description, AppColors.info);
-      case 'payment':
-        return (Icons.payments, AppColors.success);
-      case 'maintenance':
-        return (Icons.build, AppColors.primary);
-      default:
-        return (Icons.notifications_active, AppColors.primary);
-    }
+  String _timeLabel(String? date) {
+    final dt = date == null ? null : DateTime.tryParse(date);
+    return dt == null ? '' : DateFormat('HH:mm').format(dt);
+  }
+
+  List<List<dynamic>> _iconFor(String type) {
+    return switch (type.toLowerCase()) {
+      'payment' => HugeIcons.strokeRoundedMoney01,
+      'maintenance' => HugeIcons.strokeRoundedWrench01,
+      'lease' || 'contract' => HugeIcons.strokeRoundedFile01,
+      'expiry' || 'expiring' => HugeIcons.strokeRoundedCalendar01,
+      'debt' || 'debts' => HugeIcons.strokeRoundedAlert02,
+      _ => HugeIcons.strokeRoundedNotification02,
+    };
+  }
+
+  Color _colorFor(String type, FColors colors) {
+    return switch (type.toLowerCase()) {
+      'payment' => const Color(0xFF16A34A),
+      'maintenance' => colors.primary,
+      'lease' || 'contract' => const Color(0xFF0EA5E9),
+      'expiry' || 'expiring' => const Color(0xFFD97706),
+      'debt' || 'debts' => colors.error,
+      _ => colors.primary,
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('notifications')),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('notifications'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () => context.pop(),
+          child: context.theme.icons.arrowLeft(context),
+        ),
         actions: [
-          TextButton(
-            onPressed: _items.isEmpty ? null : _markAllAsRead,
-            child: Text(context.tr('mark_all_read'), style: const TextStyle(fontSize: 12, color: AppColors.gold)),
+          FButton(
+            variant: .ghost,
+            size: .sm,
+            mainAxisSize: MainAxisSize.min,
+            onPress: _items.isEmpty ? null : _markAllAsRead,
+            child: Text(context.tr('mark_all_read')),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: _items.isEmpty && !_isLoadingMore
           ? EmptyState(message: context.tr('no_notifications'))
           : RefreshIndicator(
               onRefresh: _refresh,
-              color: AppColors.primary,
+              color: colors.primary,
               child: ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 itemCount: _items.length + (_hasMore ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index == _items.length) {
@@ -139,70 +169,213 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   }
 
                   final item = _items[index];
-                  final id = item['id'] as String? ?? '';
-                  final title = item['title'] as String? ?? 'Notification';
-                  final body = item['body'] as String? ?? '';
-                  final type = item['type'] as String? ?? '';
-                  final read = item['read_at'] != null;
                   final createdAt = item['created_at'] as String?;
+                  final label = _dayLabel(createdAt);
+                  final prevLabel = index > 0
+                      ? _dayLabel(_items[index - 1]['created_at'] as String?)
+                      : '';
+                  final isLast = index == _items.length - 1;
 
-                  final (iconData, iconColor) = _getNotificationIcon(type, read);
-
-                  return Dismissible(
-                    key: ValueKey(id),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      color: AppColors.primary,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(Icons.check, color: Colors.white),
-                    ),
-                    onDismissed: (_) => _markAsRead(id),
-                    child: Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      color: read ? null : AppColors.primary.withValues(alpha: 0.05),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        leading: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: read ? (isDark ? AppColors.darkInput : Colors.grey.shade200) : iconColor.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            iconData,
-                            color: read ? AppColors.textLight : iconColor,
-                          ),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (index == 0 || label != prevLabel)
+                        _TimelineHeader(
+                          label: label,
+                          colors: colors,
+                          typography: typography,
                         ),
-                        title: Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: read ? FontWeight.w500 : FontWeight.w700,
-                            color: isDark ? Colors.white : AppColors.textDark,
-                          ),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(body, style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : AppColors.textLight)),
-                            const SizedBox(height: 6),
-                            Text(_formatDate(createdAt), style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textLight)),
-                          ],
-                        ),
-                        trailing: read
-                            ? null
-                            : IconButton(
-                                icon: const Icon(Icons.check_circle_outline, color: AppColors.primary),
-                                onPressed: () => _markAsRead(id),
-                              ),
+                      _TimelineItem(
+                        item: item,
+                        timeLabel: _timeLabel(createdAt),
+                        icon: _iconFor(item['type']?.toString() ?? ''),
+                        color:
+                            _colorFor(item['type']?.toString() ?? '', colors),
+                        isLast: isLast,
+                        onRead: () =>
+                            _markAsRead(item['id'] as String? ?? ''),
                       ),
-                    ),
+                    ],
                   );
                 },
               ),
             ),
+    );
+  }
+}
+
+class _TimelineHeader extends StatelessWidget {
+  final String label;
+  final FColors colors;
+  final FTypography typography;
+
+  const _TimelineHeader({
+    required this.label,
+    required this.colors,
+    required this.typography,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10, bottom: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            margin: const EdgeInsets.only(left: 5),
+            decoration: BoxDecoration(
+              color: colors.primary,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            label.toUpperCase(),
+            style: typography.body.xs3.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.7,
+              color: colors.foreground,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TimelineItem extends StatelessWidget {
+  final Map<String, dynamic> item;
+  final String timeLabel;
+  final List<List<dynamic>> icon;
+  final Color color;
+  final bool isLast;
+  final VoidCallback onRead;
+
+  const _TimelineItem({
+    required this.item,
+    required this.timeLabel,
+    required this.icon,
+    required this.color,
+    required this.isLast,
+    required this.onRead,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final read = item['read_at'] != null;
+    final title = item['title'] as String? ?? 'Notification';
+    final body = item['body'] as String? ?? '';
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Timeline rail — dot + connecting line
+          SizedBox(
+            width: 20,
+            child: Column(
+              children: [
+                const SizedBox(height: 4),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: read ? Colors.transparent : color,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: read
+                          ? colors.mutedForeground.withValues(alpha: 0.5)
+                          : color,
+                      width: 2,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: isLast
+                      ? const SizedBox()
+                      : Container(
+                          width: 1.5,
+                          margin: const EdgeInsets.only(top: 2),
+                          color: colors.border.withValues(alpha: 0.6),
+                        ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Content — plain row, no card
+          Expanded(
+            child: FTappable(
+              onPress: read ? null : onRead,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        HugeIcon(
+                          icon: icon,
+                          size: 14,
+                          color: read ? colors.mutedForeground : color,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: typography.body.xs2.copyWith(
+                              fontWeight:
+                                  read ? FontWeight.w500 : FontWeight.w700,
+                              color: read
+                                  ? colors.mutedForeground
+                                  : colors.foreground,
+                            ),
+                          ),
+                        ),
+                        if (timeLabel.isNotEmpty)
+                          Text(
+                            timeLabel,
+                            style: typography.body.xs3
+                                .copyWith(color: colors.mutedForeground),
+                          ),
+                      ],
+                    ),
+                    if (body.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        body,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: typography.body.xs3.copyWith(
+                          color: colors.mutedForeground,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (!read)
+            FButton.icon(
+              variant: .ghost,
+              size: .sm,
+              onPress: onRead,
+              child: HugeIcon(
+                icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                size: 16,
+                color: colors.primary,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

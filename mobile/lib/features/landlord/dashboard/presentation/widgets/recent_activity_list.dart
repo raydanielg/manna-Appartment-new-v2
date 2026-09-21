@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../../core/widgets/status_badge.dart';
+import 'package:forui/forui.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class RecentActivityList extends StatelessWidget {
   final List<dynamic> activities;
@@ -9,114 +8,129 @@ class RecentActivityList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.darkCard : Colors.white;
-    final borderColor = isDark ? Colors.white10 : const Color(0xFFE5E7EB);
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     if (activities.isEmpty) {
-      return Container(
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              Icon(Icons.inbox_outlined, size: 40, color: isDark ? Colors.white24 : Colors.grey.shade300),
-              const SizedBox(height: 12),
-              Text(
-                'No recent activity',
-                style: GoogleFonts.nunito(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.white38 : Colors.grey.shade400,
-                ),
-              ),
-            ],
-          ),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Column(
+          children: [
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedInbox,
+              size: 36,
+              color: colors.mutedForeground.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'No recent activity',
+              style: typography.body.xs2.copyWith(color: colors.mutedForeground),
+            ),
+          ],
         ),
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-        boxShadow: isDark
-            ? null
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        children: activities.asMap().entries.map((entry) {
-          final a = entry.value;
-          final isLast = entry.key == activities.length - 1;
-          final status = a['status'] ?? 'info';
-          final isSuccess = status == 'success';
+    return Column(
+      children: [
+        for (var i = 0; i < activities.length; i++)
+          _timelineItem(context, activities[i],
+              isLast: i == activities.length - 1),
+      ],
+    );
+  }
 
-          return Container(
-            decoration: isLast
-                ? null
-                : BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: isDark ? Colors.white10 : const Color(0xFFF3F4F6),
-                        width: 1,
+  Widget _timelineItem(BuildContext context, dynamic a,
+      {required bool isLast}) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final status = a['status'] ?? 'info';
+    final isSuccess = status == 'success';
+    final dotColor =
+        isSuccess ? const Color(0xFF16A34A) : const Color(0xFFD97706);
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 20,
+            child: Column(
+              children: [
+                const SizedBox(height: 4),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: dotColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: dotColor, width: 2),
+                  ),
+                ),
+                Expanded(
+                  child: isLast
+                      ? const SizedBox()
+                      : Container(
+                          width: 1.5,
+                          margin: const EdgeInsets.only(top: 2),
+                          color: colors.border.withValues(alpha: 0.6),
+                        ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      HugeIcon(
+                        icon: isSuccess
+                            ? HugeIcons.strokeRoundedCheckmarkCircle02
+                            : HugeIcons.strokeRoundedWrench01,
+                        size: 14,
+                        color: dotColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          a['title'] ?? 'Activity',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: typography.body.xs2
+                              .copyWith(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      Text(
+                        a['date'] ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: typography.body.xs3
+                            .copyWith(color: colors.mutedForeground),
+                      ),
+                    ],
+                  ),
+                  if ((a['subtitle'] ?? '').toString().isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      a['subtitle'] ?? '',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.xs3.copyWith(
+                        color: colors.mutedForeground,
+                        height: 1.4,
                       ),
                     ),
-                  ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: isSuccess
-                          ? const Color(0xFF2563EB).withValues(alpha: 0.1)
-                          : const Color(0xFFF59E0B).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      isSuccess ? Icons.check_circle_outline : Icons.build_outlined,
-                      color: isSuccess ? const Color(0xFF2563EB) : const Color(0xFFF59E0B),
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          a['title'] ?? 'Activity',
-                          style: GoogleFonts.nunito(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : AppColors.textDark,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          a['subtitle'] ?? '',
-                          style: GoogleFonts.nunito(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white54 : AppColors.textLight,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  StatusBadge(status: status),
+                  ],
                 ],
               ),
             ),
-          );
-        }).toList(),
+          ),
+        ],
       ),
     );
   }

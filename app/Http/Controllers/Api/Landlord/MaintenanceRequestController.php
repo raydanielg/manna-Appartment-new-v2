@@ -17,6 +17,12 @@ class MaintenanceRequestController extends Controller
         return $this->paginated($requests);
     }
 
+    public function show(Request $request, $id)
+    {
+        $maintenance = MaintenanceRequest::with(['tenant.user', 'unit'])->findOrFail($id);
+        return $this->success('OK', $maintenance);
+    }
+
     public function updateStatus(Request $request, $id)
     {
         $request->validate([

@@ -1,104 +1,121 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
-import '../../../../../core/widgets/status_badge.dart';
 import '../../providers/maintenance_provider.dart';
 
 class MaintenanceRequestsScreen extends ConsumerStatefulWidget {
   const MaintenanceRequestsScreen({super.key});
 
   @override
-  ConsumerState<MaintenanceRequestsScreen> createState() => _MaintenanceRequestsScreenState();
+  ConsumerState<MaintenanceRequestsScreen> createState() =>
+      _MaintenanceRequestsScreenState();
 }
 
-class _MaintenanceRequestsScreenState extends ConsumerState<MaintenanceRequestsScreen> {
+class _MaintenanceRequestsScreenState
+    extends ConsumerState<MaintenanceRequestsScreen> {
   String _searchQuery = '';
   String _filterStatus = 'all';
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final requestsAsync = ref.watch(maintenanceRequestsProvider);
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('maintenance'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('maintenance'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () {
             if (context.canPop()) context.pop();
           },
+          child: context.theme.icons.arrowLeft(context),
         ),
+        actions: [
+          FButton.icon(
+            variant: _filterStatus != 'all' ? .secondary : .ghost,
+            size: .sm,
+            onPress: () => _showFilterSheet(context),
+            child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedFilterHorizontal, size: null),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: TextField(
-              onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
-              decoration: InputDecoration(
-                hintText: context.tr('search_requests'),
-                hintStyle: GoogleFonts.nunito(fontSize: 14),
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            child: FTextField(
+              control: .managed(
+                onChange: (v) =>
+                    setState(() => _searchQuery = v.text.toLowerCase()),
               ),
+              hint: context.tr('search_requests'),
+              prefixBuilder: (context, style, variants) =>
+                  FTextField.prefixIconBuilder(
+                    context,
+                    style,
+                    variants,
+                    const HugeIcon(
+                        icon: HugeIcons.strokeRoundedSearch01, size: null),
+                  ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildFilterChip(context.tr('all'), 'all'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(context.tr('open'), 'open'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(context.tr('in_progress'), 'in_progress'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(context.tr('resolved'), 'resolved'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(context.tr('cancelled'), 'cancelled'),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () async => ref.invalidate(maintenanceRequestsProvider),
-              color: AppColors.primary,
+              onRefresh: () async =>
+                  ref.invalidate(maintenanceRequestsProvider),
+              color: colors.primary,
               child: requestsAsync.when(
                 loading: () => const LoadingIndicator(),
-                error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(maintenanceRequestsProvider)),
+                error: (e, _) => ErrorState(
+                  message: AppError.getMessage(e),
+                  onRetry: () =>
+                      ref.invalidate(maintenanceRequestsProvider),
+                ),
                 data: (requests) {
                   final filtered = requests.where((req) {
-                    final title = (req['title'] ?? '').toString().toLowerCase();
-                    final tenant = (req['tenant']?['full_name'] ?? '').toString().toLowerCase();
-                    final matchesSearch = title.contains(_searchQuery) || tenant.contains(_searchQuery);
+                    final title =
+                        (req['title'] ?? '').toString().toLowerCase();
+                    final tenant = (req['tenant']?['full_name'] ?? '')
+                        .toString()
+                        .toLowerCase();
+                    final matchesSearch = title.contains(_searchQuery) ||
+                        tenant.contains(_searchQuery);
                     final status = (req['status'] ?? 'open').toString();
-                    final matchesStatus = _filterStatus == 'all' || status == _filterStatus;
+                    final matchesStatus = _filterStatus == 'all' ||
+                        status == _filterStatus;
                     return matchesSearch && matchesStatus;
                   }).toList();
 
                   if (filtered.isEmpty) {
-                    return EmptyState(message: context.tr('no_maintenance_requests_landlord'), icon: Icons.build_outlined);
+                    return EmptyState(
+                        message:
+                            context.tr('no_maintenance_requests_landlord'));
                   }
                   return ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     itemCount: filtered.length,
-                    itemBuilder: (context, index) => _RequestCard(req: filtered[index]),
+                    itemBuilder: (context, index) =>
+                        _RequestRow(req: filtered[index]),
                   );
                 },
               ),
@@ -109,121 +126,172 @@ class _MaintenanceRequestsScreenState extends ConsumerState<MaintenanceRequestsS
     );
   }
 
-  Widget _buildFilterChip(String label, String value) {
-    final isSelected = _filterStatus == value;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ChoiceChip(
-      label: Text(label, style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: isSelected ? Colors.white : (isDark ? Colors.white70 : AppColors.textLight))),
-      selected: isSelected,
-      selectedColor: AppColors.primary,
-      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-      onSelected: (_) => setState(() => _filterStatus = value),
+  Future<void> _showFilterSheet(BuildContext context) async {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        String status = _filterStatus;
+        return StatefulBuilder(
+          builder: (context, setSheet) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: colors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      context.tr('filter'),
+                      style: typography.body.md
+                          .copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      context.tr('status').toUpperCase(),
+                      style: typography.body.xs3.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        color: colors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final (label, v) in [
+                          (context.tr('all'), 'all'),
+                          (context.tr('open'), 'open'),
+                          (context.tr('in_progress'), 'in_progress'),
+                          (context.tr('resolved'), 'resolved'),
+                          (context.tr('cancelled'), 'cancelled'),
+                        ])
+                          FButton(
+                            variant: status == v ? .primary : .outline,
+                            size: .xs,
+                            mainAxisSize: MainAxisSize.min,
+                            onPress: () => setSheet(() => status = v),
+                            child: Text(label),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    FButton(
+                      variant: .primary,
+                      onPress: () {
+                        setState(() => _filterStatus = status);
+                        Navigator.pop(context);
+                      },
+                      child: Text(context.tr('apply')),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
 
-class _RequestCard extends StatelessWidget {
+class _RequestRow extends StatelessWidget {
   final Map<String, dynamic> req;
-  const _RequestCard({required this.req});
+  const _RequestRow({required this.req});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final status = req['status'] ?? 'open';
-    final createdAt = req['created_at'] != null ? DateFormat('dd MMM yyyy').format(DateTime.tryParse(req['created_at'].toString()) ?? DateTime.now()) : '-';
-    final Color statusColor = {
-      'open': Colors.orange,
-      'in_progress': AppColors.info,
-      'resolved': AppColors.success,
-      'cancelled': Colors.grey,
-    }[status] ?? Colors.orange;
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final status = (req['status'] ?? 'open').toString();
+    final createdAt = req['created_at'] != null
+        ? DateFormat('dd MMM yyyy').format(
+            DateTime.tryParse(req['created_at'].toString()) ?? DateTime.now())
+        : '-';
+    final statusColor = switch (status) {
+      'open' => const Color(0xFFD97706),
+      'in_progress' => const Color(0xFF0EA5E9),
+      'resolved' => const Color(0xFF16A34A),
+      _ => colors.mutedForeground,
+    };
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/landlord/maintenance/${req['id']}'),
+    return FTappable(
+      onPress: () => context.push('/landlord/maintenance/${req['id']}'),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+          ),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                    child: Image.asset('assets/icons/maintainance.png', width: 22, height: 22, errorBuilder: (_, __, ___) => Icon(Icons.build, color: statusColor, size: 22)),
-                  ),
-                  const SizedBox(width: 12),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(req['title'] ?? context.tr('request'), style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
-                        const SizedBox(height: 2),
-                        Text(req['tenant']?['full_name'] ?? context.tr('unknown'), style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
-                      ],
+                    child: Text(
+                      req['title'] ?? context.tr('request'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.sm
+                          .copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),
-                  StatusBadge(status: status),
-                ],
-              ),
-              if (req['description'] != null && req['description'].toString().isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(req['description'], style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white70 : AppColors.textLight), maxLines: 2, overflow: TextOverflow.ellipsis),
-              ],
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(createdAt, style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
-                  Text('${context.tr('unit')}: ${req['unit']?['name'] ?? req['unit']?['unit_number'] ?? 'N/A'}', style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildActionButton(context, context.tr('start'), Icons.play_arrow, status == 'open' ? AppColors.info : Colors.grey, () => _updateStatus(context, 'in_progress')),
-                  ),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildActionButton(context, context.tr('resolve'), Icons.check_circle, status == 'resolved' ? Colors.grey : AppColors.success, () => _updateStatus(context, 'resolved')),
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    status.replaceAll('_', ' ').toUpperCase(),
+                    style: typography.body.xs3.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: statusColor,
+                    ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 3),
+              Text(
+                [
+                  req['tenant']?['full_name'] ?? context.tr('unknown'),
+                  '${context.tr('unit')} ${req['unit']?['name'] ?? req['unit']?['unit_number'] ?? 'N/A'}',
+                  createdAt,
+                ].join(' · '),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: typography.body.xs3
+                    .copyWith(color: colors.mutedForeground),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  Widget _buildActionButton(BuildContext context, String label, IconData icon, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: color),
-            const SizedBox(width: 6),
-            Text(label, style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w800, color: color)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _updateStatus(BuildContext context, String status) {
-    context.push('/landlord/maintenance/${req['id']}', extra: {'initialStatus': status});
   }
 }

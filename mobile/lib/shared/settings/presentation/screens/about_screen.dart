@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
+import 'package:forui/forui.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -8,91 +8,123 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        title: Text(context.tr('about'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.apartment, size: 56, color: Colors.white),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              context.tr('app_name'),
-              style: GoogleFonts.nunito(fontSize: 24, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${context.tr('version')} 3.1.0+5',
-              style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textLight),
-            ),
-            const SizedBox(height: 32),
-            _buildCard(
-              context,
-              children: [
-                _buildInfoRow(context, context.tr('company'), 'Manna Apartment Ltd'),
-                const Divider(height: 1),
-                _buildInfoRow(context, context.tr('website'), 'www.mannaapartment.co.tz'),
-                const Divider(height: 1),
-                _buildInfoRow(context, context.tr('email'), 'support@mannaapartment.co.tz'),
-                const Divider(height: 1),
-                _buildInfoRow(context, context.tr('phone'), '+255 700 000 000'),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Text(
-              context.tr('about_description'),
-              style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textLight),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        title: Text(
+          context.tr('about'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () {
+            if (context.canPop()) context.pop();
+          },
+          child: context.theme.icons.arrowLeft(context),
         ),
       ),
-    );
-  }
-
-  Widget _buildCard(BuildContext context, {required List<Widget> children}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        children: [
+          // Logo
+          Center(
+            child: ClipRRect(
+              borderRadius: context.theme.style.borderRadius.xl,
+              child: Image.asset(
+                'assets/images/app_logo.png',
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Center(
+            child: Text(
+              context.tr('app_name'),
+              style:
+                  typography.display.sm.copyWith(fontWeight: FontWeight.w800),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Center(
+            child: Text(
+              '${context.tr('version')} 3.1.0+5',
+              style:
+                  typography.body.xs2.copyWith(color: colors.mutedForeground),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Center(
+            child: Text(
+              context.tr('about_description'),
+              textAlign: TextAlign.center,
+              style: typography.body.xs2.copyWith(
+                color: colors.mutedForeground,
+                height: 1.6,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
+          _row(context, context.tr('company'), 'Manna Apartment Ltd'),
+          _divider(context),
+          _row(context, context.tr('website'), 'www.mannaapartment.co.tz'),
+          _divider(context),
+          _row(context, context.tr('email'), 'support@mannaapartment.co.tz'),
+          _divider(context),
+          _row(context, context.tr('phone'), '+255 734 070 202'),
+          Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
+          const SizedBox(height: 20),
+          Center(
+            child: Text(
+              '© 2026 Manna Apartment Ltd. All rights reserved.',
+              textAlign: TextAlign.center,
+              style:
+                  typography.body.xs3.copyWith(color: colors.mutedForeground),
+            ),
+          ),
+        ],
       ),
-      child: Column(children: children),
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String label, String value) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _divider(BuildContext context) => Divider(
+      height: 1,
+      color: context.theme.colors.border.withValues(alpha: 0.6));
+
+  Widget _row(BuildContext context, String label, String value) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 13),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.nunito(fontSize: 14, color: isDark ? Colors.white70 : AppColors.textLight)),
-          Text(value, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+          Text(
+            label,
+            style:
+                typography.body.xs2.copyWith(color: colors.mutedForeground),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: typography.body.xs2.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colors.foreground,
+              ),
+            ),
+          ),
         ],
       ),
     );

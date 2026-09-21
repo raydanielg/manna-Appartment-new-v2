@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
+import '../../../../../core/widgets/confirm_dialog.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../providers/properties_provider.dart';
@@ -172,42 +173,13 @@ class PropertyDetailScreen extends ConsumerWidget {
 
   Future<void> _confirmDelete(
       BuildContext context, WidgetRef ref, String id) async {
-    final confirmed = await showFDialog<bool>(
-      context: context,
-      builder: (context, style, animation) => FDialog(
-        animation: animation,
-        builder: (context, style) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(context.tr('delete_property'), style: style.titleTextStyle),
-            const SizedBox(height: 8),
-            Text(context.tr('confirm_delete_property'),
-                style: style.bodyTextStyle),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FButton(
-                  variant: .outline,
-                  size: .sm,
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: () => Navigator.pop(context, false),
-                  child: Text(context.tr('cancel')),
-                ),
-                const SizedBox(width: 8),
-                FButton(
-                  variant: .destructive,
-                  size: .sm,
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: () => Navigator.pop(context, true),
-                  child: Text(context.tr('delete')),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: context.tr('delete_property'),
+      message: context.tr('confirm_delete_property'),
+      confirmText: context.tr('delete'),
+      cancelText: context.tr('cancel'),
+      isDestructive: true,
     );
     if (confirmed != true) return;
     try {

@@ -1,24 +1,27 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
-import 'dart:io';
-import 'dart:typed_data';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
 
 import 'package:manna_apartment/core/utils/app_toast.dart';
+
 class InvoiceDetailScreen extends StatelessWidget {
   final Map<String, dynamic> invoice;
   const InvoiceDetailScreen({super.key, required this.invoice});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+
     final plan = invoice['plan'] ?? {};
     final planName = plan['name']?.toString() ?? 'Subscription';
     final amount = invoice['amount'] ?? 0;
@@ -32,32 +35,52 @@ class InvoiceDetailScreen extends StatelessWidget {
     final endDate = invoice['end_date']?.toString() ?? '-';
     final reference = invoice['payment_reference']?.toString() ?? '-';
     final createdAt = invoice['created_at']?.toString() ?? '-';
-    final invoiceId = invoice['id']?.toString() ?? invoice['uuid']?.toString() ?? '-';
-    final receiptNo = reference != '-' ? reference : 'RCP-${createdAt.replaceAll(RegExp(r'[^0-9]'), '').substring(0, 12)}';
+    final invoiceId =
+        invoice['id']?.toString() ?? invoice['uuid']?.toString() ?? '-';
+    final receiptNo = reference != '-'
+        ? reference
+        : 'RCP-${createdAt.replaceAll(RegExp(r'[^0-9]'), '').substring(0, 12)}';
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('efd_receipt'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('efd_receipt'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () {
             if (context.canPop()) {
               context.pop();
             } else {
               context.go('/landlord/subscription');
             }
           },
+          child: context.theme.icons.arrowLeft(context),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: () => _downloadPdf(context, invoice, planName, amountDouble, paid, startDate, endDate, receiptNo, createdAt, invoiceId),
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
+            onPress: () => _downloadPdf(context, invoice, planName,
+                amountDouble, paid, startDate, endDate, receiptNo, createdAt, invoiceId),
+            child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedDownload01, size: 20),
           ),
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () => _sharePdf(context, invoice, planName, amountDouble, paid, startDate, endDate, receiptNo, createdAt, invoiceId),
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
+            onPress: () => _sharePdf(context, invoice, planName, amountDouble,
+                paid, startDate, endDate, receiptNo, createdAt, invoiceId),
+            child:
+                const HugeIcon(icon: HugeIcons.strokeRoundedShare01, size: 20),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
@@ -65,38 +88,25 @@ class InvoiceDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildReceiptCard(
-              context, isDark, planName, amountFormatted, paid, startDate, endDate, receiptNo, createdAt, invoiceId,
-            ),
+            _buildReceiptCard(context, colors, typography, planName,
+                amountFormatted, paid, startDate, endDate, receiptNo, createdAt, invoiceId),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _downloadPdf(context, invoice, planName, amountDouble, paid, startDate, endDate, receiptNo, createdAt, invoiceId),
-                    icon: const Icon(Icons.download, size: 18),
-                    label: Text(context.tr('download_pdf'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13)),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _sharePdf(context, invoice, planName, amountDouble, paid, startDate, endDate, receiptNo, createdAt, invoiceId),
-                    icon: const Icon(Icons.share, size: 18),
-                    label: Text(context.tr('share'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                  ),
-                ),
-              ],
+            FButton(
+              variant: .primary,
+              prefix:
+                  const HugeIcon(icon: HugeIcons.strokeRoundedShare01, size: null),
+              onPress: () => _sharePdf(context, invoice, planName, amountDouble,
+                  paid, startDate, endDate, receiptNo, createdAt, invoiceId),
+              child: Text(context.tr('share')),
+            ),
+            const SizedBox(height: 10),
+            FButton(
+              variant: .outline,
+              prefix: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedDownload01, size: null),
+              onPress: () => _downloadPdf(context, invoice, planName,
+                  amountDouble, paid, startDate, endDate, receiptNo, createdAt, invoiceId),
+              child: Text(context.tr('download_pdf')),
             ),
           ],
         ),
@@ -105,80 +115,135 @@ class InvoiceDetailScreen extends StatelessWidget {
   }
 
   Widget _buildReceiptCard(
-    BuildContext context, bool isDark, String planName, String amountFormatted,
-    bool paid, String startDate, String endDate, String receiptNo, String createdAt, String invoiceId,
+    BuildContext context,
+    FColors colors,
+    FTypography typography,
+    String planName,
+    String amountFormatted,
+    bool paid,
+    String startDate,
+    String endDate,
+    String receiptNo,
+    String createdAt,
+    String invoiceId,
   ) {
+    final radii = context.theme.style.borderRadius;
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+        color: colors.card,
+        borderRadius: radii.lg,
+        border: Border.all(color: colors.border),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          // Header
+          // Header — bleeds to card edges
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
+            color: colors.primary,
             child: Column(
               children: [
-                Text(context.tr('manna_apartment'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1)),
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedInvoice01,
+                  size: 26,
+                  color: colors.primaryForeground,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  context.tr('manna_apartment'),
+                  style: typography.display.sm.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: colors.primaryForeground,
+                    letterSpacing: 1,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(context.tr('efd_receipt'), style: GoogleFonts.nunito(fontSize: 11, color: Colors.white70, letterSpacing: 0.5)),
+                Text(
+                  context.tr('efd_receipt'),
+                  style: typography.body.xs3.copyWith(
+                    color: colors.primaryForeground.withValues(alpha: 0.8),
+                    letterSpacing: 0.5,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: paid ? Colors.green.withValues(alpha: 0.2) : Colors.orange.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(4),
+                    color: colors.primaryForeground.withValues(alpha: 0.15),
+                    borderRadius: radii.pill,
                   ),
                   child: Text(
                     paid ? 'PAID' : 'PENDING',
-                    style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w800, color: paid ? Colors.green : Colors.orange),
+                    style: typography.body.xs3.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: colors.primaryForeground,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          // Receipt body
+          // Body
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildReceiptRow(isDark, 'Receipt No.', receiptNo),
-                _buildReceiptRow(isDark, 'Invoice ID', invoiceId),
-                _buildDivider(isDark),
-                _buildReceiptRow(isDark, 'Plan', planName),
-                _buildReceiptRow(isDark, 'Amount', amountFormatted == '0' ? 'FREE' : 'TZS $amountFormatted'),
-                _buildReceiptRow(isDark, 'Period', '$startDate to $endDate'),
-                _buildDivider(isDark),
-                _buildReceiptRow(isDark, 'Payment Ref', receiptNo),
-                _buildReceiptRow(isDark, 'Date Issued', createdAt == '-' ? '-' : createdAt.substring(0, 10)),
-                _buildDivider(isDark),
-                // Total
+                _receiptRow(typography, colors, 'Receipt No.', receiptNo),
+                _receiptRow(typography, colors, 'Invoice ID', invoiceId),
+                _dashedDivider(colors),
+                _receiptRow(typography, colors, 'Plan', planName),
+                _receiptRow(typography, colors, 'Amount',
+                    amountFormatted == '0' ? 'FREE' : 'TZS $amountFormatted'),
+                _receiptRow(typography, colors, 'Period', '$startDate to $endDate'),
+                _dashedDivider(colors),
+                _receiptRow(typography, colors, 'Payment Ref', receiptNo),
+                _receiptRow(typography, colors, 'Date Issued',
+                    createdAt == '-' ? '-' : createdAt.substring(0, 10)),
+                _dashedDivider(colors),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(context.tr('total_amount'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
                       Text(
-                        amountFormatted == '0' ? context.tr('free_label') : 'TZS $amountFormatted',
-                        style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary),
+                        context.tr('total_amount').toUpperCase(),
+                        style: typography.body.xs2.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          color: colors.mutedForeground,
+                        ),
+                      ),
+                      Text(
+                        amountFormatted == '0'
+                            ? context.tr('free_label')
+                            : 'TZS $amountFormatted',
+                        style: typography.display.sm.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: colors.primary,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                _buildDivider(isDark),
+                _dashedDivider(colors),
                 const SizedBox(height: 12),
-                // Footer
-                Text(context.tr('computer_generated_receipt'), style: GoogleFonts.nunito(fontSize: 10, color: isDark ? Colors.white38 : Colors.grey.shade500, fontStyle: FontStyle.italic)),
+                Text(
+                  context.tr('computer_generated_receipt'),
+                  style: typography.body.xs3.copyWith(
+                    color: colors.mutedForeground,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(context.tr('thank_you_subscription'), style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white60 : AppColors.textLight)),
+                Text(
+                  context.tr('thank_you_subscription'),
+                  style: typography.body.xs2.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colors.mutedForeground,
+                  ),
+                ),
               ],
             ),
           ),
@@ -187,31 +252,45 @@ class InvoiceDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildReceiptRow(bool isDark, String label, String value) {
+  Widget _dashedDivider(FColors colors) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final dashCount = (constraints.maxWidth / 10).floor();
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(
+              dashCount,
+              (_) => Container(width: 5, height: 1, color: colors.border),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _receiptRow(
+      FTypography typography, FColors colors, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+          Text(label,
+              style:
+                  typography.body.xs2.copyWith(color: colors.mutedForeground)),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark),
+              style: typography.body.xs2.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDivider(bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Divider(height: 1, color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
     );
   }
 
@@ -228,7 +307,6 @@ class InvoiceDetailScreen extends StatelessWidget {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              // Header
               pw.Center(
                 child: pw.Column(
                   children: [
@@ -253,7 +331,6 @@ class InvoiceDetailScreen extends StatelessWidget {
               pw.SizedBox(height: 24),
               pw.Divider(thickness: 1, color: PdfColors.grey300),
               pw.SizedBox(height: 16),
-              // Receipt details
               _pdfRow('Receipt No.', receiptNo),
               _pdfRow('Invoice ID', invoiceId),
               pw.SizedBox(height: 8),
@@ -270,7 +347,6 @@ class InvoiceDetailScreen extends StatelessWidget {
               pw.SizedBox(height: 16),
               pw.Divider(thickness: 1, color: PdfColors.grey300),
               pw.SizedBox(height: 12),
-              // Total
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -284,7 +360,6 @@ class InvoiceDetailScreen extends StatelessWidget {
               pw.SizedBox(height: 32),
               pw.Divider(thickness: 1, color: PdfColors.grey300),
               pw.SizedBox(height: 12),
-              // Footer
               pw.Center(
                 child: pw.Column(
                   children: [

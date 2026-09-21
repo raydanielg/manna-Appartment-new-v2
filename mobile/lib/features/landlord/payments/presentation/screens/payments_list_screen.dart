@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
+import '../../../../../core/widgets/confirm_dialog.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../providers/payments_provider.dart';
 
 import 'package:manna_apartment/core/utils/app_toast.dart';
+
 class PaymentsListScreen extends ConsumerStatefulWidget {
   const PaymentsListScreen({super.key});
 
@@ -25,135 +27,157 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final paymentsAsync = ref.watch(landlordPaymentsProvider);
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('payments'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('payments'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () {
             if (context.canPop()) context.pop();
           },
+          child: context.theme.icons.arrowLeft(context),
         ),
+        actions: [
+          FButton.icon(
+            variant: _filterType != 'all' ? .secondary : .ghost,
+            size: .sm,
+            onPress: () => _showFilterSheet(context),
+            child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedFilterHorizontal, size: null),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: TextField(
-              onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
-              decoration: InputDecoration(
-                hintText: context.tr('search_payments'),
-                hintStyle: GoogleFonts.nunito(fontSize: 14),
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            child: FTextField(
+              control: .managed(
+                onChange: (v) =>
+                    setState(() => _searchQuery = v.text.toLowerCase()),
               ),
+              hint: context.tr('search_payments'),
+              prefixBuilder: (context, style, variants) =>
+                  FTextField.prefixIconBuilder(
+                    context,
+                    style,
+                    variants,
+                    const HugeIcon(
+                        icon: HugeIcons.strokeRoundedSearch01, size: null),
+                  ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildFilterChip(context.tr('all'), 'all'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(context.tr('rent'), 'rent'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(context.tr('water'), 'water'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(context.tr('electricity'), 'electricity'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(context.tr('other'), 'other'),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async => ref.invalidate(landlordPaymentsProvider),
-              color: AppColors.primary,
+              color: colors.primary,
               child: paymentsAsync.when(
                 loading: () => const LoadingIndicator(),
                 error: (e, _) {
                   final message = AppError.getMessage(e);
-                  final isSetupError = message.toLowerCase().contains('kyc') ||
-                      message.toLowerCase().contains('subscription') ||
-                      message.toLowerCase().contains('organization');
+                  final isSetupError =
+                      message.toLowerCase().contains('kyc') ||
+                          message.toLowerCase().contains('subscription') ||
+                          message.toLowerCase().contains('organization');
                   return ErrorState(
                     message: message,
                     onRetry: () => ref.invalidate(landlordPaymentsProvider),
-                    onAction: isSetupError ? () => context.go('/landlord/subscription') : null,
+                    onAction: isSetupError
+                        ? () => context.go('/landlord/subscription')
+                        : null,
                     actionLabel: context.tr('complete_setup'),
                   );
                 },
                 data: (payments) {
                   final filtered = payments.where((p) {
-                    final tenant = (p['tenant']?['user']?['full_name'] ?? p['tenant']?['full_name'] ?? p['tenant_name'] ?? '').toString().toLowerCase();
-                    final matchesSearch = tenant.contains(_searchQuery) || (p['reference'] ?? '').toString().toLowerCase().contains(_searchQuery);
+                    final tenant = (p['tenant']?['user']?['full_name'] ??
+                            p['tenant']?['full_name'] ??
+                            p['tenant_name'] ??
+                            '')
+                        .toString()
+                        .toLowerCase();
+                    final matchesSearch = tenant.contains(_searchQuery) ||
+                        (p['reference'] ?? '')
+                            .toString()
+                            .toLowerCase()
+                            .contains(_searchQuery);
                     final type = (p['payment_type'] ?? 'rent').toString();
-                    final matchesType = _filterType == 'all' || type == _filterType;
+                    final matchesType =
+                        _filterType == 'all' || type == _filterType;
                     return matchesSearch && matchesType;
                   }).toList();
 
                   if (filtered.isEmpty) {
-                    return EmptyState(message: context.tr('no_payments_recorded_yet'));
+                    return EmptyState(
+                        message: context.tr('no_payments_recorded_yet'));
                   }
                   return ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final payment = filtered[index];
                       return Dismissible(
-                        key: Key(payment['id']?.toString() ?? index.toString()),
+                        key: Key(
+                            payment['id']?.toString() ?? index.toString()),
                         direction: DismissDirection.endToStart,
                         background: Container(
                           alignment: Alignment.centerRight,
                           padding: const EdgeInsets.only(right: 24),
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: AppColors.error,
-                            borderRadius: BorderRadius.circular(16),
+                            color: colors.error,
+                            borderRadius:
+                                context.theme.style.borderRadius.lg,
                           ),
-                          child: const Icon(Icons.delete, color: Colors.white),
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedDelete02,
+                            size: 22,
+                            color: colors.errorForeground,
+                          ),
                         ),
-                        confirmDismiss: (direction) async {
-                          return await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text(context.tr('delete_payment')),
-                              content: Text(context.tr('confirm_delete_payment')),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.tr('cancel'))),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                        confirmDismiss: (direction) => showConfirmDialog(
+                          context,
+                          title: context.tr('delete_payment'),
+                          message: context.tr('confirm_delete_payment'),
+                          confirmText: context.tr('delete'),
+                          cancelText: context.tr('cancel'),
+                          isDestructive: true,
+                        ),
                         onDismissed: (direction) async {
                           try {
-                            await ref.read(paymentsRepositoryProvider).deletePayment(payment['id'].toString());
+                            await ref
+                                .read(paymentsRepositoryProvider)
+                                .deletePayment(payment['id'].toString());
                             ref.invalidate(landlordPaymentsProvider);
                             if (context.mounted) {
-                              AppToast.success(context, context.tr('payment_deleted'));
+                              AppToast.success(
+                                  context, context.tr('payment_deleted'));
                             }
                           } catch (e) {
                             if (context.mounted) {
-                              AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
+                              AppToast.error(
+                                context,
+                                context.tr('failed_msg').replaceAll(
+                                    '{0}', AppError.getMessage(e)),
+                              );
                               ref.invalidate(landlordPaymentsProvider);
                             }
                           }
                         },
-                        child: _PaymentCard(payment: payment),
+                        child: _PaymentRow(payment: payment),
                       );
                     },
                   );
@@ -165,99 +189,173 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/landlord/payments/record'),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add),
+        backgroundColor: colors.primary,
+        foregroundColor: colors.primaryForeground,
+        icon: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 20),
         label: Text(context.tr('record')),
       ),
     );
   }
 
-  Widget _buildFilterChip(String label, String value) {
-    final isSelected = _filterType == value;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ChoiceChip(
-      label: Text(label, style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: isSelected ? Colors.white : (isDark ? Colors.white70 : AppColors.textLight))),
-      selected: isSelected,
-      selectedColor: AppColors.primary,
-      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-      onSelected: (_) => setState(() => _filterType = value),
+  Future<void> _showFilterSheet(BuildContext context) async {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        String type = _filterType;
+        return StatefulBuilder(
+          builder: (context, setSheet) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: colors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      context.tr('filter'),
+                      style: typography.body.md
+                          .copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      context.tr('payment_type').toUpperCase(),
+                      style: typography.body.xs3.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        color: colors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final (label, v) in [
+                          (context.tr('all'), 'all'),
+                          (context.tr('rent'), 'rent'),
+                          (context.tr('water'), 'water'),
+                          (context.tr('electricity'), 'electricity'),
+                          (context.tr('other'), 'other'),
+                        ])
+                          FButton(
+                            variant: type == v ? .primary : .outline,
+                            size: .xs,
+                            mainAxisSize: MainAxisSize.min,
+                            onPress: () => setSheet(() => type = v),
+                            child: Text(label),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    FButton(
+                      variant: .primary,
+                      onPress: () {
+                        setState(() => _filterType = type);
+                        Navigator.pop(context);
+                      },
+                      child: Text(context.tr('apply')),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
 
-class _PaymentCard extends StatelessWidget {
+class _PaymentRow extends StatelessWidget {
   final Map<String, dynamic> payment;
-  const _PaymentCard({required this.payment});
+  const _PaymentRow({required this.payment});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+
     final amount = _parseAmount(payment['amount']);
     final type = (payment['payment_type'] ?? 'rent').toString();
-    final date = payment['payment_date'] != null ? DateFormat('dd MMM yyyy').format(DateTime.tryParse(payment['payment_date'].toString()) ?? DateTime.now()) : '-';
-    final Color typeColor = {
-      'rent': AppColors.primary,
-      'water': Colors.blue,
-      'electricity': Colors.amber,
-      'other': Colors.grey,
-    }[type] ?? AppColors.info;
+    final date = payment['payment_date'] != null
+        ? DateFormat('dd MMM yyyy').format(
+            DateTime.tryParse(payment['payment_date'].toString()) ??
+                DateTime.now())
+        : '-';
+    final tenant = payment['tenant']?['user']?['full_name'] ??
+        payment['tenant']?['full_name'] ??
+        payment['tenant_name'] ??
+        context.tr('unknown');
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/landlord/payments/${payment['id']}'),
-        child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: typeColor.withValues(alpha: 0.15),
-          child: Icon(_iconForType(type), color: typeColor, size: 18),
-        ),
-        title: Text(
-          'TZS ${amount.toStringAsFixed(0)}',
-          style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              payment['tenant']?['user']?['full_name'] ?? payment['tenant']?['full_name'] ?? payment['tenant_name'] ?? context.tr('unknown'),
-              style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight),
-            ),
-            Text(
-              type.toUpperCase(),
-              style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: typeColor),
-            ),
-          ],
-        ),
-        trailing: Text(date, style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+    return FTappable(
+      onPress: () => context.push('/landlord/payments/${payment['id']}'),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: colors.border.withValues(alpha: 0.5)),
           ),
         ),
-      );
-    }
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tenant,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.sm
+                          .copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '$type · $date',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.xs3
+                          .copyWith(color: colors.mutedForeground),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'TZS ${NumberFormat('#,###').format(amount)}',
+                style: typography.body.sm
+                    .copyWith(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   double _parseAmount(dynamic value) {
     if (value == null) return 0;
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0;
     return 0;
-  }
-
-  IconData _iconForType(String type) {
-    switch (type) {
-      case 'water':
-        return Icons.water_drop;
-      case 'electricity':
-        return Icons.electric_bolt;
-      case 'rent':
-        return Icons.home;
-      default:
-        return Icons.payments;
-    }
   }
 }

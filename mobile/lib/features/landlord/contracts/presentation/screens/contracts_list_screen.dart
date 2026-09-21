@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/empty_state.dart';
@@ -17,26 +17,44 @@ class ContractsListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final contractsAsync = ref.watch(contractsListProvider);
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('contracts')),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('contracts'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () {
+            if (context.canPop()) context.pop();
+          },
+          child: context.theme.icons.arrowLeft(context),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(contractsListProvider),
-        color: AppColors.primary,
+        color: colors.primary,
         child: contractsAsync.when(
           loading: () => const LoadingIndicator(),
-          error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(contractsListProvider)),
+          error: (e, _) => ErrorState(
+            message: AppError.getMessage(e),
+            onRetry: () => ref.invalidate(contractsListProvider),
+          ),
           data: (contracts) => ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _buildNewContractCard(context),
+              _buildNewContractCard(context, colors, typography),
               const SizedBox(height: 16),
               if (contracts.isEmpty)
-                EmptyState(message: context.tr('no_contracts_tap'), icon: Icons.description_outlined)
+                EmptyState(message: context.tr('no_contracts_tap'))
               else
                 ...contracts.map((c) => ContractCard(contract: c)),
             ],
@@ -46,48 +64,55 @@ class ContractsListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildNewContractCard(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/landlord/contracts/create'),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-          ),
+  Widget _buildNewContractCard(
+      BuildContext context, FColors colors, FTypography typography) {
+    return FTappable(
+      onPress: () => context.push('/landlord/contracts/create'),
+      child: FCard(
+        child: Padding(
+          padding: const EdgeInsets.all(4),
           child: Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: colors.primary.withValues(alpha: 0.1),
+                  borderRadius: context.theme.style.borderRadius.md,
                 ),
-                child: const Icon(Icons.add, color: AppColors.primary, size: 24),
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedAdd01,
+                    size: 22,
+                    color: colors.primary,
+                  ),
+                ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       context.tr('new_contract'),
-                      style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                      style: typography.body.sm.copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       context.tr('create_new_contract'),
-                      style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.xs2
+                          .copyWith(color: colors.mutedForeground),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.primary.withValues(alpha: 0.5)),
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                size: 18,
+                color: colors.mutedForeground.withValues(alpha: 0.6),
+              ),
             ],
           ),
         ),

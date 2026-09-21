@@ -729,5 +729,9 @@
   "credentials_sent_success": "Vitambulisho vimetumwa kwa mafanikio kupitia SMS",
   "credentials_sms_hint": "Mpangaji atapokea SMS yenye vitambulisho vya kuingia na link ya kupakua app.",
   "contract_created_msg": "Mkataba umetengenezwa kwa mafanikio. Sasa unaweza kutuma vitambulisho kwa mpangaji.",
-  "tenant_credentials": "Vitambulisho vya Mpangaji"
+  "tenant_credentials": "Vitambulisho vya Mpangaji",
+  "today": "Leo",
+  "yesterday": "Jana",
+  "apply": "Tumia",
+  "no_results": "Hakuna matokeo"
 }

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
+import '../../../../../core/widgets/confirm_dialog.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
@@ -12,6 +13,7 @@ import '../../providers/units_provider.dart';
 import '../widgets/unit_card.dart';
 
 import 'package:manna_apartment/core/utils/app_toast.dart';
+
 class UnitsListScreen extends ConsumerWidget {
   final String? propertyId;
   const UnitsListScreen({super.key, this.propertyId});
@@ -19,16 +21,29 @@ class UnitsListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unitsAsync = ref.watch(unitsListProvider(propertyId));
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('units')),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('units'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () => context.pop(),
+          child: context.theme.icons.arrowLeft(context),
+        ),
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(unitsListProvider(propertyId)),
-        color: AppColors.primary,
+        color: colors.primary,
         child: unitsAsync.when(
           loading: () => const LoadingIndicator(),
           error: (e, _) {
@@ -37,64 +52,69 @@ class UnitsListScreen extends ConsumerWidget {
             return ErrorState(
               message: message,
               onRetry: () => ref.invalidate(unitsListProvider(propertyId)),
-              onAction: isSetup ? () => context.go('/landlord/subscription') : null,
+              onAction:
+                  isSetup ? () => context.go('/landlord/subscription') : null,
               actionLabel: context.tr('complete_setup'),
             );
           },
           data: (units) => ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _buildAddUnitCard(context),
+              _buildAddUnitCard(context, colors, typography),
               const SizedBox(height: 16),
               if (units.isEmpty)
-                EmptyState(message: context.tr('no_units_tap'), icon: Icons.meeting_room_outlined)
+                EmptyState(message: context.tr('no_units_tap'))
               else
                 ...units.map((unit) => Dismissible(
-                  key: Key(unit['id']?.toString() ?? UniqueKey().toString()),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 24),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.error,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(Icons.delete, color: Colors.white),
-                  ),
-                  confirmDismiss: (direction) async {
-                    return await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        title: Text(context.tr('delete_unit'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-                        content: Text(context.tr('confirm_delete_unit'), style: GoogleFonts.nunito(fontSize: 14)),
-                        actions: [
-                          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.tr('cancel'))),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
-                          ),
-                        ],
+                      key: Key(
+                          unit['id']?.toString() ?? UniqueKey().toString()),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 24),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: colors.error,
+                          borderRadius:
+                              context.theme.style.borderRadius.lg,
+                        ),
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedDelete02,
+                          size: 22,
+                          color: colors.errorForeground,
+                        ),
                       ),
-                    );
-                  },
-                  onDismissed: (direction) async {
-                    try {
-                      await ref.read(unitsRepositoryProvider).deleteUnit(unit['id'].toString());
-                      ref.invalidate(unitsListProvider(propertyId));
-                      if (context.mounted) {
-                        AppToast.success(context, context.tr('unit_deleted'));
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
-                        ref.invalidate(unitsListProvider(propertyId));
-                      }
-                    }
-                  },
-                  child: UnitCard(unit: unit),
-                )),
+                      confirmDismiss: (direction) => showConfirmDialog(
+                        context,
+                        title: context.tr('delete_unit'),
+                        message: context.tr('confirm_delete_unit'),
+                        confirmText: context.tr('delete'),
+                        cancelText: context.tr('cancel'),
+                        isDestructive: true,
+                      ),
+                      onDismissed: (direction) async {
+                        try {
+                          await ref
+                              .read(unitsRepositoryProvider)
+                              .deleteUnit(unit['id'].toString());
+                          ref.invalidate(unitsListProvider(propertyId));
+                          if (context.mounted) {
+                            AppToast.success(
+                                context, context.tr('unit_deleted'));
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            AppToast.error(
+                              context,
+                              context.tr('failed_msg').replaceAll(
+                                  '{0}', AppError.getMessage(e)),
+                            );
+                            ref.invalidate(unitsListProvider(propertyId));
+                          }
+                        }
+                      },
+                      child: UnitCard(unit: unit),
+                    )),
             ],
           ),
         ),
@@ -102,48 +122,57 @@ class UnitsListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAddUnitCard(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/landlord/units/add?propertyId=${propertyId ?? ''}'),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-          ),
+  Widget _buildAddUnitCard(
+      BuildContext context, FColors colors, FTypography typography) {
+    return FTappable(
+      onPress: () =>
+          context.push('/landlord/units/add?propertyId=${propertyId ?? ''}'),
+      child: FCard(
+        child: Padding(
+          padding: const EdgeInsets.all(4),
           child: Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: colors.primary.withValues(alpha: 0.1),
+                  borderRadius: context.theme.style.borderRadius.md,
                 ),
-                child: const Icon(Icons.add, color: AppColors.primary, size: 24),
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedAdd01,
+                    size: 22,
+                    color: colors.primary,
+                  ),
+                ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       context.tr('add_unit'),
-                      style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                      style: typography.body.sm
+                          .copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       context.tr('create_new_unit'),
-                      style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.xs2
+                          .copyWith(color: colors.mutedForeground),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.primary.withValues(alpha: 0.5)),
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                size: 18,
+                color: colors.mutedForeground.withValues(alpha: 0.6),
+              ),
             ],
           ),
         ),

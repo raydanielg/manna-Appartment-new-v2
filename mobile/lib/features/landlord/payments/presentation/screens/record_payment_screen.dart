@@ -1,32 +1,33 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
-import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/payments_provider.dart';
 import '../../../contracts/providers/contracts_provider.dart';
 import '../../../tenants/providers/tenants_provider.dart';
 
 import 'package:manna_apartment/core/utils/app_toast.dart';
+
 class RecordPaymentScreen extends ConsumerStatefulWidget {
   const RecordPaymentScreen({super.key});
 
   @override
-  ConsumerState<RecordPaymentScreen> createState() => _RecordPaymentScreenState();
+  ConsumerState<RecordPaymentScreen> createState() =>
+      _RecordPaymentScreenState();
 }
 
 class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
   final _amountController = TextEditingController();
   final _referenceController = TextEditingController();
-  final _monthController = TextEditingController(text: DateFormat('MMMM yyyy').format(DateTime.now()));
+  final _monthController = TextEditingController(
+      text: DateFormat('MMMM yyyy').format(DateTime.now()));
   final _notesController = TextEditingController();
-  final _methodController = TextEditingController(text: 'cash');
   String? _selectedTenantId;
   String? _selectedContractId;
   String _paymentType = 'rent';
@@ -47,7 +48,8 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
 
   void _onAmountChanged() {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 600), _fetchOverpaymentPreview);
+    _debounce =
+        Timer(const Duration(milliseconds: 600), _fetchOverpaymentPreview);
   }
 
   Future<void> _fetchOverpaymentPreview() async {
@@ -64,7 +66,9 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
         contractId: _selectedContractId!,
         amount: amount,
         paymentDate: DateFormat('yyyy-MM-dd').format(_paymentDate),
-        monthCovered: _monthController.text.trim().isNotEmpty ? _monthController.text.trim() : null,
+        monthCovered: _monthController.text.trim().isNotEmpty
+            ? _monthController.text.trim()
+            : null,
       );
       if (mounted) setState(() => _overpaymentPreview = result);
     } catch (_) {
@@ -81,7 +85,6 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
     _referenceController.dispose();
     _monthController.dispose();
     _notesController.dispose();
-    _methodController.dispose();
     super.dispose();
   }
 
@@ -124,14 +127,18 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
         final monthsCount = overpayment?['months_count'];
         final isOverpayment = overpayment?['is_overpayment'] == true;
         final msg = isOverpayment && monthsCount != null
-            ? context.tr('payment_recorded_months').replaceAll('{0}', monthsCount.toString())
+            ? context
+                .tr('payment_recorded_months')
+                .replaceAll('{0}', monthsCount.toString())
             : context.tr('payment_recorded');
         AppToast.success(context, msg);
         if (context.canPop()) context.pop();
       }
     } catch (e) {
       if (mounted) {
-        AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
+        AppToast.error(
+            context,
+            context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -140,154 +147,306 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     final tenantsAsync = ref.watch(tenantsListProvider(null));
     final contractsAsync = ref.watch(contractsListProvider);
+
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('record_payment'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('record_payment'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () {
             if (context.canPop()) context.pop();
           },
+          child: context.theme.icons.arrowLeft(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(context.tr('tenant'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-            const SizedBox(height: 8),
-            tenantsAsync.when(
-              loading: () => const LinearProgressIndicator(),
-              error: (_, __) => Text(context.tr('failed_load_tenants'), style: GoogleFonts.nunito(color: Colors.red)),
-              data: (tenants) => DropdownButtonFormField<String>(
-                isExpanded: true,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                ),
-                hint: Text(context.tr('select_tenant'), style: GoogleFonts.nunito(fontSize: 14)),
-                items: tenants.map<DropdownMenuItem<String>>((t) {
-                  final name = t['user']?['full_name'] ?? t['full_name'] ?? context.tr('tenant');
-                  return DropdownMenuItem(value: t['id'].toString(), child: Text(name, style: GoogleFonts.nunito(fontSize: 14)));
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        children: [
+          // Tenant picker
+          _sectionLabel(context, context.tr('tenant')),
+          tenantsAsync.when(
+            loading: () => const Center(child: FCircularProgress()),
+            error: (_, _) => Text(
+              context.tr('failed_load_tenants'),
+              style: typography.body.xs2.copyWith(color: colors.error),
+            ),
+            data: (tenants) => _searchablePicker(
+              context,
+              title: context.tr('select_tenant'),
+              label: _selectedTenantId == null
+                  ? context.tr('select_tenant')
+                  : _tenantName(tenants.firstWhere(
+                      (t) => t['id'].toString() == _selectedTenantId,
+                      orElse: () => <String, dynamic>{},
+                    )),
+              items: tenants.map((t) {
+                final name = _tenantName(t);
+                final phone = (t['user']?['phone'] ?? t['phone'] ?? '')
+                    .toString();
+                return MapEntry(
+                    t['id'].toString(), MapEntry(name, phone));
+              }).toList(),
+              onSelected: (v) => setState(() {
+                _selectedTenantId = v;
+                _selectedContractId = null;
+              }),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Contract picker
+          _sectionLabel(context, context.tr('contract')),
+          contractsAsync.when(
+            loading: () => const Center(child: FCircularProgress()),
+            error: (_, _) => Text(
+              context.tr('failed_load_contracts'),
+              style: typography.body.xs2.copyWith(color: colors.error),
+            ),
+            data: (contracts) {
+              final tenantContracts = contracts
+                  .where(
+                      (c) => c['tenant_id'].toString() == _selectedTenantId)
+                  .toList();
+              final selectedLabel = _selectedContractId == null
+                  ? context.tr('select_contract')
+                  : (tenantContracts.firstWhere(
+                            (c) =>
+                                c['id'].toString() == _selectedContractId,
+                            orElse: () => <String, dynamic>{},
+                          )['contract_number'] ??
+                      context.tr('contract'));
+              return _picker(
+                context,
+                label: selectedLabel.toString(),
+                enabled: _selectedTenantId != null,
+                items: tenantContracts.map((c) {
+                  final label =
+                      c['contract_number'] ?? context.tr('contract');
+                  return MapEntry(c['id'].toString(), label.toString());
                 }).toList(),
-                onChanged: (v) => setState(() {
-                  _selectedTenantId = v;
-                  _selectedContractId = null;
-                }),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(context.tr('contract'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-            const SizedBox(height: 8),
-            contractsAsync.when(
-              loading: () => const LinearProgressIndicator(),
-              error: (_, __) => Text(context.tr('failed_load_contracts'), style: GoogleFonts.nunito(color: Colors.red)),
-              data: (contracts) {
-                final tenantContracts = contracts.where((c) => c['tenant_id'].toString() == _selectedTenantId).toList();
-                return DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  ),
-                  hint: Text(context.tr('select_contract'), style: GoogleFonts.nunito(fontSize: 14)),
-                  value: _selectedContractId,
-                  items: tenantContracts.map<DropdownMenuItem<String>>((c) {
-                    final label = c['contract_number'] ?? context.tr('contract');
-                    return DropdownMenuItem(value: c['id'].toString(), child: Text(label, style: GoogleFonts.nunito(fontSize: 14)));
-                  }).toList(),
-                  onChanged: (v) {
-                    setState(() => _selectedContractId = v);
-                    _onAmountChanged();
-                  },
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            Text(context.tr('payment_type'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _buildTypeChip(context.tr('rent'), 'rent', AppColors.primary),
-                _buildTypeChip(context.tr('water'), 'water', Colors.blue),
-                _buildTypeChip(context.tr('electricity'), 'electricity', Colors.amber),
-                _buildTypeChip(context.tr('other'), 'other', Colors.grey),
-              ],
-            ),
-            const SizedBox(height: 16),
-            AppTextField(
-              label: context.tr('amount_tzs'),
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 12),
-            _buildOverpaymentCard(isDark),
-            const SizedBox(height: 16),
-            AppTextField(
-              label: context.tr('method'),
-              controller: _methodController,
-              readOnly: true,
-              onTap: () => _showMethodPicker(context),
-            ),
-            const SizedBox(height: 16),
-            AppTextField(
-              label: context.tr('reference_number'),
-              controller: _referenceController,
-            ),
-            const SizedBox(height: 16),
-            Text(context.tr('payment_date'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: _pickDate,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 18, color: isDark ? Colors.white60 : AppColors.textLight),
-                    const SizedBox(width: 12),
-                    Text(DateFormat('dd MMM yyyy').format(_paymentDate), style: GoogleFonts.nunito(fontSize: 14)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            AppTextField(
-              label: context.tr('month_covered_hint'),
-              controller: _monthController,
-            ),
-            const SizedBox(height: 16),
-            AppTextField(
-              label: context.tr('notes'),
-              controller: _notesController,
-              maxLines: 3,
-            ),
-            const SizedBox(height: 24),
-            PrimaryButton(text: context.tr('save_payment'), isLoading: _isLoading, onPressed: _submit),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {
-                  if (context.canPop()) context.pop();
+                onSelected: (v) {
+                  setState(() => _selectedContractId = v);
+                  _onAmountChanged();
                 },
-                child: Text(context.tr('cancel'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+              );
+            },
+          ),
+          const SizedBox(height: 14),
+
+          // Payment type chips
+          _sectionLabel(context, context.tr('payment_type')),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final (label, v) in [
+                (context.tr('rent'), 'rent'),
+                (context.tr('water'), 'water'),
+                (context.tr('electricity'), 'electricity'),
+                (context.tr('other'), 'other'),
+              ])
+                FButton(
+                  variant: _paymentType == v ? .primary : .outline,
+                  size: .xs,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => setState(() => _paymentType = v),
+                  child: Text(label),
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Amount
+          FTextField(
+            control: .managed(controller: _amountController),
+            label: Text(context.tr('amount_tzs')),
+            hint: '0',
+            keyboardType: TextInputType.number,
+            prefixBuilder: (context, style, variants) =>
+                FTextField.prefixIconBuilder(
+                  context,
+                  style,
+                  variants,
+                  const HugeIcon(
+                      icon: HugeIcons.strokeRoundedMoney01, size: null),
+                ),
+          ),
+          const SizedBox(height: 8),
+          _overpaymentCard(context),
+          const SizedBox(height: 10),
+
+          // Method picker
+          _sectionLabel(context, context.tr('method')),
+          _picker(
+            context,
+            label: switch (_method) {
+              'bank_transfer' => context.tr('bank_transfer'),
+              'mobile_money' => context.tr('mobile_money'),
+              'card' => context.tr('card'),
+              _ => context.tr('cash'),
+            },
+            items: [
+              MapEntry('cash', context.tr('cash')),
+              MapEntry('bank_transfer', context.tr('bank_transfer')),
+              MapEntry('mobile_money', context.tr('mobile_money')),
+              MapEntry('card', context.tr('card')),
+            ],
+            onSelected: (v) => setState(() => _method = v),
+          ),
+          const SizedBox(height: 14),
+
+          // Reference
+          FTextField(
+            control: .managed(controller: _referenceController),
+            label: Text(context.tr('reference_number')),
+            hint: 'REF-001',
+            prefixBuilder: (context, style, variants) =>
+                FTextField.prefixIconBuilder(
+                  context,
+                  style,
+                  variants,
+                  const HugeIcon(
+                      icon: HugeIcons.strokeRoundedFile01, size: null),
+                ),
+          ),
+          const SizedBox(height: 14),
+
+          // Payment date
+          _sectionLabel(context, context.tr('payment_date')),
+          FTappable(
+            onPress: _pickDate,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                border: Border.all(color: colors.border),
+                borderRadius: context.theme.style.borderRadius.md,
               ),
+              child: Row(
+                children: [
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedCalendar01,
+                    size: 16,
+                    color: colors.mutedForeground,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    DateFormat('dd MMM yyyy').format(_paymentDate),
+                    style: typography.body.xs2
+                        .copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Month covered
+          FTextField(
+            control: .managed(controller: _monthController),
+            label: Text(context.tr('month_covered_hint')),
+            hint: 'January 2025',
+            prefixBuilder: (context, style, variants) =>
+                FTextField.prefixIconBuilder(
+                  context,
+                  style,
+                  variants,
+                  const HugeIcon(
+                      icon: HugeIcons.strokeRoundedCalendar01, size: null),
+                ),
+          ),
+          const SizedBox(height: 14),
+
+          // Notes
+          FTextField.multiline(
+            control: .managed(controller: _notesController),
+            label: Text(context.tr('notes')),
+            hint: context.tr('notes'),
+            minLines: 3,
+          ),
+          const SizedBox(height: 24),
+
+          PrimaryButton(
+            text: context.tr('save_payment'),
+            isLoading: _isLoading,
+            onPressed: _submit,
+          ),
+          const SizedBox(height: 10),
+          FButton(
+            variant: .ghost,
+            onPress: () {
+              if (context.canPop()) context.pop();
+            },
+            child: Text(context.tr('cancel')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _tenantName(Map<String, dynamic> t) {
+    return (t['user']?['full_name'] ?? t['full_name'] ?? context.tr('tenant'))
+        .toString();
+  }
+
+  /// Tap opens a bottom sheet with a search field + list — good for long lists.
+  Widget _searchablePicker(
+    BuildContext context, {
+    required String title,
+    required String label,
+    required List<MapEntry<String, MapEntry<String, String>>> items,
+    required ValueChanged<String> onSelected,
+  }) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final isPlaceholder = label == title;
+
+    return FTappable(
+      onPress: () => _openSearchSheet(context,
+          title: title, items: items, onSelected: onSelected),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: colors.border),
+          borderRadius: context.theme.style.borderRadius.md,
+        ),
+        child: Row(
+          children: [
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedUser,
+              size: 16,
+              color: colors.mutedForeground,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: typography.body.xs2.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isPlaceholder
+                      ? colors.mutedForeground
+                      : colors.foreground,
+                ),
+              ),
+            ),
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedArrowDown01,
+              size: 14,
+              color: colors.mutedForeground,
             ),
           ],
         ),
@@ -295,15 +454,265 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
     );
   }
 
-  Widget _buildOverpaymentCard(bool isDark) {
+  Future<void> _openSearchSheet(
+    BuildContext context, {
+    required String title,
+    required List<MapEntry<String, MapEntry<String, String>>> items,
+    required ValueChanged<String> onSelected,
+  }) async {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    String query = '';
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: colors.card,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheet) {
+          final filtered = items.where((e) {
+            final q = query.toLowerCase();
+            return e.value.key.toLowerCase().contains(q) ||
+                e.value.value.toLowerCase().contains(q);
+          }).toList();
+
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: colors.border,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            title,
+                            style: typography.body.md
+                                .copyWith(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        FTextField(
+                          control: .managed(
+                            onChange: (v) =>
+                                setSheet(() => query = v.text),
+                          ),
+                          hint: context.tr('search'),
+                          prefixBuilder: (context, style, variants) =>
+                              FTextField.prefixIconBuilder(
+                                context,
+                                style,
+                                variants,
+                                const HugeIcon(
+                                    icon: HugeIcons.strokeRoundedSearch01,
+                                    size: null),
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.45,
+                    ),
+                    child: filtered.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(
+                              context.tr('no_results'),
+                              style: typography.body.xs2.copyWith(
+                                  color: colors.mutedForeground),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: filtered.length,
+                            itemBuilder: (context, i) {
+                              final e = filtered[i];
+                              return FTappable(
+                                onPress: () {
+                                  onSelected(e.key);
+                                  Navigator.pop(context);
+                                },
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: colors.border
+                                            .withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 12),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                e.value.key,
+                                                maxLines: 1,
+                                                overflow:
+                                                    TextOverflow.ellipsis,
+                                                style: typography.body.xs2
+                                                    .copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w700),
+                                              ),
+                                              if (e.value.value.isNotEmpty)
+                                                Text(
+                                                  e.value.value,
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow
+                                                      .ellipsis,
+                                                  style: typography.body.xs3
+                                                      .copyWith(
+                                                    color: colors
+                                                        .mutedForeground,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                        HugeIcon(
+                                          icon: HugeIcons
+                                              .strokeRoundedArrowRight01,
+                                          size: 14,
+                                          color: colors.mutedForeground
+                                              .withValues(alpha: 0.6),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _sectionLabel(BuildContext context, String label) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, left: 2),
+      child: Text(
+        label.toUpperCase(),
+        style: typography.body.xs3.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+          color: colors.mutedForeground,
+        ),
+      ),
+    );
+  }
+
+  Widget _picker(
+    BuildContext context, {
+    required String label,
+    required List<MapEntry<String, String>> items,
+    required ValueChanged<String> onSelected,
+    bool enabled = true,
+  }) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    return PopupMenuButton<String>(
+      enabled: enabled,
+      offset: const Offset(0, 44),
+      color: colors.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: context.theme.style.borderRadius.lg,
+      ),
+      onSelected: onSelected,
+      itemBuilder: (context) => [
+        for (final e in items)
+          PopupMenuItem(
+            value: e.key,
+            child: Text(e.value, style: typography.body.xs2),
+          ),
+      ],
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: colors.border),
+          borderRadius: context.theme.style.borderRadius.md,
+          color: enabled ? null : colors.secondary.withValues(alpha: 0.4),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: typography.body.xs2.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: label == context.tr('select_tenant') ||
+                          label == context.tr('select_contract')
+                      ? colors.mutedForeground
+                      : colors.foreground,
+                ),
+              ),
+            ),
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedArrowDown01,
+              size: 14,
+              color: colors.mutedForeground,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _overpaymentCard(BuildContext context) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+
     if (_isPreviewLoading) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
-            const SizedBox(width: 12),
-            Text(context.tr('calculating_coverage'), style: GoogleFonts.nunito(fontSize: 13, color: isDark ? Colors.white60 : AppColors.textLight)),
+            const SizedBox(
+                width: 14, height: 14, child: FCircularProgress()),
+            const SizedBox(width: 10),
+            Text(
+              context.tr('calculating_coverage'),
+              style: typography.body.xs2
+                  .copyWith(color: colors.mutedForeground),
+            ),
           ],
         ),
       );
@@ -316,122 +725,92 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
     final isOverpayment = preview['is_overpayment'] == true;
     final monthCovered = preview['month_covered'] as String? ?? '';
     final overdueDate = preview['overdue_date'] as String? ?? '';
-    final rawRemainder = preview['remainder'];
-    final remainder = (rawRemainder is num)
-        ? (rawRemainder as num).toDouble()
-        : double.tryParse(rawRemainder?.toString() ?? '0') ?? 0.0;
-    final rawRent = preview['rent_amount'];
-    final rentAmount = (rawRent is num)
-        ? (rawRent as num).toDouble()
-        : double.tryParse(rawRent?.toString() ?? '0') ?? 0.0;
+    final remainder = _parseNum(preview['remainder']);
+    final rentAmount = _parseNum(preview['rent_amount']);
 
-    if (monthsCount == 0) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.orange.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.info_outline, color: Colors.orange, size: 20),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Amount is less than one month rent (TZS ${rentAmount.toStringAsFixed(0)}).',
-                style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.orange.shade800),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+    final color =
+        monthsCount == 0 ? const Color(0xFFD97706) : const Color(0xFF16A34A);
 
-    final cardColor = isOverpayment ? Colors.green : AppColors.primary;
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: cardColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cardColor.withValues(alpha: 0.3)),
+        color: color.withValues(alpha: 0.08),
+        borderRadius: context.theme.style.borderRadius.md,
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(isOverpayment ? Icons.check_circle : Icons.info, color: cardColor, size: 22),
-              const SizedBox(width: 10),
+              HugeIcon(
+                icon: monthsCount == 0
+                    ? HugeIcons.strokeRoundedAlert02
+                    : HugeIcons.strokeRoundedCheckmarkCircle02,
+                size: 16,
+                color: color,
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  isOverpayment
-                      ? context.tr('payment_covers_months').replaceAll('{0}', monthsCount.toString())
-                      : context.tr('payment_covers_one_month'),
-                  style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: cardColor),
+                  monthsCount == 0
+                      ? 'Amount is less than one month rent (TZS ${rentAmount.toStringAsFixed(0)}).'
+                      : isOverpayment
+                          ? context
+                              .tr('payment_covers_months')
+                              .replaceAll('{0}', monthsCount.toString())
+                          : context.tr('payment_covers_one_month'),
+                  style: typography.body.xs2.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          _previewRow(context.tr('months_covered'), '$monthsCount month(s)', isDark),
-          _previewRow(context.tr('period'), monthCovered, isDark),
-          if (overdueDate.isNotEmpty)
-            _previewRow(context.tr('next_due_date'), overdueDate, isDark),
-          if (remainder > 0)
-            _previewRow(context.tr('remainder'), 'TZS ${remainder.toStringAsFixed(0)}', isDark),
+          if (monthsCount > 0) ...[
+            const SizedBox(height: 8),
+            _previewRow(context, context.tr('months_covered'),
+                '$monthsCount month(s)'),
+            _previewRow(context, context.tr('period'), monthCovered),
+            if (overdueDate.isNotEmpty)
+              _previewRow(
+                  context, context.tr('next_due_date'), overdueDate),
+            if (remainder > 0)
+              _previewRow(context, context.tr('remainder'),
+                  'TZS ${remainder.toStringAsFixed(0)}'),
+          ],
         ],
       ),
     );
   }
 
-  Widget _previewRow(String label, String value, bool isDark) {
+  Widget _previewRow(BuildContext context, String label, String value) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.only(top: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
-          const SizedBox(width: 16),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark),
-            ),
+          Text(
+            label,
+            style:
+                typography.body.xs3.copyWith(color: colors.mutedForeground),
+          ),
+          Text(
+            value,
+            style:
+                typography.body.xs3.copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTypeChip(String label, String value, Color color) {
-    final isSelected = _paymentType == value;
-    return ChoiceChip(
-      label: Text(label, style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: isSelected ? Colors.white : Colors.black87)),
-      selected: isSelected,
-      selectedColor: color,
-      backgroundColor: Colors.grey.shade200,
-      onSelected: (_) => setState(() => _paymentType = value),
-    );
-  }
-
-  void _showMethodPicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(title: Text(context.tr('cash'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() { _method = 'cash'; _methodController.text = context.tr('cash'); }); Navigator.pop(context); }),
-            ListTile(title: Text(context.tr('bank_transfer'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() { _method = 'bank_transfer'; _methodController.text = context.tr('bank_transfer'); }); Navigator.pop(context); }),
-            ListTile(title: Text(context.tr('mobile_money'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() { _method = 'mobile_money'; _methodController.text = context.tr('mobile_money'); }); Navigator.pop(context); }),
-            ListTile(title: Text(context.tr('card'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), onTap: () { setState(() { _method = 'card'; _methodController.text = context.tr('card'); }); Navigator.pop(context); }),
-          ],
-        ),
-      ),
-    );
+  double _parseNum(dynamic v) {
+    if (v == null) return 0;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString()) ?? 0;
   }
 }

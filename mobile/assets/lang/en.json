@@ -729,5 +729,9 @@
   "credentials_sent_success": "Credentials sent successfully via SMS",
   "credentials_sms_hint": "The tenant will receive an SMS with their login credentials and a link to download the app.",
   "contract_created_msg": "Contract has been created successfully. You can now send login credentials to the tenant.",
-  "tenant_credentials": "Tenant Credentials"
+  "tenant_credentials": "Tenant Credentials",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "apply": "Apply",
+  "no_results": "No results"
 }

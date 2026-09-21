@@ -1,69 +1,95 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
-import 'dart:io';
-import 'dart:typed_data';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
+import '../../../../../core/widgets/confirm_dialog.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
-import '../../../../../core/widgets/status_badge.dart';
 import '../../providers/payments_provider.dart';
 
 import 'package:manna_apartment/core/utils/app_toast.dart';
+
 class PaymentDetailScreen extends ConsumerWidget {
   const PaymentDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final id = GoRouterState.of(context).pathParameters['id'] ?? '';
     final paymentAsync = ref.watch(paymentDetailProvider(id));
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('payment_details'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('payment_details'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () {
             if (context.canPop()) context.pop();
           },
+          child: context.theme.icons.arrowLeft(context),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: AppColors.error),
-            onPressed: () => _confirmDelete(context, ref, id),
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
+            onPress: () => _confirmDelete(context, ref, id),
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedDelete02,
+              size: 20,
+              color: colors.error,
+            ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: paymentAsync.when(
         loading: () => const LoadingIndicator(),
-        error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(paymentDetailProvider(id))),
+        error: (e, _) => ErrorState(
+          message: AppError.getMessage(e),
+          onRetry: () => ref.invalidate(paymentDetailProvider(id)),
+        ),
         data: (payment) {
-          final rawAmount = payment['amount'];
-          final amount = (rawAmount is num
-              ? rawAmount.toDouble()
-              : double.tryParse(rawAmount?.toString() ?? '0') ?? 0.0);
+          final amount = _parseAmount(payment['amount']);
           final tenant = payment['tenant'];
           final contract = payment['contract'];
           final type = (payment['payment_type'] ?? 'rent').toString();
-          final date = payment['payment_date'] != null ? DateFormat('dd MMM yyyy').format(DateTime.tryParse(payment['payment_date'].toString()) ?? DateTime.now()) : '-';
+          final date = payment['payment_date'] != null
+              ? DateFormat('dd MMM yyyy').format(
+                  DateTime.tryParse(payment['payment_date'].toString()) ??
+                      DateTime.now())
+              : '-';
           final status = payment['status']?.toString() ?? 'confirmed';
           final paid = status == 'confirmed' || status == 'paid';
-          final receiptNo = payment['reference_number']?.toString() ?? 'RCP-${date.replaceAll(RegExp(r'[^0-9]'), '')}';
+          final receiptNo = payment['reference_number']?.toString() ??
+              'RCP-${date.replaceAll(RegExp(r'[^0-9]'), '')}';
           final method = (payment['method'] ?? 'snippe').toString();
           final monthCovered = payment['month_covered']?.toString() ?? '-';
           final notes = payment['notes']?.toString() ?? '-';
-          final tenantName = tenant?['full_name'] ?? tenant?['user']?['full_name'] ?? 'N/A';
-          final unitName = contract?['unit']?['name'] ?? contract?['unit']?['unit_number'] ?? 'N/A';
+          final tenantName = tenant?['full_name'] ??
+              tenant?['user']?['full_name'] ??
+              'N/A';
+          final unitName = contract?['unit']?['name'] ??
+              contract?['unit']?['unit_number'] ??
+              'N/A';
           final paymentId = payment['id']?.toString() ?? id;
 
           return SingleChildScrollView(
@@ -71,61 +97,96 @@ class PaymentDetailScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [AppColors.success, AppColors.primary]),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(context.tr('amount_label'), style: GoogleFonts.nunito(fontSize: 14, color: Colors.white70)),
-                      Text('TZS ${amount.toStringAsFixed(0)}', style: GoogleFonts.nunito(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.white)),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          StatusBadge(status: status),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(8)),
-                            child: Text(type.toUpperCase(), style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                    ],
+                // Amount card
+                FCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              context.tr('amount_label').toUpperCase(),
+                              style: typography.body.xs3.copyWith(
+                                color: colors.mutedForeground,
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                            _pill(
+                              context,
+                              paid ? 'PAID' : 'PENDING',
+                              paid
+                                  ? const Color(0xFF16A34A)
+                                  : const Color(0xFFD97706),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'TZS ${NumberFormat('#,###').format(amount)}',
+                          style: typography.display.xl
+                              .copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 8),
+                        _pill(context, type.toUpperCase(), colors.primary),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                _buildRow(context, Icons.person, context.tr('tenant'), tenantName),
-                _buildRow(context, Icons.meeting_room, context.tr('unit'), unitName),
-                _buildRow(context, Icons.calendar_today, context.tr('date'), date),
-                _buildRow(context, Icons.payment, context.tr('method'), method),
-                _buildRow(context, Icons.receipt, context.tr('reference'), payment['reference_number'] ?? 'N/A'),
-                _buildRow(context, Icons.calendar_month, context.tr('month_covered'), monthCovered),
-                _buildRow(context, Icons.note, context.tr('notes'), notes),
+                const SizedBox(height: 16),
+
+                // Info card
+                FCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Column(
+                      children: [
+                        _row(colors, typography, HugeIcons.strokeRoundedUser,
+                            context.tr('tenant'), tenantName),
+                        _divider(colors),
+                        _row(colors, typography, HugeIcons.strokeRoundedDoor01,
+                            context.tr('unit'), unitName),
+                        _divider(colors),
+                        _row(colors, typography, HugeIcons.strokeRoundedCalendar01,
+                            context.tr('date'), date),
+                        _divider(colors),
+                        _row(colors, typography, HugeIcons.strokeRoundedCreditCard,
+                            context.tr('method'), method.toUpperCase()),
+                        _divider(colors),
+                        _row(colors, typography, HugeIcons.strokeRoundedTag01,
+                            context.tr('reference'),
+                            payment['reference_number']?.toString() ?? 'N/A'),
+                        _divider(colors),
+                        _row(colors, typography, HugeIcons.strokeRoundedCalendarMinus01,
+                            context.tr('month_covered'), monthCovered),
+                        _divider(colors),
+                        _row(colors, typography, HugeIcons.strokeRoundedNote01,
+                            context.tr('notes'), notes),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showReceipt(context, isDark, tenantName, unitName, amount, paid, date, method, receiptNo, monthCovered, notes, paymentId, type),
-                        style: ElevatedButton.styleFrom(backgroundColor: AppColors.info),
-                        icon: const Icon(Icons.receipt_long),
-                        label: Text(context.tr('view_receipt')),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showEditDialog(context, ref, id, payment),
-                        icon: const Icon(Icons.edit),
-                        label: Text(context.tr('edit')),
-                      ),
-                    ),
-                  ],
+
+                FButton(
+                  variant: .secondary,
+                  size: .sm,
+                  prefix: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedReceipt, size: null),
+                  onPress: () => _showReceipt(context, tenantName, unitName,
+                      amount, paid, date, method, receiptNo, monthCovered, notes, paymentId, type),
+                  child: Text(context.tr('view_receipt')),
+                ),
+                const SizedBox(height: 10),
+                FButton(
+                  variant: .outline,
+                  size: .sm,
+                  prefix: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedEdit02, size: null),
+                  onPress: () => _showEditDialog(context, ref, id, payment),
+                  child: Text(context.tr('edit')),
                 ),
               ],
             ),
@@ -135,12 +196,79 @@ class PaymentDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _showReceipt(BuildContext context, bool isDark, String tenantName, String unitName, double amount, bool paid,
-      String date, String method, String receiptNo, String monthCovered, String notes, String paymentId, String type) {
+  double _parseAmount(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  Widget _pill(BuildContext context, String label, Color color) {
+    final typography = context.theme.typography;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: context.theme.style.borderRadius.pill,
+      ),
+      child: Text(
+        label,
+        style: typography.body.xs3.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  Widget _divider(FColors colors) =>
+      Divider(height: 1, indent: 14, color: colors.border.withValues(alpha: 0.6));
+
+  Widget _row(FColors colors, FTypography typography, List<List<dynamic>> icon,
+      String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          HugeIcon(icon: icon, size: 16, color: colors.mutedForeground),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: typography.body.xs2.copyWith(color: colors.mutedForeground),
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: typography.body.xs2
+                  .copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReceipt(
+      BuildContext context,
+      String tenantName,
+      String unitName,
+      double amount,
+      bool paid,
+      String date,
+      String method,
+      String receiptNo,
+      String monthCovered,
+      String notes,
+      String paymentId,
+      String type) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => _PaymentReceiptScreen(
-          isDark: isDark,
           tenantName: tenantName,
           unitName: unitName,
           amount: amount,
@@ -157,168 +285,218 @@ class PaymentDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.tr('cancel_payment_record')),
-        content: Text(context.tr('confirm_delete_payment')),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('no'))),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await ref.read(paymentsRepositoryProvider).deletePayment(id);
-                ref.invalidate(landlordPaymentsProvider);
-                if (context.mounted) {
-                  AppToast.success(context, context.tr('payment_deleted'));
-                  if (context.canPop()) context.pop();
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
-                }
-              }
-            },
-            child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
-          ),
-        ],
-      ),
+  Future<void> _confirmDelete(
+      BuildContext context, WidgetRef ref, String id) async {
+    final confirmed = await showConfirmDialog(
+      context,
+      title: context.tr('cancel_payment_record'),
+      message: context.tr('confirm_delete_payment'),
+      confirmText: context.tr('delete'),
+      cancelText: context.tr('no'),
+      isDestructive: true,
     );
+    if (!confirmed) return;
+    try {
+      await ref.read(paymentsRepositoryProvider).deletePayment(id);
+      ref.invalidate(landlordPaymentsProvider);
+      if (context.mounted) {
+        AppToast.success(context, context.tr('payment_deleted'));
+        if (context.canPop()) context.pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppToast.error(context,
+            context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
+      }
+    }
   }
 
-  void _showEditDialog(BuildContext context, WidgetRef ref, String id, Map<String, dynamic> payment) {
-    final amountController = TextEditingController(text: (payment['amount'] ?? '').toString());
-    final notesController = TextEditingController(text: (payment['notes'] ?? '').toString());
-    final referenceController = TextEditingController(text: (payment['reference_number'] ?? '').toString());
-    final monthController = TextEditingController(text: (payment['month_covered'] ?? '').toString());
+  void _showEditDialog(
+      BuildContext context, WidgetRef ref, String id, Map<String, dynamic> payment) {
+    final amountController =
+        TextEditingController(text: (payment['amount'] ?? '').toString());
+    final notesController =
+        TextEditingController(text: (payment['notes'] ?? '').toString());
+    final referenceController = TextEditingController(
+        text: (payment['reference_number'] ?? '').toString());
+    final monthController = TextEditingController(
+        text: (payment['month_covered'] ?? '').toString());
     String paymentType = (payment['payment_type'] ?? 'rent').toString();
     String method = (payment['method'] ?? 'cash').toString();
     DateTime paymentDate = payment['payment_date'] != null
-        ? (DateTime.tryParse(payment['payment_date'].toString()) ?? DateTime.now())
+        ? (DateTime.tryParse(payment['payment_date'].toString()) ??
+            DateTime.now())
         : DateTime.now();
 
-    showDialog(
+    showFDialog<void>(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(context.tr('edit_payment')),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: amountController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: context.tr('edit_amount_tzs')),
+      builder: (context, style, animation) => FDialog(
+        animation: animation,
+        builder: (dialogContext, style) => StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            final typography = context.theme.typography;
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(context.tr('edit_payment'), style: style.titleTextStyle),
+                  const SizedBox(height: 16),
+                  FTextField(
+                    control: .managed(controller: amountController),
+                    label: Text(context.tr('edit_amount_tzs')),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(context.tr('payment_type_label'),
+                      style: typography.body.xs2.copyWith(
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (final t in ['rent', 'water', 'electricity', 'other'])
+                        FButton(
+                          variant: paymentType == t ? .primary : .outline,
+                          size: .sm,
+                          mainAxisSize: MainAxisSize.min,
+                          onPress: () =>
+                              setDialogState(() => paymentType = t),
+                          child: Text(context.tr(t)),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(context.tr('method'),
+                      style: typography.body.xs2.copyWith(
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (final m in [
+                        'cash',
+                        'mobile_money',
+                        'bank_transfer',
+                        'cheque'
+                      ])
+                        FButton(
+                          variant: method == m ? .primary : .outline,
+                          size: .sm,
+                          mainAxisSize: MainAxisSize.min,
+                          onPress: () => setDialogState(() => method = m),
+                          child: Text(context.tr(m)),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  FTextField(
+                    control: .managed(
+                      controller: TextEditingController(
+                          text: DateFormat('dd MMM yyyy').format(paymentDate)),
                     ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      value: paymentType,
-                      decoration: InputDecoration(labelText: context.tr('payment_type_label')),
-                      items: [
-                        DropdownMenuItem(value: 'rent', child: Text(context.tr('rent'))),
-                        DropdownMenuItem(value: 'water', child: Text(context.tr('water'))),
-                        DropdownMenuItem(value: 'electricity', child: Text(context.tr('electricity'))),
-                        DropdownMenuItem(value: 'other', child: Text(context.tr('other'))),
-                      ],
-                      onChanged: (v) => setDialogState(() => paymentType = v ?? 'rent'),
+                    label: Text(context.tr('payment_date')),
+                    readOnly: true,
+                    suffixBuilder: (context, style, variants) => Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 12, start: 4),
+                      child: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedCalendar01, size: null),
                     ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      value: method,
-                      decoration: InputDecoration(labelText: context.tr('method')),
-                      items: [
-                        DropdownMenuItem(value: 'cash', child: Text(context.tr('cash'))),
-                        DropdownMenuItem(value: 'mobile_money', child: Text(context.tr('mobile_money'))),
-                        DropdownMenuItem(value: 'bank_transfer', child: Text(context.tr('bank_transfer'))),
-                        DropdownMenuItem(value: 'cheque', child: Text(context.tr('cheque'))),
-                      ],
-                      onChanged: (v) => setDialogState(() => method = v ?? 'cash'),
-                    ),
-                    const SizedBox(height: 8),
-                    InkWell(
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: paymentDate,
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
-                        );
-                        if (picked != null) setDialogState(() => paymentDate = picked);
-                      },
-                      child: InputDecorator(
-                        decoration: InputDecoration(labelText: context.tr('payment_date')),
-                        child: Text(DateFormat('dd MMM yyyy').format(paymentDate)),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: dialogContext,
+                        initialDate: paymentDate,
+                        firstDate: DateTime(2020),
+                        lastDate:
+                            DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (picked != null) {
+                        setDialogState(() => paymentDate = picked);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  FTextField(
+                    control: .managed(controller: referenceController),
+                    label: Text(context.tr('reference_number')),
+                  ),
+                  const SizedBox(height: 12),
+                  FTextField(
+                    control: .managed(controller: monthController),
+                    label: Text(context.tr('month_covered')),
+                  ),
+                  const SizedBox(height: 12),
+                  FTextField(
+                    control: .managed(controller: notesController),
+                    label: Text(context.tr('notes')),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      FButton(
+                        variant: .outline,
+                        size: .sm,
+                        mainAxisSize: MainAxisSize.min,
+                        onPress: () => Navigator.pop(dialogContext),
+                        child: Text(context.tr('cancel')),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: referenceController,
-                      decoration: InputDecoration(labelText: context.tr('reference_number')),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: notesController,
-                      decoration: InputDecoration(labelText: context.tr('notes')),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 8),
+                      FButton(
+                        variant: .primary,
+                        size: .sm,
+                        mainAxisSize: MainAxisSize.min,
+                        onPress: () async {
+                          Navigator.pop(dialogContext);
+                          try {
+                            await ref
+                                .read(paymentsRepositoryProvider)
+                                .updatePayment(id, {
+                              'amount': double.tryParse(amountController.text) ??
+                                  payment['amount'],
+                              'payment_type': paymentType,
+                              'method': method,
+                              'reference_number':
+                                  referenceController.text.trim(),
+                              'payment_date':
+                                  DateFormat('yyyy-MM-dd').format(paymentDate),
+                              'month_covered': monthController.text.trim(),
+                              'notes': notesController.text.trim(),
+                            });
+                            ref.invalidate(paymentDetailProvider(id));
+                            ref.invalidate(landlordPaymentsProvider);
+                            if (context.mounted) {
+                              AppToast.success(
+                                  context, context.tr('edit_payment_success'));
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              AppToast.error(
+                                context,
+                                context.tr('failed_msg').replaceAll(
+                                    '{0}', AppError.getMessage(e)),
+                              );
+                            }
+                          }
+                        },
+                        child: Text(context.tr('save')),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('cancel'))),
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    try {
-                      await ref.read(paymentsRepositoryProvider).updatePayment(id, {
-                        'amount': double.tryParse(amountController.text) ?? payment['amount'],
-                        'payment_type': paymentType,
-                        'method': method,
-                        'reference_number': referenceController.text.trim(),
-                        'payment_date': DateFormat('yyyy-MM-dd').format(paymentDate),
-                        'month_covered': monthController.text.trim(),
-                        'notes': notesController.text.trim(),
-                      });
-                      ref.invalidate(paymentDetailProvider(id));
-                      ref.invalidate(landlordPaymentsProvider);
-                      if (context.mounted) {
-                        AppToast.success(context, context.tr('edit_payment_success'));
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
-                      }
-                    }
-                  },
-                  child: Text(context.tr('save')),
-                ),
-              ],
             );
           },
-        );
-      },
-    );
-  }
-
-  Widget _buildRow(BuildContext context, IconData icon, String label, String value) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Icon(icon, color: AppColors.primary),
-        title: Text(label, style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
-        trailing: Text(value, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark)),
+        ),
       ),
     );
   }
 }
 
 class _PaymentReceiptScreen extends StatelessWidget {
-  final bool isDark;
   final String tenantName;
   final String unitName;
   final double amount;
@@ -332,7 +510,6 @@ class _PaymentReceiptScreen extends StatelessWidget {
   final String type;
 
   const _PaymentReceiptScreen({
-    required this.isDark,
     required this.tenantName,
     required this.unitName,
     required this.amount,
@@ -348,23 +525,41 @@ class _PaymentReceiptScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('efd_receipt'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('efd_receipt'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () => Navigator.pop(context),
+          child: context.theme.icons.arrowLeft(context),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: () => _downloadPdf(context),
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
+            onPress: () => _downloadPdf(context),
+            child: const HugeIcon(
+                icon: HugeIcons.strokeRoundedDownload01, size: 20),
           ),
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () => _sharePdf(context),
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
+            onPress: () => _sharePdf(context),
+            child:
+                const HugeIcon(icon: HugeIcons.strokeRoundedShare01, size: 20),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
@@ -372,36 +567,22 @@ class _PaymentReceiptScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildReceiptCard(context),
+            _buildReceiptCard(context, colors, typography),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _downloadPdf(context),
-                    icon: const Icon(Icons.download, size: 18),
-                    label: Text(context.tr('download_pdf'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13)),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _sharePdf(context),
-                    icon: const Icon(Icons.share, size: 18),
-                    label: Text(context.tr('share'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                  ),
-                ),
-              ],
+            FButton(
+              variant: .primary,
+              prefix:
+                  const HugeIcon(icon: HugeIcons.strokeRoundedShare01, size: null),
+              onPress: () => _sharePdf(context),
+              child: Text(context.tr('share')),
+            ),
+            const SizedBox(height: 10),
+            FButton(
+              variant: .outline,
+              prefix: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedDownload01, size: null),
+              onPress: () => _downloadPdf(context),
+              child: Text(context.tr('download_pdf')),
             ),
           ],
         ),
@@ -409,82 +590,129 @@ class _PaymentReceiptScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildReceiptCard(BuildContext context) {
+  Widget _buildReceiptCard(
+      BuildContext context, FColors colors, FTypography typography) {
+    final radii = context.theme.style.borderRadius;
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+        color: colors.card,
+        borderRadius: radii.lg,
+        border: Border.all(color: colors.border),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          // Header
+          // Header — bleeds to card edges
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
+            color: colors.primary,
             child: Column(
               children: [
-                Text(context.tr('manna_apartment'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1)),
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedReceipt,
+                  size: 26,
+                  color: colors.primaryForeground,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  context.tr('manna_apartment'),
+                  style: typography.display.sm.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: colors.primaryForeground,
+                    letterSpacing: 1,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(context.tr('efd_receipt'), style: GoogleFonts.nunito(fontSize: 11, color: Colors.white70, letterSpacing: 0.5)),
+                Text(
+                  context.tr('efd_receipt'),
+                  style: typography.body.xs3.copyWith(
+                    color: colors.primaryForeground.withValues(alpha: 0.8),
+                    letterSpacing: 0.5,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: paid ? Colors.green.withValues(alpha: 0.2) : Colors.orange.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(4),
+                    color: colors.primaryForeground.withValues(alpha: 0.15),
+                    borderRadius: radii.pill,
                   ),
                   child: Text(
                     paid ? 'PAID' : 'PENDING',
-                    style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w800, color: paid ? Colors.green : Colors.orange),
+                    style: typography.body.xs3.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: colors.primaryForeground,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          // Receipt body
+          // Body
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildReceiptRow(context.tr('receipt_no'), receiptNo),
-                _buildReceiptRow(context.tr('payment_id'), paymentId),
-                _buildDivider(),
-                _buildReceiptRow(context.tr('tenant'), tenantName),
-                _buildReceiptRow(context.tr('unit'), unitName),
-                _buildReceiptRow(context.tr('payment_type_label'), type.toUpperCase()),
-                _buildDivider(),
-                _buildReceiptRow(context.tr('amount_label'), 'TZS ${amount.toStringAsFixed(0)}'),
-                _buildReceiptRow(context.tr('method'), method.toUpperCase()),
-                _buildReceiptRow(context.tr('month_covered'), monthCovered),
-                _buildReceiptRow(context.tr('date'), date),
-                _buildDivider(),
-                _buildReceiptRow(context.tr('notes'), notes),
-                _buildDivider(),
-                // Total
+                _receiptRow(typography, colors, context.tr('receipt_no'), receiptNo),
+                _receiptRow(typography, colors, context.tr('payment_id'), paymentId),
+                _dashedDivider(colors),
+                _receiptRow(typography, colors, context.tr('tenant'), tenantName),
+                _receiptRow(typography, colors, context.tr('unit'), unitName),
+                _receiptRow(typography, colors, context.tr('payment_type_label'),
+                    type.toUpperCase()),
+                _dashedDivider(colors),
+                _receiptRow(typography, colors, context.tr('amount_label'),
+                    'TZS ${amount.toStringAsFixed(0)}'),
+                _receiptRow(typography, colors, context.tr('method'),
+                    method.toUpperCase()),
+                _receiptRow(typography, colors, context.tr('month_covered'),
+                    monthCovered),
+                _receiptRow(typography, colors, context.tr('date'), date),
+                _dashedDivider(colors),
+                _receiptRow(typography, colors, context.tr('notes'), notes),
+                _dashedDivider(colors),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(context.tr('total_amount'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: isDark ? Colors.white : AppColors.textDark)),
                       Text(
-                        'TZS ${amount.toStringAsFixed(0)}',
-                        style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.primary),
+                        context.tr('total_amount').toUpperCase(),
+                        style: typography.body.xs2.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          color: colors.mutedForeground,
+                        ),
+                      ),
+                      Text(
+                        'TZS ${NumberFormat('#,###').format(amount)}',
+                        style: typography.display.sm.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: colors.primary,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                _buildDivider(),
+                _dashedDivider(colors),
                 const SizedBox(height: 12),
-                // Footer
-                Text(context.tr('computer_generated_receipt'), style: GoogleFonts.nunito(fontSize: 10, color: isDark ? Colors.white38 : Colors.grey.shade500, fontStyle: FontStyle.italic)),
+                Text(
+                  context.tr('computer_generated_receipt'),
+                  style: typography.body.xs3.copyWith(
+                    color: colors.mutedForeground,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(context.tr('thank_you_payment'), style: GoogleFonts.nunito(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white60 : AppColors.textLight)),
+                Text(
+                  context.tr('thank_you_payment'),
+                  style: typography.body.xs2.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colors.mutedForeground,
+                  ),
+                ),
               ],
             ),
           ),
@@ -493,31 +721,50 @@ class _PaymentReceiptScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildReceiptRow(String label, String value) {
+  Widget _dashedDivider(FColors colors) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final dashCount = (constraints.maxWidth / 10).floor();
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(
+              dashCount,
+              (_) => Container(
+                width: 5,
+                height: 1,
+                color: colors.border,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _receiptRow(
+      FTypography typography, FColors colors, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GoogleFonts.nunito(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textLight)),
+          Text(label,
+              style:
+                  typography.body.xs2.copyWith(color: colors.mutedForeground)),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textDark),
+              style:
+                  typography.body.xs2.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Divider(height: 1, color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
     );
   }
 
@@ -535,19 +782,33 @@ class _PaymentReceiptScreen extends StatelessWidget {
               pw.Center(
                 child: pw.Column(
                   children: [
-                    pw.Text('MANNA APARTMENT', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                    pw.Text('MANNA APARTMENT',
+                        style: pw.TextStyle(
+                            fontSize: 22,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.blue800)),
                     pw.SizedBox(height: 4),
-                    pw.Text('Electronic Fiscal Device Receipt', style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+                    pw.Text('Electronic Fiscal Device Receipt',
+                        style: pw.TextStyle(
+                            fontSize: 11, color: PdfColors.grey600)),
                     pw.SizedBox(height: 8),
                     pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      padding: const pw.EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
                       decoration: pw.BoxDecoration(
-                        color: paid ? PdfColors.green100 : PdfColors.orange100,
+                        color: paid
+                            ? PdfColors.green100
+                            : PdfColors.orange100,
                         borderRadius: pw.BorderRadius.circular(4),
                       ),
                       child: pw.Text(
                         paid ? 'PAID' : 'PENDING',
-                        style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: paid ? PdfColors.green800 : PdfColors.orange800),
+                        style: pw.TextStyle(
+                            fontSize: 12,
+                            fontWeight: pw.FontWeight.bold,
+                            color: paid
+                                ? PdfColors.green800
+                                : PdfColors.orange800),
                       ),
                     ),
                   ],
@@ -581,10 +842,15 @@ class _PaymentReceiptScreen extends StatelessWidget {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('TOTAL AMOUNT', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                  pw.Text('TOTAL AMOUNT',
+                      style: pw.TextStyle(
+                          fontSize: 14, fontWeight: pw.FontWeight.bold)),
                   pw.Text(
                     'TZS ${amount.toStringAsFixed(0)}',
-                    style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800),
+                    style: pw.TextStyle(
+                        fontSize: 16,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.blue800),
                   ),
                 ],
               ),
@@ -594,9 +860,17 @@ class _PaymentReceiptScreen extends StatelessWidget {
               pw.Center(
                 child: pw.Column(
                   children: [
-                    pw.Text('This is a computer generated receipt.', style: pw.TextStyle(fontSize: 9, color: PdfColors.grey500, fontStyle: pw.FontStyle.italic)),
+                    pw.Text('This is a computer generated receipt.',
+                        style: pw.TextStyle(
+                            fontSize: 9,
+                            color: PdfColors.grey500,
+                            fontStyle: pw.FontStyle.italic)),
                     pw.SizedBox(height: 4),
-                    pw.Text('Thank you for your payment!', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.grey600)),
+                    pw.Text('Thank you for your payment!',
+                        style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.grey600)),
                   ],
                 ),
               ),
@@ -615,13 +889,15 @@ class _PaymentReceiptScreen extends StatelessWidget {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text(label, style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
+          pw.Text(label,
+              style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
           pw.SizedBox(width: 16),
           pw.Expanded(
             child: pw.Text(
               value,
               textAlign: pw.TextAlign.right,
-              style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+              style:
+                  pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
             ),
           ),
         ],
@@ -635,7 +911,11 @@ class _PaymentReceiptScreen extends StatelessWidget {
       await Printing.layoutPdf(onLayout: (format) async => doc.save());
     } catch (e) {
       if (context.mounted) {
-        AppToast.error(context, context.tr('failed_generate_pdf').replaceAll('{0}', AppError.getMessage(e)));
+        AppToast.error(
+            context,
+            context
+                .tr('failed_generate_pdf')
+                .replaceAll('{0}', AppError.getMessage(e)));
       }
     }
   }
@@ -648,10 +928,15 @@ class _PaymentReceiptScreen extends StatelessWidget {
       final dir = await Directory.systemTemp.createTemp();
       final file = File('${dir.path}/EFD_Receipt_$receiptNo.pdf');
       await file.writeAsBytes(bytes);
-      await Share.shareXFiles([XFile(file.path)], text: 'EFD Receipt - $tenantName');
+      await Share.shareXFiles([XFile(file.path)],
+          text: 'EFD Receipt - $tenantName');
     } catch (e) {
       if (context.mounted) {
-        AppToast.error(context, context.tr('failed_share_pdf').replaceAll('{0}', AppError.getMessage(e)));
+        AppToast.error(
+            context,
+            context
+                .tr('failed_share_pdf')
+                .replaceAll('{0}', AppError.getMessage(e)));
       }
     }
   }
