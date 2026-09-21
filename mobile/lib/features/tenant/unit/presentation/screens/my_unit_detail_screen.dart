@@ -1,14 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:intl/intl.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
+import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
-import '../../../../../core/widgets/status_badge.dart';
 import '../../providers/unit_provider.dart';
 
 class MyUnitDetailScreen extends ConsumerWidget {
@@ -17,88 +18,145 @@ class MyUnitDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unitAsync = ref.watch(myUnitProvider);
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
-      appBar: AppBar(title: Text(context.tr('my_unit'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop())),
+      backgroundColor: colors.background,
+      appBar: AppBar(
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('my_unit'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () => context.pop(),
+          child: context.theme.icons.arrowLeft(context),
+        ),
+      ),
       body: unitAsync.when(
         loading: () => const LoadingIndicator(),
         error: (e, _) {
           if (e is DioException && e.response?.statusCode == 404) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(color: AppColors.textLight.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
-                      child: const Icon(Icons.meeting_room_outlined, size: 36, color: AppColors.textLight),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(context.tr('no_unit_assigned_title'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
-                    const SizedBox(height: 8),
-                    Text(context.tr('no_unit_assigned_desc'), textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
-                  ],
-                ),
-              ),
+            return EmptyState(
+              icon: Icons.door_front_door_outlined,
+              message:
+                  '${context.tr('no_unit_assigned_title')}\n${context.tr('no_unit_assigned_desc')}',
             );
           }
-          return ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(myUnitProvider));
+          return ErrorState(
+            message: AppError.getMessage(e),
+            onRetry: () => ref.invalidate(myUnitProvider),
+          );
         },
-        data: (unit) => SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        data: (unit) {
+          final rent = unit['rent_amount'] ?? unit['monthly_rent'] ?? 0;
+          final rentNum =
+              rent is num ? rent : double.tryParse(rent.toString()) ?? 0;
+          final status = (unit['status'] ?? 'occupied').toString();
+
+          return ListView(
+            padding: const EdgeInsets.all(20),
             children: [
-              Container(
-                width: double.infinity,
-                height: 180,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]),
-                  borderRadius: BorderRadius.circular(20),
+              Text(
+                unit['name']?.toString() ?? context.tr('my_unit'),
+                style: typography.display.lg
+                    .copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'TZS ${NumberFormat('#,###').format(rentNum)}${context.tr('per_month')}',
+                style: typography.body.md.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colors.primary,
                 ),
-                child: const Center(child: Icon(Icons.meeting_room, size: 64, color: Colors.white70)),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                status.toUpperCase(),
+                style: typography.body.xs3.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                  color: status == 'occupied'
+                      ? const Color(0xFF16A34A)
+                      : const Color(0xFFD97706),
+                ),
               ),
               const SizedBox(height: 20),
-              Text(unit['name'] ?? context.tr('my_unit'), style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark)),
-              const SizedBox(height: 8),
-              Text('TZS ${unit['monthly_rent'] ?? unit['rent_amount'] ?? 0}${context.tr('per_month')}', style: const TextStyle(fontSize: 16, color: AppColors.primary, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 12),
-              StatusBadge(status: unit['status'] ?? 'occupied'),
-              const SizedBox(height: 20),
-              _buildInfoRow(context, Icons.category_outlined, context.tr('type'), unit['type'] ?? 'N/A'),
-              _buildInfoRow(context, Icons.square_foot, context.tr('size'), '${unit['size'] ?? 'N/A'} sqm'),
-              _buildInfoRow(context, Icons.bed, context.tr('bedrooms'), '${unit['bedrooms'] ?? 0}'),
-              _buildInfoRow(context, Icons.bathtub, context.tr('bathrooms'), '${unit['bathrooms'] ?? 0}'),
+              _infoRow(context, HugeIcons.strokeRoundedHome01,
+                  context.tr('type'), unit['type']?.toString() ?? 'N/A'),
+              _infoRow(context, HugeIcons.strokeRoundedRuler,
+                  context.tr('size'), '${unit['size'] ?? 'N/A'} sqm'),
+              _infoRow(context, HugeIcons.strokeRoundedBedDouble,
+                  context.tr('bedrooms'), '${unit['bedrooms'] ?? 0}'),
+              _infoRow(context, HugeIcons.strokeRoundedBathtub01,
+                  context.tr('bathrooms'), '${unit['bathrooms'] ?? 0}'),
               if (unit['property'] != null)
-                _buildInfoRow(context, Icons.apartment, context.tr('property'), unit['property']['name'] ?? 'N/A'),
+                _infoRow(context, HugeIcons.strokeRoundedBuilding03,
+                    context.tr('property'),
+                    unit['property']['name']?.toString() ?? 'N/A'),
               if (unit['description'] != null) ...[
-                const SizedBox(height: 20),
-                Text(context.tr('description'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+                const SizedBox(height: 16),
+                Text(
+                  context.tr('description').toUpperCase(),
+                  style: typography.body.xs3.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                    color: colors.mutedForeground,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text(unit['description'], style: TextStyle(fontSize: 14, color: AppColors.textDark)),
+                Text(
+                  unit['description'].toString(),
+                  style:
+                      typography.body.xs2.copyWith(height: 1.5),
+                ),
               ],
             ],
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: AppColors.primary),
-          const SizedBox(width: 12),
-          Text(label, style: TextStyle(fontSize: 14, color: AppColors.textLight)),
-          const Spacer(),
-          Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-        ],
+  Widget _infoRow(BuildContext context, List<List<dynamic>> icon, String label,
+      String value) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            HugeIcon(icon: icon, size: 16, color: colors.mutedForeground),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: typography.body.xs2
+                    .copyWith(color: colors.mutedForeground),
+              ),
+            ),
+            Flexible(
+              child: Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: typography.body.xs2
+                    .copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

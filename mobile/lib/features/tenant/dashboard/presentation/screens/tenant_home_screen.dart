@@ -1,9 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
@@ -22,31 +22,38 @@ class TenantHomeScreen extends ConsumerWidget {
     final user = ref.watch(authProvider).user;
     final unreadCount = ref.watch(unreadCountProvider).value ?? 0;
     final dashboardAsync = ref.watch(tenantDashboardProvider);
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async => ref.invalidate(tenantDashboardProvider),
-          color: AppColors.primary,
+          color: colors.primary,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(context, user?.fullName ?? context.tr('tenant'), unreadCount),
-                const SizedBox(height: 24),
+                _buildHeader(
+                    context, colors, typography,
+                    user?.fullName ?? context.tr('tenant'), unreadCount),
+                const SizedBox(height: 20),
                 dashboardAsync.when(
                   loading: () => const LoadingIndicator(),
                   error: (e, _) {
                     if (e is DioException && e.response?.statusCode == 403) {
                       final data = e.response?.data;
                       if (data is Map && data['must_change_password'] == true) {
-                        return _buildMustChangePasswordCard(context);
+                        return _buildMustChangePassword(
+                            context, colors, typography);
                       }
                       return ErrorState(
-                        message: data is Map ? (data['message'] ?? context.tr('access_denied')) : context.tr('access_denied'),
+                        message: data is Map
+                            ? (data['message'] ?? context.tr('access_denied'))
+                            : context.tr('access_denied'),
                         onRetry: () => ref.invalidate(tenantDashboardProvider),
                       );
                     }
@@ -60,47 +67,106 @@ class TenantHomeScreen extends ConsumerWidget {
                     final contract = data['contract'] as Map<String, dynamic>?;
                     final balance = (data['balance'] is num
                         ? (data['balance'] as num).toDouble()
-                        : double.tryParse(data['balance']?.toString() ?? '0') ?? 0.0);
+                        : double.tryParse(data['balance']?.toString() ?? '0') ??
+                            0.0);
                     final totalPaid = (data['total_paid'] is num
                         ? (data['total_paid'] as num).toDouble()
-                        : double.tryParse(data['total_paid']?.toString() ?? '0') ?? 0.0);
+                        : double.tryParse(
+                                data['total_paid']?.toString() ?? '0') ??
+                            0.0);
                     final rentAmount = (contract?['rent_amount'] is num
                         ? (contract?['rent_amount'] as num).toDouble()
-                        : double.tryParse(contract?['rent_amount']?.toString() ?? '0') ?? 0.0);
+                        : double.tryParse(
+                                contract?['rent_amount']?.toString() ?? '0') ??
+                            0.0);
                     final recentPayments = data['recent_payments'] as List? ?? [];
-                    final maintenanceRequests = data['maintenance_requests'] as List? ?? [];
+                    final maintenanceRequests =
+                        data['maintenance_requests'] as List? ?? [];
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        MyUnitCard(unit: unit, rentAmount: rentAmount, balance: balance),
+                        MyUnitCard(
+                            unit: unit,
+                            rentAmount: rentAmount,
+                            balance: balance),
+                        const SizedBox(height: 16),
+                        BalanceSummaryCard(
+                            totalPaid: totalPaid,
+                            totalDue: rentAmount,
+                            balance: balance),
                         const SizedBox(height: 24),
-                        BalanceSummaryCard(totalPaid: totalPaid, totalDue: rentAmount, balance: balance),
-                        const SizedBox(height: 24),
-                        Text(context.tr('quick_actions'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-                        const SizedBox(height: 12),
-                        _buildQuickAction(context, icon: Icons.payments_outlined, title: context.tr('my_payments'), subtitle: context.tr('view_history'), color: AppColors.success, onTap: () => context.push('/tenant/payments')),
-                        _buildQuickAction(context, icon: Icons.description_outlined, title: context.tr('my_contract'), subtitle: context.tr('view_details'), color: AppColors.info, onTap: () => context.push('/tenant/contract')),
-                        _buildQuickAction(context, icon: Icons.build_outlined, title: context.tr('maintenance'), subtitle: context.tr('submit_track'), color: AppColors.warning, onTap: () => context.push('/tenant/maintenance/my')),
-                        const SizedBox(height: 24),
-                        Text(context.tr('recent_updates'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-                        const SizedBox(height: 12),
+                        Text(
+                          context.tr('quick_actions').toUpperCase(),
+                          style: typography.body.xs3.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                            color: colors.mutedForeground,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        _actionRow(
+                          context,
+                          colors,
+                          typography,
+                          icon: HugeIcons.strokeRoundedMoney01,
+                          title: context.tr('my_payments'),
+                          subtitle: context.tr('view_history'),
+                          onTap: () => context.push('/tenant/payments'),
+                        ),
+                        _actionRow(
+                          context,
+                          colors,
+                          typography,
+                          icon: HugeIcons.strokeRoundedFile01,
+                          title: context.tr('my_contract'),
+                          subtitle: context.tr('view_details'),
+                          onTap: () => context.push('/tenant/contract'),
+                        ),
+                        _actionRow(
+                          context,
+                          colors,
+                          typography,
+                          icon: HugeIcons.strokeRoundedWrench01,
+                          title: context.tr('maintenance'),
+                          subtitle: context.tr('submit_track'),
+                          onTap: () => context.push('/tenant/maintenance/my'),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          context.tr('recent_updates').toUpperCase(),
+                          style: typography.body.xs3.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                            color: colors.mutedForeground,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
                         if (recentPayments.isEmpty && maintenanceRequests.isEmpty)
-                          _buildUpdate(context, title: context.tr('no_updates_yet'), subtitle: context.tr('notifications_appear'))
+                          _updateRow(context, colors, typography,
+                              title: context.tr('no_updates_yet'),
+                              subtitle: context.tr('notifications_appear'))
                         else ...[
-                          ...recentPayments.take(3).map((p) => _buildUpdate(
+                          ...recentPayments.take(3).map((p) => _updateRow(
                                 context,
-                                title: 'Payment: TZS ${(p['amount'] ?? 0).toStringAsFixed(0)}',
-                                subtitle: p['date'] ?? '',
-                                icon: Icons.payments,
-                                color: AppColors.success,
+                                colors,
+                                typography,
+                                title:
+                                    'Payment: TZS ${(p['amount'] ?? 0).toStringAsFixed(0)}',
+                                subtitle: p['date']?.toString() ?? '',
+                                icon: HugeIcons.strokeRoundedMoney01,
+                                iconColor: const Color(0xFF16A34A),
                               )),
-                          ...maintenanceRequests.take(2).map((m) => _buildUpdate(
+                          ...maintenanceRequests.take(2).map((m) => _updateRow(
                                 context,
-                                title: m['description'] ?? 'Maintenance request',
-                                subtitle: '${m['status'] ?? ''} - ${m['created_at'] ?? ''}',
-                                icon: Icons.build,
-                                color: AppColors.warning,
+                                colors,
+                                typography,
+                                title: m['description']?.toString() ??
+                                    'Maintenance request',
+                                subtitle:
+                                    '${m['status'] ?? ''} · ${m['created_at'] ?? ''}',
+                                icon: HugeIcons.strokeRoundedWrench01,
+                                iconColor: const Color(0xFFD97706),
                               )),
                         ],
                       ],
@@ -115,28 +181,31 @@ class TenantHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, String name, int unreadCount) {
-    final initials = name.trim().split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join().toUpperCase();
+  Widget _buildHeader(BuildContext context, FColors colors,
+      FTypography typography, String name, int unreadCount) {
+    final initials = name
+        .trim()
+        .split(' ')
+        .map((w) => w.isNotEmpty ? w[0] : '')
+        .take(2)
+        .join()
+        .toUpperCase();
+
     return Row(
       children: [
         Container(
-          width: 44,
-          height: 44,
+          width: 42,
+          height: 42,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF2563EB), Color(0xFF1E40AF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
+            color: colors.primary,
+            borderRadius: context.theme.style.borderRadius.md,
           ),
           child: Center(
             child: Text(
               initials,
-              style: GoogleFonts.nunito(
-                fontSize: 16,
+              style: typography.body.sm.copyWith(
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: colors.primaryForeground,
               ),
             ),
           ),
@@ -148,124 +217,193 @@ class TenantHomeScreen extends ConsumerWidget {
             children: [
               Text(
                 '${context.tr('hello')}, $name',
-                style: GoogleFonts.nunito(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textDark,
-                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style:
+                    typography.body.md.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 2),
               Text(
                 context.tr('welcome_tenant'),
-                style: GoogleFonts.nunito(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textLight,
-                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: typography.body.xs3
+                    .copyWith(color: colors.mutedForeground),
               ),
             ],
           ),
         ),
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF3F4F6),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              IconButton(
-                onPressed: () => context.push('/notifications'),
-                icon: const Icon(Icons.notifications_none_rounded, size: 20),
-                color: AppColors.textLight,
-                padding: EdgeInsets.zero,
-              ),
-              if (unreadCount > 0)
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                    child: Text(
-                      unreadCount > 9 ? '9+' : '$unreadCount',
-                      style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
-                      textAlign: TextAlign.center,
-                    ),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            FButton.icon(
+              variant: .ghost,
+              size: .sm,
+              onPress: () => context.push('/notifications'),
+              child: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedNotification01, size: null),
+            ),
+            if (unreadCount > 0)
+              Positioned(
+                top: 4,
+                right: 6,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                      color: colors.error, shape: BoxShape.circle),
+                  constraints:
+                      const BoxConstraints(minWidth: 14, minHeight: 14),
+                  child: Text(
+                    unreadCount > 9 ? '9+' : '$unreadCount',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                        fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildQuickAction(BuildContext context, {required IconData icon, required String title, required String subtitle, required Color color, VoidCallback? onTap}) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
-        leading: Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color)),
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textDark)),
-        subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: AppColors.textLight)),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: onTap,
+  Widget _actionRow(
+    BuildContext context,
+    FColors colors,
+    FTypography typography, {
+    required List<List<dynamic>> icon,
+    required String title,
+    required String subtitle,
+    VoidCallback? onTap,
+  }) {
+    return FTappable(
+      onPress: onTap,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: colors.border.withValues(alpha: 0.5)),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              HugeIcon(icon: icon, size: 17, color: colors.mutedForeground),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.sm
+                          .copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.xs3
+                          .copyWith(color: colors.mutedForeground),
+                    ),
+                  ],
+                ),
+              ),
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                size: 14,
+                color: colors.mutedForeground.withValues(alpha: 0.6),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildUpdate(BuildContext context, {required String title, required String subtitle, IconData icon = Icons.notifications, Color color = AppColors.info}) {
-    return Card(
-      child: ListTile(
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textDark)),
-        subtitle: Text(subtitle, style: TextStyle(fontSize: 12, color: AppColors.textLight)),
-      ),
-    );
-  }
-
-  Widget _buildMustChangePasswordCard(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 8)),
+  Widget _updateRow(
+    BuildContext context,
+    FColors colors,
+    FTypography typography, {
+    required String title,
+    required String subtitle,
+    List<List<dynamic>>? icon,
+    Color? iconColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: HugeIcon(
+              icon: icon ?? HugeIcons.strokeRoundedNotification01,
+              size: 15,
+              color: iconColor ?? colors.mutedForeground,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: typography.body.sm
+                      .copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: typography.body.xs3
+                      .copyWith(color: colors.mutedForeground),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMustChangePassword(
+      BuildContext context, FColors colors, FTypography typography) {
+    return Center(
       child: Column(
         children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: AppColors.warning.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Icon(Icons.lock_outline, color: AppColors.warning, size: 32),
+          const SizedBox(height: 40),
+          HugeIcon(
+            icon: HugeIcons.strokeRoundedLockPassword,
+            size: 40,
+            color: const Color(0xFFD97706),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            context.tr('password_change_required'),
+            style: typography.body.lg.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.tr('password_change_desc'),
+            textAlign: TextAlign.center,
+            style: typography.body.xs2
+                .copyWith(color: colors.mutedForeground, height: 1.5),
           ),
           const SizedBox(height: 20),
-          Text(context.tr('password_change_required'), style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textDark)),
-          const SizedBox(height: 8),
-          Text(context.tr('password_change_desc'), textAlign: TextAlign.center, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight, height: 1.5)),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => context.go('/tenant/profile/change-password'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text(context.tr('change_password'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700)),
-            ),
+          FButton(
+            variant: .primary,
+            onPress: () => context.go('/tenant/profile/change-password'),
+            child: Text(context.tr('change_password')),
           ),
         ],
       ),

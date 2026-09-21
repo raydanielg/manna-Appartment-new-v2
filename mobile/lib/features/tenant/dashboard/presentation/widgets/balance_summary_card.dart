@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:forui/forui.dart';
+import 'package:intl/intl.dart';
 
 class BalanceSummaryCard extends StatelessWidget {
   final double totalPaid;
@@ -16,36 +16,57 @@ class BalanceSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final fmt = NumberFormat('#,###');
+
+    return FCard(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(4),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Balance Summary', style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-            const SizedBox(height: 12),
-            _buildRow('Total Paid', 'TZS ${_formatAmount(totalPaid)}', AppColors.success),
-            const Divider(),
-            _buildRow('Total Due', 'TZS ${_formatAmount(totalDue)}', AppColors.warning),
-            const Divider(),
-            _buildRow('Balance', 'TZS ${_formatAmount(balance)}', AppColors.primary),
+            _row(colors, typography, 'Total Paid', 'TZS ${fmt.format(totalPaid)}',
+                const Color(0xFF16A34A)),
+            Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
+            _row(colors, typography, 'Total Due', 'TZS ${fmt.format(totalDue)}',
+                const Color(0xFFD97706)),
+            Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
+            _row(colors, typography, 'Balance', 'TZS ${fmt.format(balance)}',
+                colors.primary),
           ],
         ),
       ),
     );
   }
 
-  String _formatAmount(double amount) {
-    return amount.toStringAsFixed(0);
-  }
-
-  Widget _buildRow(String label, String value, Color color) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label),
-        Text(value, style: TextStyle(fontWeight: FontWeight.w700, color: color)),
-      ],
+  Widget _row(FColors colors, FTypography typography, String label,
+      String value, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: typography.body.xs2
+                  .copyWith(color: colors.mutedForeground),
+            ),
+          ),
+          Text(
+            value,
+            style: typography.body.sm.copyWith(
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

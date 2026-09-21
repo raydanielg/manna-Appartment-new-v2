@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:forui/forui.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:intl/intl.dart';
 
 class MyUnitCard extends StatelessWidget {
   final Map<String, dynamic>? unit;
@@ -16,39 +17,79 @@ class MyUnitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final unitName = unit?['name'] as String? ?? 'Not assigned';
-    final propertyName = unit?['property'] as String?;
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final fmt = NumberFormat('#,###');
+    final unitName = unit?['name']?.toString() ?? 'Not assigned';
+    final propertyName = unit?['property']?.toString();
     final hasUnit = unit != null;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppColors.primary, AppColors.primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))],
-      ),
+    return FCard(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('My Unit', style: TextStyle(fontSize: 14, color: Colors.white70)),
-                Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)), child: Text(hasUnit ? 'ACTIVE' : 'NONE', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white))),
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedDoor01,
+                  size: 18,
+                  color: colors.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'My Unit',
+                    style: typography.body.sm
+                        .copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                Text(
+                  hasUnit ? 'ACTIVE' : 'NONE',
+                  style: typography.body.xs3.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                    color: hasUnit
+                        ? const Color(0xFF16A34A)
+                        : colors.mutedForeground,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            Text(unitName, style: GoogleFonts.nunito(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
-            if (propertyName != null) ...[
-              const SizedBox(height: 4),
-              Text(propertyName, style: GoogleFonts.nunito(fontSize: 13, color: Colors.white70)),
+            Text(
+              unitName,
+              style: typography.display.sm.copyWith(fontWeight: FontWeight.w800),
+            ),
+            if (propertyName != null && propertyName.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                propertyName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: typography.body.xs2
+                    .copyWith(color: colors.mutedForeground),
+              ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
+            Divider(height: 1, color: colors.border.withValues(alpha: 0.6)),
+            const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: _buildStat(Icons.calendar_today, 'Rent Due', 'TZS ${_formatAmount(rentAmount ?? 0)}')),
-                Expanded(child: _buildStat(Icons.account_balance_wallet, 'Balance', 'TZS ${_formatAmount(balance ?? 0)}')),
+                Expanded(
+                  child: _stat(colors, typography, 'Rent Due',
+                      'TZS ${fmt.format(rentAmount ?? 0)}'),
+                ),
+                Container(
+                    width: 1,
+                    height: 28,
+                    color: colors.border.withValues(alpha: 0.6)),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _stat(colors, typography, 'Balance',
+                      'TZS ${fmt.format(balance ?? 0)}'),
+                ),
               ],
             ),
           ],
@@ -57,18 +98,22 @@ class MyUnitCard extends StatelessWidget {
     );
   }
 
-  String _formatAmount(double amount) {
-    return amount.toStringAsFixed(0);
-  }
-
-  Widget _buildStat(IconData icon, String label, String value) {
-    return Row(
+  Widget _stat(
+      FColors colors, FTypography typography, String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: Colors.white70),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [Text(label, style: const TextStyle(fontSize: 11, color: Colors.white70)), Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white))],
+        Text(
+          label,
+          style:
+              typography.body.xs3.copyWith(color: colors.mutedForeground),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: typography.body.sm.copyWith(fontWeight: FontWeight.w700),
         ),
       ],
     );
