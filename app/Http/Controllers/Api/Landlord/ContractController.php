@@ -118,6 +118,11 @@ class ContractController extends Controller
 
         $contract = Contract::with(['tenant.user', 'unit.property'])->findOrFail($id);
 
+        // Legacy contracts stored the tenant's signature in signature_path
+        if (!$contract->tenant_signed_at && !$contract->signature_path) {
+            return $this->error('The tenant must sign the contract first.', null, 422);
+        }
+
         if ($contract->signed_at) {
             return $this->error('This contract has already been signed.', null, 409);
         }
@@ -126,7 +131,8 @@ class ContractController extends Controller
         $path = $file->store('signatures', 'public');
 
         $contract->update([
-            'signature_path' => $path,
+            'landlord_signature_path' => $path,
+            'landlord_signed_at' => now(),
             'signed_at' => now(),
         ]);
 

@@ -60,23 +60,21 @@ class MyContractController extends Controller
             return $this->error('This contract is not active and cannot be signed.', null, 409);
         }
 
-        if ($contract->signed_at) {
-            return $this->error('This contract has already been signed.', null, 409);
+        if ($contract->tenant_signed_at) {
+            return $this->error('You have already signed this contract.', null, 409);
         }
 
         $file = $request->file('signature');
         $path = $file->store('signatures', 'public');
 
         $contract->update([
-            'signature_path' => $path,
-            'signed_at' => now(),
+            'tenant_signature_path' => $path,
+            'tenant_signed_at' => now(),
         ]);
 
-        $pdfUrl = app(ContractPdfService::class)->generate($contract);
-
-        return $this->success('Contract signed.', [
+        return $this->success('Contract signed. Waiting for landlord countersignature.', [
             'contract' => $contract->load('unit.property'),
-            'pdf_url' => $pdfUrl,
+            'awaiting_landlord' => true,
         ]);
     }
 }

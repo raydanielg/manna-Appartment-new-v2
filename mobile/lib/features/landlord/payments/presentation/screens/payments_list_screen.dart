@@ -15,7 +15,8 @@ import '../../providers/payments_provider.dart';
 import 'package:manna_apartment/core/utils/app_toast.dart';
 
 class PaymentsListScreen extends ConsumerStatefulWidget {
-  const PaymentsListScreen({super.key});
+  final String? propertyId;
+  const PaymentsListScreen({super.key, this.propertyId});
 
   @override
   ConsumerState<PaymentsListScreen> createState() => _PaymentsListScreenState();
@@ -27,7 +28,8 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final paymentsAsync = ref.watch(landlordPaymentsProvider);
+    final paymentsAsync =
+        ref.watch(landlordPaymentsProvider(widget.propertyId));
     final colors = context.theme.colors;
     final typography = context.theme.typography;
 
@@ -82,7 +84,7 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
           ),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () async => ref.invalidate(landlordPaymentsProvider),
+              onRefresh: () async => ref.invalidate(landlordPaymentsProvider(widget.propertyId)),
               color: colors.primary,
               child: paymentsAsync.when(
                 loading: () => const LoadingIndicator(),
@@ -94,7 +96,7 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
                           message.toLowerCase().contains('organization');
                   return ErrorState(
                     message: message,
-                    onRetry: () => ref.invalidate(landlordPaymentsProvider),
+                    onRetry: () => ref.invalidate(landlordPaymentsProvider(widget.propertyId)),
                     onAction: isSetupError
                         ? () => context.go('/landlord/subscription')
                         : null,
@@ -161,7 +163,7 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
                             await ref
                                 .read(paymentsRepositoryProvider)
                                 .deletePayment(payment['id'].toString());
-                            ref.invalidate(landlordPaymentsProvider);
+                            ref.invalidate(landlordPaymentsProvider(widget.propertyId));
                             if (context.mounted) {
                               AppToast.success(
                                   context, context.tr('payment_deleted'));
@@ -173,7 +175,7 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
                                 context.tr('failed_msg').replaceAll(
                                     '{0}', AppError.getMessage(e)),
                               );
-                              ref.invalidate(landlordPaymentsProvider);
+                              ref.invalidate(landlordPaymentsProvider(widget.propertyId));
                             }
                           }
                         },

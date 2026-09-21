@@ -298,7 +298,7 @@ class PaymentDetailScreen extends ConsumerWidget {
     if (!confirmed) return;
     try {
       await ref.read(paymentsRepositoryProvider).deletePayment(id);
-      ref.invalidate(landlordPaymentsProvider);
+      ref.invalidate(landlordPaymentsProvider(null));
       if (context.mounted) {
         AppToast.success(context, context.tr('payment_deleted'));
         if (context.canPop()) context.pop();
@@ -467,7 +467,7 @@ class PaymentDetailScreen extends ConsumerWidget {
                               'notes': notesController.text.trim(),
                             });
                             ref.invalidate(paymentDetailProvider(id));
-                            ref.invalidate(landlordPaymentsProvider);
+                            ref.invalidate(landlordPaymentsProvider(null));
                             if (context.mounted) {
                               AppToast.success(
                                   context, context.tr('edit_payment_success'));

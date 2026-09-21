@@ -38,6 +38,15 @@ class ContractsListScreen extends ConsumerWidget {
           },
           child: context.theme.icons.arrowLeft(context),
         ),
+        actions: [
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
+            onPress: () => context.push('/landlord/contracts/create'),
+            child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 20),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(contractsListProvider),
@@ -48,73 +57,17 @@ class ContractsListScreen extends ConsumerWidget {
             message: AppError.getMessage(e),
             onRetry: () => ref.invalidate(contractsListProvider),
           ),
-          data: (contracts) => ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _buildNewContractCard(context, colors, typography),
-              const SizedBox(height: 16),
-              if (contracts.isEmpty)
-                EmptyState(message: context.tr('no_contracts_tap'))
-              else
-                ...contracts.map((c) => ContractCard(contract: c)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNewContractCard(
-      BuildContext context, FColors colors, FTypography typography) {
-    return FTappable(
-      onPress: () => context.push('/landlord/contracts/create'),
-      child: FCard(
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.1),
-                  borderRadius: context.theme.style.borderRadius.md,
-                ),
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedAdd01,
-                    size: 22,
-                    color: colors.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('new_contract'),
-                      style: typography.body.sm.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      context.tr('create_new_contract'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: typography.body.xs2
-                          .copyWith(color: colors.mutedForeground),
-                    ),
-                  ],
-                ),
-              ),
-              HugeIcon(
-                icon: HugeIcons.strokeRoundedArrowRight01,
-                size: 18,
-                color: colors.mutedForeground.withValues(alpha: 0.6),
-              ),
-            ],
-          ),
+          data: (contracts) {
+            if (contracts.isEmpty) {
+              return EmptyState(message: context.tr('no_contracts_tap'));
+            }
+            return ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              itemCount: contracts.length,
+              itemBuilder: (context, index) =>
+                  ContractCard(contract: contracts[index]),
+            );
+          },
         ),
       ),
     );

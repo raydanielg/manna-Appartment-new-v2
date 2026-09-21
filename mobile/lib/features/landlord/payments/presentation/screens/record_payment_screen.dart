@@ -121,7 +121,9 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
         'month_covered': _monthController.text.trim(),
         'notes': _notesController.text.trim(),
       });
-      ref.invalidate(landlordPaymentsProvider);
+      ref.invalidate(landlordPaymentsProvider(null));
+      ref.invalidate(contractsListProvider);
+      ref.invalidate(tenantsListProvider);
       if (mounted) {
         final overpayment = response['overpayment'] as Map<String, dynamic>?;
         final monthsCount = overpayment?['months_count'];
@@ -136,9 +138,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
       }
     } catch (e) {
       if (mounted) {
-        AppToast.error(
-            context,
-            context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
+        AppToast.error(context, AppError.getMessage(e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

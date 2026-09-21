@@ -334,7 +334,53 @@ class FinanceController extends Controller
 
     public function export(Request $request)
     {
-        // TODO: implement CSV/PDF export
-        return $this->success('Export generated.', ['download_url' => null]);
+        $period = $request->get('period', 'monthly');
+        $year = (int) $request->get('year', now()->year);
+        $month = $request->filled('month') ? (int) $request->month : null;
+        $propertyId = $request->get('property_id');
+        $unitId = $request->get('unit_id');
+        $orgId = Auth::user()->organization_id;
+
+        $range = $this->dateRange($period, $year, $month);
+
+        $payments = Payment::query()
+            ->with(['tenant.user', 'contract.unit.property'])
+            ->where('status', 'confirmed')
+            ->where('organization_id', $orgId)
+            ->whereBetween('payment_date', [$range['start'], $range['end']])
+            ->when($propertyId, fn ($q) => $q->whereHas('contract.unit', fn ($u) => $u->where('property_id', $propertyId)))
+            ->when($unitId, fn ($q) => $q->whereHas('contract', fn ($c) => $c->where('unit_id', $unitId)))
+            ->orderBy('payment_date')
+            ->get();
+
+        $filename = "revenue-report-{$range['start']->format('Ymd')}-{$range['end']->format('Ymd')}.csv";
+
+        return response()->streamDownload(function () use ($payments) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Date', 'Tenant', 'Property', 'Unit', 'Type', 'Method', 'Month Covered', 'Amount (TZS)', 'Reference']);
+
+            $total = 0.0;
+            foreach ($payments as $p) {
+                $total += (float) $p->amount;
+                fputcsv($out, [
+                    optional($p->payment_date)->toDateString(),
+                    $p->tenant?->user?->full_name ?? $p->tenant?->full_name ?? '-',
+                    $p->contract?->unit?->property?->name ?? '-',
+                    $p->contract?->unit?->name ?? $p->contract?->unit?->unit_number ?? '-',
+                    $p->payment_type ?? '-',
+                    $p->method ?? '-',
+                    $p->month_covered ?? '-',
+                    number_format((float) $p->amount, 2, '.', ''),
+                    $p->reference_number ?? '-',
+                ]);
+            }
+
+            fputcsv($out, []);
+            fputcsv($out, ['', '', '', '', '', '', 'TOTAL', number_format($total, 2, '.', ''), '']);
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
     }
 }

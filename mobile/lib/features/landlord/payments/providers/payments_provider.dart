@@ -4,9 +4,10 @@ import '../data/payments_repository.dart';
 
 final paymentsRepositoryProvider = Provider((ref) => PaymentsRepository(ref.read(apiClientProvider)));
 
-final landlordPaymentsProvider = FutureProvider.autoDispose((ref) async {
+final landlordPaymentsProvider =
+    FutureProvider.autoDispose.family<List<dynamic>, String?>((ref, propertyId) async {
   final repo = ref.watch(paymentsRepositoryProvider);
-  return repo.getPayments();
+  return repo.getPayments(propertyId: propertyId);
 });
 
 final paymentDetailProvider = FutureProvider.autoDispose.family<Map<String, dynamic>, String>((ref, id) async {

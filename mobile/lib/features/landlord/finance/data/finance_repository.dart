@@ -1,3 +1,4 @@
+import 'package:path_provider/path_provider.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_endpoints.dart';
 
@@ -50,5 +51,29 @@ class FinanceRepository {
     };
     final response = await _client.get(ApiEndpoints.financeReport, queryParameters: params);
     return response.data['data'] ?? {};
+  }
+
+  Future<String> exportRevenueReport({
+    String period = 'monthly',
+    int? year,
+    int? month,
+    String? propertyId,
+    String? unitId,
+  }) async {
+    final params = <String, dynamic>{
+      'period': period,
+      if (year != null) 'year': year,
+      if (month != null) 'month': month,
+      if (propertyId != null) 'property_id': propertyId,
+      if (unitId != null) 'unit_id': unitId,
+    };
+    final dir = await getTemporaryDirectory();
+    final savePath = '${dir.path}/revenue_report_${DateTime.now().millisecondsSinceEpoch}.csv';
+    await _client.download(
+      '/landlord/finance/export',
+      savePath,
+      queryParameters: params,
+    );
+    return savePath;
   }
 }

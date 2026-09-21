@@ -5,8 +5,13 @@ class PaymentsRepository {
   final ApiClient _client;
   PaymentsRepository(this._client);
 
-  Future<List<dynamic>> getPayments() async {
-    final response = await _client.get(ApiEndpoints.payments);
+  Future<List<dynamic>> getPayments({String? propertyId}) async {
+    final response = await _client.get(
+      ApiEndpoints.payments,
+      queryParameters: {
+        if (propertyId != null) 'property_id': propertyId,
+      },
+    );
     final data = response.data['data'];
     if (data is Map && data['data'] is List) return data['data'];
     if (data is List) return data;

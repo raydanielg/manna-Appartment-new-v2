@@ -16,7 +16,8 @@ import '../widgets/tenant_card.dart';
 import 'package:manna_apartment/core/utils/app_toast.dart';
 
 class TenantsListScreen extends ConsumerStatefulWidget {
-  const TenantsListScreen({super.key});
+  final String? propertyId;
+  const TenantsListScreen({super.key, this.propertyId});
 
   @override
   ConsumerState<TenantsListScreen> createState() => _TenantsListScreenState();
@@ -26,6 +27,12 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
   String _searchQuery = '';
   String _filterStatus = 'all'; // all, active, moved_out
   String? _selectedPropertyId;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedPropertyId = widget.propertyId;
+  }
 
   @override
   Widget build(BuildContext context) {

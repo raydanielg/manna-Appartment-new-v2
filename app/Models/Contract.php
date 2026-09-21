@@ -29,6 +29,10 @@ class Contract extends Model
         'status',
         'signature_path',
         'signed_at',
+        'tenant_signature_path',
+        'tenant_signed_at',
+        'landlord_signature_path',
+        'landlord_signed_at',
         'pdf_url',
     ];
 
@@ -36,6 +40,8 @@ class Contract extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'signed_at' => 'datetime',
+        'tenant_signed_at' => 'datetime',
+        'landlord_signed_at' => 'datetime',
     ];
 
     protected static function boot()

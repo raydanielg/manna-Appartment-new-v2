@@ -40,6 +40,16 @@ class UnitsListScreen extends ConsumerWidget {
           onPress: () => context.pop(),
           child: context.theme.icons.arrowLeft(context),
         ),
+        actions: [
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
+            onPress: () =>
+                context.push('/landlord/units/add?propertyId=${propertyId ?? ''}'),
+            child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 20),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.invalidate(unitsListProvider(propertyId)),
@@ -57,14 +67,13 @@ class UnitsListScreen extends ConsumerWidget {
               actionLabel: context.tr('complete_setup'),
             );
           },
-          data: (units) => ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _buildAddUnitCard(context, colors, typography),
-              const SizedBox(height: 16),
-              if (units.isEmpty)
-                EmptyState(message: context.tr('no_units_tap'))
-              else
+          data: (units) {
+            if (units.isEmpty) {
+              return EmptyState(message: context.tr('no_units_tap'));
+            }
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              children: [
                 ...units.map((unit) => Dismissible(
                       key: Key(
                           unit['id']?.toString() ?? UniqueKey().toString()),
@@ -115,66 +124,9 @@ class UnitsListScreen extends ConsumerWidget {
                       },
                       child: UnitCard(unit: unit),
                     )),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAddUnitCard(
-      BuildContext context, FColors colors, FTypography typography) {
-    return FTappable(
-      onPress: () =>
-          context.push('/landlord/units/add?propertyId=${propertyId ?? ''}'),
-      child: FCard(
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.1),
-                  borderRadius: context.theme.style.borderRadius.md,
-                ),
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedAdd01,
-                    size: 22,
-                    color: colors.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.tr('add_unit'),
-                      style: typography.body.sm
-                          .copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      context.tr('create_new_unit'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: typography.body.xs2
-                          .copyWith(color: colors.mutedForeground),
-                    ),
-                  ],
-                ),
-              ),
-              HugeIcon(
-                icon: HugeIcons.strokeRoundedArrowRight01,
-                size: 18,
-                color: colors.mutedForeground.withValues(alpha: 0.6),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );

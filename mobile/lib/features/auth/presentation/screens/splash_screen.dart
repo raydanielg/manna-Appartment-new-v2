@@ -2,10 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/storage/local_cache_service.dart';
 import '../../../../core/utils/app_update_checker.dart';
-import '../../../../core/widgets/loading_indicator.dart';
 import '../../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -98,18 +96,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: DecoratedBox(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              AppColors.primary.withValues(alpha: 0.05),
-              Colors.white,
+              Color(0xFF1E40AF),
+              Color(0xFF2563EB),
+              Color(0xFF60A5FA),
             ],
           ),
         ),
         child: Stack(
           children: [
+            // Decorative circles
+            Positioned(
+              top: -80,
+              right: -60,
+              child: _blob(220, Colors.white.withValues(alpha: 0.08)),
+            ),
+            Positioned(
+              bottom: -100,
+              left: -80,
+              child: _blob(260, Colors.white.withValues(alpha: 0.06)),
+            ),
             Center(
               child: FadeTransition(
                 opacity: _fadeAnimation,
@@ -120,35 +130,45 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     children: [
                       // Logo
                       Container(
-                        width: 100,
-                        height: 100,
+                        width: 150,
+                        height: 150,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(36),
+                          color: Colors.white,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.15),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 40,
+                              offset: const Offset(0, 16),
                             ),
                           ],
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(36),
                           child: Image.asset(
                             'assets/images/app_logo.png',
                             fit: BoxFit.cover,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      // App name
+                      const SizedBox(height: 28),
+                      // Welcome
                       const Text(
-                        'Manna Apartment',
+                        'Karibu Manna App',
                         style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E3A8A),
-                          letterSpacing: 0.3,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Manage your properties with ease',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          letterSpacing: 0.2,
                         ),
                       ),
                     ],
@@ -162,12 +182,29 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               bottom: 56,
               child: FadeTransition(
                 opacity: _fadeAnimation,
-                child: const LoadingIndicator(),
+                child: const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _blob(double size, Color color) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }

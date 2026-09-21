@@ -9,6 +9,9 @@ import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/empty_state.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
+import 'package:open_filex/open_filex.dart';
+import '../../../../../core/utils/app_error.dart';
+import '../../../../../core/utils/app_toast.dart';
 import '../../providers/finance_provider.dart';
 import '../../../properties/providers/properties_provider.dart';
 import '../../../units/providers/units_provider.dart';
@@ -27,6 +30,7 @@ class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
   int _selectedMonth = DateTime.now().month;
   String? _selectedPropertyId;
   String? _selectedUnitId;
+  bool _isExporting = false;
 
   double _parseAmount(dynamic v) {
     if (v == null) return 0;
@@ -74,6 +78,16 @@ class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
           FButton.icon(
             variant: .ghost,
             size: .sm,
+            onPress: _isExporting ? null : () => _exportReport(context),
+            child: _isExporting
+                ? const SizedBox(
+                    width: 16, height: 16, child: FCircularProgress())
+                : const HugeIcon(
+                    icon: HugeIcons.strokeRoundedDownload04, size: null),
+          ),
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
             onPress: () => _showFilterSheet(context),
             child: const HugeIcon(
                 icon: HugeIcons.strokeRoundedFilterHorizontal, size: null),
@@ -105,6 +119,26 @@ class _FinanceReportScreenState extends ConsumerState<FinanceReportScreen> {
   }
 
   // ---- filter sheet ----
+
+  Future<void> _exportReport(BuildContext context) async {
+    setState(() => _isExporting = true);
+    try {
+      final path = await ref.read(financeRepositoryProvider).exportRevenueReport(
+            period: _period,
+            year: _selectedYear,
+            month: _period == 'monthly' ? _selectedMonth : null,
+            propertyId: _selectedPropertyId,
+            unitId: _selectedUnitId,
+          );
+      await OpenFilex.open(path);
+    } catch (e) {
+      if (context.mounted) {
+        AppToast.error(context, AppError.getMessage(e));
+      }
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
 
   Future<void> _showFilterSheet(BuildContext context) async {
     final colors = context.theme.colors;
