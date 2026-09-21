@@ -8,6 +8,7 @@ import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/maintenance_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class SubmitMaintenanceScreen extends ConsumerStatefulWidget {
   const SubmitMaintenanceScreen({super.key});
 
@@ -27,9 +28,7 @@ class _SubmitMaintenanceScreenState extends ConsumerState<SubmitMaintenanceScree
 
   Future<void> _submit() async {
     if (_descriptionController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('please_describe_issue')), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
-      );
+      AppToast.error(context, context.tr('please_describe_issue'));
       return;
     }
 
@@ -39,9 +38,7 @@ class _SubmitMaintenanceScreenState extends ConsumerState<SubmitMaintenanceScree
         'description': _descriptionController.text.trim(),
       });
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('maintenance_submitted')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
-        );
+        AppToast.success(context, context.tr('maintenance_submitted'));
         ref.invalidate(myMaintenanceRequestsProvider);
         context.pop();
       }
@@ -51,9 +48,7 @@ class _SubmitMaintenanceScreenState extends ConsumerState<SubmitMaintenanceScree
         if (e is DioException && e.response?.statusCode == 404) {
           msg = context.tr('no_unit_assigned_msg');
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
-        );
+        AppToast.error(context, msg);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

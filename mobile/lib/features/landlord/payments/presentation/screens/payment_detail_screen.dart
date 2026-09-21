@@ -17,6 +17,7 @@ import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/status_badge.dart';
 import '../../providers/payments_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class PaymentDetailScreen extends ConsumerWidget {
   const PaymentDetailScreen({super.key});
 
@@ -171,16 +172,12 @@ class PaymentDetailScreen extends ConsumerWidget {
                 await ref.read(paymentsRepositoryProvider).deletePayment(id);
                 ref.invalidate(landlordPaymentsProvider);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('payment_deleted')), backgroundColor: AppColors.success),
-                  );
+                  AppToast.success(context, context.tr('payment_deleted'));
                   if (context.canPop()) context.pop();
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-                  );
+                  AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
                 }
               }
             },
@@ -289,15 +286,11 @@ class PaymentDetailScreen extends ConsumerWidget {
                       ref.invalidate(paymentDetailProvider(id));
                       ref.invalidate(landlordPaymentsProvider);
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.tr('edit_payment_success')), backgroundColor: AppColors.success),
-                        );
+                        AppToast.success(context, context.tr('edit_payment_success'));
                       }
                     } catch (e) {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-                        );
+                        AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
                       }
                     }
                   },
@@ -642,9 +635,7 @@ class _PaymentReceiptScreen extends StatelessWidget {
       await Printing.layoutPdf(onLayout: (format) async => doc.save());
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_generate_pdf').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, context.tr('failed_generate_pdf').replaceAll('{0}', AppError.getMessage(e)));
       }
     }
   }
@@ -660,9 +651,7 @@ class _PaymentReceiptScreen extends StatelessWidget {
       await Share.shareXFiles([XFile(file.path)], text: 'EFD Receipt - $tenantName');
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_share_pdf').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, context.tr('failed_share_pdf').replaceAll('{0}', AppError.getMessage(e)));
       }
     }
   }

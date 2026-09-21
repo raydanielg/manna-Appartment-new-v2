@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/widgets/auth_background.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/primary_button.dart';
+import '../../../../core/widgets/theme_mode_button.dart';
 import '../../providers/auth_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key});
 
@@ -17,8 +20,6 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-  bool _obscure = true;
-  bool _obscureConfirm = true;
   String _phone = '';
 
   @override
@@ -44,35 +45,25 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final success = await ref.read(authProvider.notifier)
         .resetPassword(_phone, _passwordController.text);
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('password_reset_success')),
-          backgroundColor: const Color(0xFF22C55E),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppToast.success(context, context.tr('password_reset_success'));
       context.go('/auth/login');
     }
   }
 
   void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: const Color(0xFFEF4444),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    AppToast.error(context, msg);
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     final query = GoRouterState.of(context).uri.queryParameters;
     _phone = query['phone'] ?? '';
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -81,58 +72,44 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
             children: [
               const SizedBox(height: 20),
 
-              // Back button
-              IconButton(
-                onPressed: () {
-                  ref.read(authProvider.notifier).clearError();
-                  context.go('/auth/login');
-                },
-                icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827), size: 22),
-                padding: EdgeInsets.zero,
-                alignment: Alignment.centerLeft,
-                constraints: const BoxConstraints(),
+              // Back button + theme toggle
+              Row(
+                children: [
+                  FButton.icon(
+                    variant: .outline,
+                    size: .sm,
+                    onPress: () {
+                      ref.read(authProvider.notifier).clearError();
+                      context.go('/auth/login');
+                    },
+                    child: context.theme.icons.arrowLeft(context),
+                  ),
+                  const Spacer(),
+                  const ThemeModeButton(),
+                ],
               ),
 
               const SizedBox(height: 32),
               Text(
                 context.tr('reset_password_title'),
-                style: GoogleFonts.nunito(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF111827),
-                ),
+                style: typography.display.xl2.copyWith(fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 context.tr('reset_password_subtitle'),
-                style: GoogleFonts.nunito(
-                  fontSize: 14,
-                  color: const Color(0xFF6B7280),
-                ),
+                style: typography.body.sm.copyWith(color: colors.mutedForeground),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
 
               if (authState.error != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFFECACA)),
-                  ),
-                  child: Row(
+                FAlert(
+                  variant: .destructive,
+                  title: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          authState.error!,
-                          style: GoogleFonts.nunito(color: const Color(0xFFB91C1C), fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
-                      ),
+                      Expanded(child: Text(authState.error!)),
                       GestureDetector(
                         onTap: () => ref.read(authProvider.notifier).clearError(),
-                        child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 16),
+                        child: context.theme.icons.x(context),
                       ),
                     ],
                   ),
@@ -140,117 +117,47 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 const SizedBox(height: 20),
               ],
 
-              _buildLabel(context.tr('new_password')),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscure,
-                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-                decoration: _buildInputDecoration(
-                  hint: context.tr('enter_new_password'),
-                  suffix: IconButton(
-                    icon: Icon(
-                      _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      size: 20,
-                      color: const Color(0xFF9CA3AF),
-                    ),
-                    onPressed: () => setState(() => _obscure = !_obscure),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 16),
-              _buildLabel(context.tr('confirm_password')),
-              TextField(
-                controller: _confirmController,
-                obscureText: _obscureConfirm,
-                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-                onSubmitted: (_) => _resetPassword(),
-                decoration: _buildInputDecoration(
-                  hint: context.tr('confirm_new_password'),
-                  suffix: IconButton(
-                    icon: Icon(
-                      _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      size: 20,
-                      color: const Color(0xFF9CA3AF),
-                    ),
-                    onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
-                  ),
+              FTextField.password(
+                control: .managed(controller: _passwordController),
+                label: Text(context.tr('new_password')),
+                hint: context.tr('enter_new_password'),
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.newPassword],
+                prefixBuilder: (context, style, obscure, variants) => FTextField.prefixIconBuilder(
+                  context,
+                  style,
+                  variants,
+                  const HugeIcon(icon: HugeIcons.strokeRoundedLockPassword, size: null),
                 ),
               ),
 
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: authState.isLoading ? () {} : _resetPassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AuthColors.primary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AuthColors.primary,
-                    disabledForegroundColor: Colors.white,
-                    elevation: 4,
-                    shadowColor: AuthColors.primary.withValues(alpha: 0.35),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: authState.isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          context.tr('update_password'),
-                          style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold),
-                        ),
+              const SizedBox(height: 16),
+              FTextField.password(
+                control: .managed(controller: _confirmController),
+                label: Text(context.tr('confirm_password')),
+                hint: context.tr('confirm_new_password'),
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.newPassword],
+                onSubmit: (_) => _resetPassword(),
+                prefixBuilder: (context, style, obscure, variants) => FTextField.prefixIconBuilder(
+                  context,
+                  style,
+                  variants,
+                  const HugeIcon(icon: HugeIcons.strokeRoundedLockPassword, size: null),
                 ),
+              ),
+
+              const SizedBox(height: 28),
+              PrimaryButton(
+                text: context.tr('update_password'),
+                isLoading: authState.isLoading,
+                onPressed: _resetPassword,
+                icon: const HugeIcon(icon: HugeIcons.strokeRoundedShieldUser, size: null),
               ),
               const SizedBox(height: 40),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text,
-        style: GoogleFonts.nunito(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF374151),
-        ),
-      ),
-    );
-  }
-
-  InputDecoration _buildInputDecoration({required String hint, Widget? suffix}) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: GoogleFonts.nunito(color: const Color(0xFF9CA3AF), fontSize: 14),
-      filled: true,
-      fillColor: const Color(0xFFF9FAFB),
-      suffixIcon: suffix,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: AuthColors.primary, width: 1.5),
       ),
     );
   }

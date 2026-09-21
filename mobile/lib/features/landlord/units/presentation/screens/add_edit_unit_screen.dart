@@ -9,6 +9,7 @@ import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/units_provider.dart';
 import '../../../properties/providers/properties_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class AddEditUnitScreen extends ConsumerStatefulWidget {
   final String? propertyId;
   final String? unitId;
@@ -124,9 +125,7 @@ class _AddEditUnitScreenState extends ConsumerState<AddEditUnitScreen> {
   }
 
   void _showSnack(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: color, behavior: SnackBarBehavior.floating),
-    );
+    AppToast.info(context, message);
   }
 
   @override

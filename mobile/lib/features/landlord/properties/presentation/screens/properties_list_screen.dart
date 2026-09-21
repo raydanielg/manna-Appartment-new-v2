@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/empty_state.dart';
@@ -11,6 +11,8 @@ import '../../../../../core/widgets/loading_indicator.dart';
 import '../../providers/properties_provider.dart';
 import '../widgets/property_card.dart';
 import '../widgets/property_grid_card.dart';
+
+import 'package:manna_apartment/core/utils/app_toast.dart';
 
 class PropertiesListScreen extends ConsumerStatefulWidget {
   const PropertiesListScreen({super.key});
@@ -27,47 +29,67 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
   @override
   Widget build(BuildContext context) {
     final propertiesAsync = ref.watch(propertiesListProvider);
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('properties'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () {
-          if (context.canPop()) context.pop();
-        }),
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('properties'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () {
+            if (context.canPop()) context.pop();
+          },
+          child: context.theme.icons.arrowLeft(context),
+        ),
         actions: [
-          IconButton(
-            icon: Icon(_showVacantOnly ? Icons.filter_alt : Icons.filter_alt_outlined),
-            tooltip: context.tr('vacant_only'),
-            onPressed: () => setState(() => _showVacantOnly = !_showVacantOnly),
+          FButton.icon(
+            variant: _showVacantOnly ? .secondary : .ghost,
+            size: .sm,
+            onPress: () => setState(() => _showVacantOnly = !_showVacantOnly),
+            child: const HugeIcon(icon: HugeIcons.strokeRoundedFilterHorizontal, size: null),
           ),
-          IconButton(
-            icon: Icon(_isGrid ? Icons.view_list : Icons.grid_view),
-            tooltip: _isGrid ? context.tr('list_view') : context.tr('grid_view'),
-            onPressed: () => setState(() => _isGrid = !_isGrid),
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
+            onPress: () => setState(() => _isGrid = !_isGrid),
+            child: HugeIcon(
+              icon: _isGrid ? HugeIcons.strokeRoundedListView : HugeIcons.strokeRoundedGridView,
+              size: null,
+            ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: TextField(
-              onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
-              decoration: InputDecoration(
-                hintText: context.tr('search_properties'),
-                hintStyle: GoogleFonts.nunito(fontSize: 14),
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            child: FTextField(
+              control: .managed(
+                onChange: (v) => setState(() => _searchQuery = v.text.toLowerCase()),
+              ),
+              hint: context.tr('search_properties'),
+              prefixBuilder: (context, style, variants) => FTextField.prefixIconBuilder(
+                context,
+                style,
+                variants,
+                const HugeIcon(icon: HugeIcons.strokeRoundedSearch01, size: null),
               ),
             ),
           ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async => ref.invalidate(propertiesListProvider),
-              color: AppColors.primary,
+              color: colors.primary,
               child: propertiesAsync.when(
                 loading: () => const LoadingIndicator(),
                 error: (e, _) {
@@ -82,7 +104,8 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
                 },
                 data: (properties) {
                   var filtered = properties.where((p) {
-                    final matchesSearch = p.name.toLowerCase().contains(_searchQuery) || (p.address ?? '').toLowerCase().contains(_searchQuery);
+                    final matchesSearch = p.name.toLowerCase().contains(_searchQuery) ||
+                        (p.address ?? '').toLowerCase().contains(_searchQuery);
                     final matchesVacant = !_showVacantOnly || (p.vacantUnits ?? 0) > 0;
                     return matchesSearch && matchesVacant;
                   }).toList();
@@ -96,8 +119,8 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
                       padding: const EdgeInsets.all(16),
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        mainAxisSpacing: 14,
-                        crossAxisSpacing: 14,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
                         childAspectRatio: 0.78,
                       ),
                       itemCount: filtered.length,
@@ -118,40 +141,30 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
                           padding: const EdgeInsets.only(right: 24),
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: AppColors.error,
-                            borderRadius: BorderRadius.circular(16),
+                            color: colors.error,
+                            borderRadius: context.theme.style.borderRadius.lg,
                           ),
-                          child: const Icon(Icons.delete, color: Colors.white),
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedDelete02,
+                            size: 22,
+                            color: colors.errorForeground,
+                          ),
                         ),
-                        confirmDismiss: (direction) async {
-                          return await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text(context.tr('delete_property')),
-                              content: Text(context.tr('confirm_delete_property')),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.tr('cancel'))),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                        confirmDismiss: (direction) => _confirmDelete(context),
                         onDismissed: (direction) async {
                           try {
-                            await ref.read(propertiesRepositoryProvider).deleteProperty(property.id);
+                            await ref
+                                .read(propertiesRepositoryProvider)
+                                .deleteProperty(property.id);
                             ref.invalidate(propertiesListProvider);
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(context.tr('property_deleted')), backgroundColor: AppColors.success),
-                              );
+                              AppToast.success(context, context.tr('property_deleted'));
                             }
                           } catch (e) {
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
+                              AppToast.error(
+                                context,
+                                context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)),
                               );
                               ref.invalidate(propertiesListProvider);
                             }
@@ -169,9 +182,49 @@ class _PropertiesListScreenState extends ConsumerState<PropertiesListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/landlord/properties/add'),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add),
+        backgroundColor: colors.primary,
+        foregroundColor: colors.primaryForeground,
+        icon: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 20),
         label: Text(context.tr('add')),
+      ),
+    );
+  }
+
+  Future<bool?> _confirmDelete(BuildContext context) {
+    return showFDialog<bool>(
+      context: context,
+      builder: (context, style, animation) => FDialog(
+        animation: animation,
+        builder: (context, style) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(context.tr('delete_property'), style: style.titleTextStyle),
+            const SizedBox(height: 8),
+            Text(context.tr('confirm_delete_property'), style: style.bodyTextStyle),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FButton(
+                  variant: .outline,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => Navigator.pop(context, false),
+                  child: Text(context.tr('cancel')),
+                ),
+                const SizedBox(width: 8),
+                FButton(
+                  variant: .destructive,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => Navigator.pop(context, true),
+                  child: Text(context.tr('delete')),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

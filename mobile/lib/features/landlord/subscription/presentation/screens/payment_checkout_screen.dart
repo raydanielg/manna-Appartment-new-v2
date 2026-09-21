@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../providers/subscription_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class PaymentCheckoutScreen extends ConsumerStatefulWidget {
   const PaymentCheckoutScreen({super.key});
 
@@ -222,13 +223,7 @@ class _PaymentCheckoutScreenState extends ConsumerState<PaymentCheckoutScreen>
 
   void _showSnack(String message, {Color? color}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color ?? AppColors.error,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    AppToast.error(context, message);
   }
 
   String _formatPrice(dynamic price) {

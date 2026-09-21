@@ -7,6 +7,7 @@ import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/staff_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class StaffPermissionsScreen extends ConsumerStatefulWidget {
   const StaffPermissionsScreen({super.key});
   @override
@@ -37,16 +38,12 @@ class _StaffPermissionsScreenState extends ConsumerState<StaffPermissionsScreen>
       final selected = _permissions.entries.where((e) => e.value).map((e) => e.key).toList();
       await repo.updatePermissions(id, selected);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('permissions_updated')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
-        );
+        AppToast.success(context, context.tr('permissions_updated'));
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
-        );
+        AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

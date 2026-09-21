@@ -9,6 +9,7 @@ import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../providers/admin_landlords_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class AdminLandlordsScreen extends ConsumerStatefulWidget {
   const AdminLandlordsScreen({super.key});
 
@@ -68,15 +69,11 @@ class _AdminLandlordsScreenState extends ConsumerState<AdminLandlordsScreen> {
         _isSelectionMode = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Landlords deleted successfully'), backgroundColor: AppColors.success),
-        );
+        AppToast.success(context, 'Landlords deleted successfully');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete: $e'), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, 'Failed to delete: $e');
       }
     } finally {
       if (mounted) setState(() => _isDeleting = false);

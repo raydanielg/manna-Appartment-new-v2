@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../auth/providers/auth_provider.dart';
 import '../../../../../core/localization/app_localizations.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class OrganizationSetupScreen extends ConsumerStatefulWidget {
   const OrganizationSetupScreen({super.key});
 
@@ -32,13 +33,7 @@ class _OrganizationSetupScreenState extends ConsumerState<OrganizationSetupScree
         _businessNameController.text.trim(),
       );
       if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.tr('organization_created_success')),
-            backgroundColor: const Color(0xFF2563EB),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppToast.info(context, context.tr('organization_created_success'));
         context.go('/landlord/kyc/upload');
       }
     } finally {

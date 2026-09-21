@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../../core/config/app_config.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
+import '../../../../../core/widgets/theme_mode_button.dart';
 import '../../../../../features/auth/data/models/login_response_model.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
 import '../../../../../shared/notifications/providers/notifications_provider.dart';
@@ -25,13 +26,15 @@ class LandlordHomeScreen extends ConsumerWidget {
     final user = ref.watch(authProvider).user;
     final dashboardAsync = ref.watch(landlordDashboardProvider);
     final unreadCount = ref.watch(unreadCountProvider).value ?? 0;
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async => ref.invalidate(landlordDashboardProvider),
-          color: AppColors.primary,
+          color: colors.primary,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(20),
@@ -60,20 +63,21 @@ class LandlordHomeScreen extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(context.tr('income_overview'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-                          GestureDetector(
-                            onTap: () => context.push('/landlord/finance-report'),
-                            child: Row(
-                              children: [
-                                Text(context.tr('view_report'), style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
-                                const SizedBox(width: 4),
-                                const Icon(Icons.arrow_forward_ios, size: 10, color: AppColors.primary),
-                              ],
-                            ),
+                          Text(
+                            context.tr('income_overview'),
+                            style: typography.display.lg.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          FButton(
+                            variant: .ghost,
+                            size: .sm,
+                            mainAxisSize: MainAxisSize.min,
+                            onPress: () => context.push('/landlord/finance-report'),
+                            suffix: context.theme.icons.chevronRight(context),
+                            child: Text(context.tr('view_report')),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       IncomeChart(data: data),
                       const SizedBox(height: 24),
                       _buildTenantsSection(context, ref),
@@ -89,50 +93,28 @@ class LandlordHomeScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, UserModel? user, int unreadCount) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     final name = user?.fullName ?? context.tr('landlord');
     final avatarUrl = user?.avatar;
     final initials = name.trim().split(' ').map((w) => w.isNotEmpty ? w[0] : '').take(2).join().toUpperCase();
+
     return Row(
       children: [
-        GestureDetector(
-          onTap: () => context.push('/landlord/profile'),
-          child: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryDark],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: ClipOval(
-              child: avatarUrl != null && avatarUrl.isNotEmpty
-                  ? Image.network(
-                      _avatarUrl(avatarUrl),
-                      key: ValueKey(avatarUrl),
-                      width: 48,
-                      height: 48,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Image.asset('assets/icons/avatar.png'),
-                      ),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Image.asset('assets/icons/avatar.png'),
-                    ),
-            ),
+        FTappable(
+          onPress: () => context.push('/landlord/profile'),
+          child: FAvatar.raw(
+            size: 46,
+            child: avatarUrl != null && avatarUrl.isNotEmpty
+                ? Image.network(
+                    _avatarUrl(avatarUrl),
+                    key: ValueKey(avatarUrl),
+                    width: 46,
+                    height: 46,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => Text(initials),
+                  )
+                : Text(initials),
           ),
         ),
         const SizedBox(width: 12),
@@ -142,64 +124,62 @@ class LandlordHomeScreen extends ConsumerWidget {
             children: [
               Text(
                 '${context.tr('hello')}, $name',
-                style: GoogleFonts.nunito(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textDark,
-                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: typography.body.lg.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 2),
               Text(
                 context.tr('welcome_back'),
-                style: GoogleFonts.nunito(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textLight,
-                ),
+                style: typography.body.xs.copyWith(color: colors.mutedForeground),
               ),
             ],
           ),
         ),
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF3F4F6),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              IconButton(
-                onPressed: () => context.push('/notifications'),
-                icon: const Icon(Icons.notifications_none_rounded, size: 20),
-                color: AppColors.textLight,
-                padding: EdgeInsets.zero,
-              ),
-              if (unreadCount > 0)
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                    child: Text(
-                      unreadCount > 9 ? '9+' : '$unreadCount',
-                      style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
-                      textAlign: TextAlign.center,
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            FButton.icon(
+              variant: .outline,
+              size: .sm,
+              onPress: () => context.push('/notifications'),
+              child: const HugeIcon(icon: HugeIcons.strokeRoundedNotification02, size: null),
+            ),
+            if (unreadCount > 0)
+              Positioned(
+                top: -5,
+                right: -5,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: colors.error,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: colors.background, width: 1.5),
+                  ),
+                  constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
+                  child: Text(
+                    unreadCount > 9 ? '9+' : '$unreadCount',
+                    style: TextStyle(
+                      color: colors.errorForeground,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
+        const SizedBox(width: 8),
+        const ThemeModeButton(),
       ],
     );
   }
 
   Widget _buildTenantsSection(BuildContext context, WidgetRef ref) {
     final tenantsAsync = ref.watch(tenantsListProvider(null));
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,46 +189,40 @@ class LandlordHomeScreen extends ConsumerWidget {
           children: [
             Text(
               context.tr('tenants'),
-              style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark),
+              style: typography.display.lg.copyWith(fontWeight: FontWeight.w700),
             ),
-            TextButton(
-              onPressed: () => context.push('/landlord/tenants'),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    context.tr('view_all'),
-                    style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_forward_ios, size: 11, color: AppColors.primary),
-                ],
-              ),
+            FButton(
+              variant: .ghost,
+              size: .sm,
+              mainAxisSize: MainAxisSize.min,
+              onPress: () => context.push('/landlord/tenants'),
+              suffix: context.theme.icons.chevronRight(context),
+              child: Text(context.tr('view_all')),
             ),
           ],
         ),
         const SizedBox(height: 12),
         tenantsAsync.when(
           loading: () => const LoadingIndicator(),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
           data: (tenants) {
             if (tenants.isEmpty) {
-              return Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  children: [
-                    Icon(Icons.people_outline, size: 36, color: Colors.grey.shade300),
-                    const SizedBox(height: 10),
-                    Text(
-                      context.tr('no_tenants_yet'),
-                      style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey.shade400),
-                    ),
-                  ],
+              return FCard(
+                child: Center(
+                  child: Column(
+                    children: [
+                      HugeIcon(
+                        icon: HugeIcons.strokeRoundedUserGroup,
+                        size: 36,
+                        color: colors.mutedForeground.withValues(alpha: 0.4),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        context.tr('no_tenants_yet'),
+                        style: typography.body.xs.copyWith(color: colors.mutedForeground),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
@@ -265,7 +239,7 @@ class LandlordHomeScreen extends ConsumerWidget {
   String _avatarUrl(String avatar) {
     if (avatar.isEmpty) return avatar;
     if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar;
-    final base = AppConfig.apiBaseUrl.replaceAll(RegExp(r'/api/?$'), '');
+    final base = AppConfig.apiBaseUrl.replaceAll(RegExp(r'/api(/v1)?/?$'), '');
     final separator = avatar.startsWith('/') ? '' : '/';
     return '$base$separator$avatar';
   }

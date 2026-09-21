@@ -7,6 +7,7 @@ import '../../../../../core/localization/app_localizations.dart';
 import '../../providers/subscription_provider.dart';
 import '../widgets/plan_card.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class SubscriptionPlansScreen extends ConsumerStatefulWidget {
   const SubscriptionPlansScreen({super.key});
 
@@ -137,13 +138,7 @@ class _SubscriptionPlansScreenState extends ConsumerState<SubscriptionPlansScree
       setState(() => _isActivating = false);
 
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.tr('free_trial_activated')),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppToast.success(context, context.tr('free_trial_activated'));
         context.go('/landlord/home');
       } else {
         final errorState = ref.read(freeTrialNotifierProvider);

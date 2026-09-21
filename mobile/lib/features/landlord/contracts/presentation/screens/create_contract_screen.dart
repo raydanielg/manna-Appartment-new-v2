@@ -11,6 +11,7 @@ import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/contracts_provider.dart';
 import '../../../tenants/providers/tenants_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class CreateContractScreen extends ConsumerStatefulWidget {
   const CreateContractScreen({super.key});
 
@@ -146,23 +147,11 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
                 try {
                   await ref.read(tenantsRepositoryProvider).sendCredentials(tenantId);
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(context.tr('credentials_sent_success')),
-                        backgroundColor: AppColors.success,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
+                    AppToast.success(context, context.tr('credentials_sent_success'));
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))),
-                        backgroundColor: AppColors.error,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
+                    AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
                   }
                 }
                 if (context.mounted) context.pop();
@@ -182,9 +171,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_tenantId == null || _unitId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('please_select_tenant_unit')), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
-      );
+      AppToast.error(context, context.tr('please_select_tenant_unit'));
       return;
     }
     setState(() => _isLoading = true);
@@ -206,9 +193,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
-        );
+        AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

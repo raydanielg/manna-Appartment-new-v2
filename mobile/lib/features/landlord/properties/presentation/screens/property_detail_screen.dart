@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../providers/properties_provider.dart';
+
+import 'package:manna_apartment/core/utils/app_toast.dart';
 
 class PropertyDetailScreen extends ConsumerWidget {
   const PropertyDetailScreen({super.key});
@@ -17,97 +19,148 @@ class PropertyDetailScreen extends ConsumerWidget {
     final state = GoRouterState.of(context);
     final id = state.pathParameters['id'] ?? '';
     final propertyAsync = ref.watch(propertyDetailProvider(id));
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('property_details')),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('property_details'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () => context.pop(),
+          child: context.theme.icons.arrowLeft(context),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () => context.push('/landlord/properties/add?id=$id'),
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
+            onPress: () => context.push('/landlord/properties/add?id=$id'),
+            child: const HugeIcon(
+              icon: HugeIcons.strokeRoundedEdit02,
+              size: 20,
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: AppColors.error),
-            onPressed: () => _confirmDelete(context, ref, id),
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
+            onPress: () => _confirmDelete(context, ref, id),
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedDelete02,
+              size: 20,
+              color: colors.error,
+            ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: propertyAsync.when(
         loading: () => const LoadingIndicator(),
-        error: (e, _) => ErrorState(message: AppError.getMessage(e), onRetry: () => ref.invalidate(propertyDetailProvider(id))),
+        error: (e, _) => ErrorState(
+          message: AppError.getMessage(e),
+          onRetry: () => ref.invalidate(propertyDetailProvider(id)),
+        ),
         data: (property) => SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildImageGallery(context, property),
+              _buildImageGallery(context, property, colors, typography),
               const SizedBox(height: 20),
               Text(
                 property.name,
-                style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                style: typography.display.lg.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 6),
               Row(
                 children: [
-                  Icon(Icons.location_on_outlined, size: 16, color: AppColors.textLight),
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedLocation01,
+                    size: 15,
+                    color: colors.mutedForeground,
+                  ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       property.address ?? context.tr('no_address'),
-                      style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                          typography.body.xs.copyWith(color: colors.mutedForeground),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  children: [
-                    _buildInfoRow(Icons.category_outlined, context.tr('type'), _capitalize(property.type ?? 'N/A')),
-                    const Divider(height: 1, indent: 52),
-                    _buildInfoRow(Icons.meeting_room_outlined, context.tr('total_units'), '${property.unitsCount ?? 0}'),
-                    const Divider(height: 1, indent: 52),
-                    _buildInfoRow(Icons.check_circle_outline, context.tr('occupied'), '${property.occupiedUnits ?? 0}'),
-                    const Divider(height: 1, indent: 52),
-                    _buildInfoRow(Icons.highlight_off, context.tr('vacant'), '${property.vacantUnits ?? 0}'),
-                    if (property.monthlyRevenue != null && property.monthlyRevenue! > 0) ...[
-                      const Divider(height: 1, indent: 52),
-                      _buildInfoRow(Icons.account_balance_wallet_outlined, context.tr('monthly_revenue'), 'TZS ${property.monthlyRevenue!.toStringAsFixed(0)}'),
+
+              FCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Column(
+                    children: [
+                      _row(colors, typography, HugeIcons.strokeRoundedBuilding03,
+                          context.tr('type'), _capitalize(property.type ?? 'N/A')),
+                      _divider(colors),
+                      _row(colors, typography, HugeIcons.strokeRoundedDoor01,
+                          context.tr('total_units'), '${property.unitsCount ?? 0}'),
+                      _divider(colors),
+                      _row(colors, typography, HugeIcons.strokeRoundedCheckmarkCircle02,
+                          context.tr('occupied'), '${property.occupiedUnits ?? 0}'),
+                      _divider(colors),
+                      _row(colors, typography, HugeIcons.strokeRoundedCancel01,
+                          context.tr('vacant'), '${property.vacantUnits ?? 0}'),
+                      if (property.monthlyRevenue != null &&
+                          property.monthlyRevenue! > 0) ...[
+                        _divider(colors),
+                        _row(
+                          colors,
+                          typography,
+                          HugeIcons.strokeRoundedWallet01,
+                          context.tr('monthly_revenue'),
+                          'TZS ${property.monthlyRevenue!.toStringAsFixed(0)}',
+                          valueColor: colors.primary,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => context.push('/landlord/properties/add?id=${property.id}'),
-                      icon: const Icon(Icons.edit_outlined, size: 18),
-                      label: Text(context.tr('edit')),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => context.push('/landlord/units?propertyId=${property.id}'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.primary,
-                        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
-                      ),
-                      icon: const Icon(Icons.meeting_room_outlined, size: 18),
-                      label: Text(context.tr('units')),
-                    ),
-                  ),
-                ],
+
+              FButton(
+                variant: .secondary,
+                size: .sm,
+                prefix:
+                    const HugeIcon(icon: HugeIcons.strokeRoundedDoor01, size: null),
+                onPress: () =>
+                    context.push('/landlord/units?propertyId=${property.id}'),
+                child: Text(context.tr('units')),
+              ),
+              const SizedBox(height: 10),
+              FButton(
+                variant: .outline,
+                size: .sm,
+                prefix:
+                    const HugeIcon(icon: HugeIcons.strokeRoundedEdit02, size: null),
+                onPress: () =>
+                    context.push('/landlord/properties/add?id=${property.id}'),
+                child: Text(context.tr('edit')),
+              ),
+              const SizedBox(height: 10),
+              FButton(
+                variant: .destructive,
+                size: .sm,
+                prefix: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedDelete02, size: null),
+                onPress: () => _confirmDelete(context, ref, id),
+                child: Text(context.tr('delete')),
               ),
               const SizedBox(height: 24),
             ],
@@ -117,61 +170,90 @@ class PropertyDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
-    showDialog(
+  Future<void> _confirmDelete(
+      BuildContext context, WidgetRef ref, String id) async {
+    final confirmed = await showFDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(context.tr('delete_property'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        content: Text(context.tr('confirm_delete_property'), style: GoogleFonts.nunito(fontSize: 14)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('cancel'))),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await ref.read(propertiesRepositoryProvider).deleteProperty(id);
-                ref.invalidate(propertiesListProvider);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('property_deleted')), backgroundColor: AppColors.success),
-                  );
-                  if (context.canPop()) context.pop();
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-                  );
-                }
-              }
-            },
-            child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
-          ),
-        ],
+      builder: (context, style, animation) => FDialog(
+        animation: animation,
+        builder: (context, style) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(context.tr('delete_property'), style: style.titleTextStyle),
+            const SizedBox(height: 8),
+            Text(context.tr('confirm_delete_property'),
+                style: style.bodyTextStyle),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FButton(
+                  variant: .outline,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => Navigator.pop(context, false),
+                  child: Text(context.tr('cancel')),
+                ),
+                const SizedBox(width: 8),
+                FButton(
+                  variant: .destructive,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => Navigator.pop(context, true),
+                  child: Text(context.tr('delete')),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
+    if (confirmed != true) return;
+    try {
+      await ref.read(propertiesRepositoryProvider).deleteProperty(id);
+      ref.invalidate(propertiesListProvider);
+      if (context.mounted) {
+        AppToast.success(context, context.tr('property_deleted'));
+        if (context.canPop()) context.pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppToast.error(context,
+            context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
+      }
+    }
   }
 
-  Widget _buildImageGallery(BuildContext context, property) {
-    final images = property.images is List ? property.images as List<String> : <String>[];
+  Widget _buildImageGallery(
+      BuildContext context, property, FColors colors, FTypography typography) {
+    final images =
+        property.images is List ? property.images as List<String> : <String>[];
     final hasImages = images.isNotEmpty;
+    final radii = context.theme.style.borderRadius;
 
     if (!hasImages) {
       return Container(
         width: double.infinity,
-        height: 200,
+        height: 180,
         decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+          color: colors.secondary.withValues(alpha: 0.4),
+          borderRadius: radii.lg,
+          border: Border.all(color: colors.border),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.apartment_outlined, size: 56, color: AppColors.primary.withValues(alpha: 0.4)),
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedBuilding03,
+              size: 48,
+              color: colors.mutedForeground.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 8),
-            Text(context.tr('no_photos'), style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight)),
+            Text(
+              context.tr('no_photos'),
+              style: typography.body.xs.copyWith(color: colors.mutedForeground),
+            ),
           ],
         ),
       );
@@ -180,7 +262,7 @@ class PropertyDetailScreen extends ConsumerWidget {
     return Column(
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: radii.lg,
           child: SizedBox(
             height: 220,
             child: PageView.builder(
@@ -188,9 +270,15 @@ class PropertyDetailScreen extends ConsumerWidget {
               itemBuilder: (context, index) => Image.network(
                 images[index],
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: AppColors.primary.withValues(alpha: 0.06),
-                  child: const Icon(Icons.apartment_outlined, color: AppColors.primary, size: 48),
+                errorBuilder: (_, _, _) => Container(
+                  color: colors.secondary.withValues(alpha: 0.4),
+                  child: Center(
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedBuilding03,
+                      size: 40,
+                      color: colors.mutedForeground.withValues(alpha: 0.4),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -207,7 +295,7 @@ class PropertyDetailScreen extends ConsumerWidget {
                 height: 6,
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 decoration: BoxDecoration(
-                  color: index == 0 ? AppColors.primary : Colors.grey.shade300,
+                  color: index == 0 ? colors.primary : colors.border,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -218,16 +306,40 @@ class PropertyDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _divider(FColors colors) =>
+      Divider(height: 1, indent: 14, color: colors.border.withValues(alpha: 0.6));
+
+  Widget _row(
+    FColors colors,
+    FTypography typography,
+    List<List<dynamic>> icon,
+    String label,
+    String value, {
+    Color? valueColor,
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppColors.primary),
-          const SizedBox(width: 12),
-          Text(label, style: GoogleFonts.nunito(fontSize: 14, color: AppColors.textLight)),
-          const Spacer(),
-          Text(value, style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+          HugeIcon(icon: icon, size: 16, color: colors.mutedForeground),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: typography.body.xs2.copyWith(color: colors.mutedForeground),
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: typography.body.xs2.copyWith(
+                fontWeight: FontWeight.w700,
+                color: valueColor ?? colors.foreground,
+              ),
+            ),
+          ),
         ],
       ),
     );

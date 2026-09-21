@@ -140,7 +140,7 @@ class LandlordMoreScreen extends ConsumerWidget {
             child: ClipOval(
               child: avatarUrl != null && avatarUrl.isNotEmpty
                   ? Image.network(
-                      avatarUrl.startsWith('http') ? avatarUrl : '${AppConfig.apiBaseUrl.replaceAll(RegExp(r'/api/?$'), '')}/$avatarUrl',
+                      avatarUrl.startsWith('http') ? avatarUrl : '${AppConfig.apiBaseUrl.replaceAll(RegExp(r'/api(/v1)?/?$'), '')}/$avatarUrl',
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Padding(
                         padding: const EdgeInsets.all(12),

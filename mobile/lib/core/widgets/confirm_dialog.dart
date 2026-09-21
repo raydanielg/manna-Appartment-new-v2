@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
+import 'package:forui/forui.dart';
 
 class ConfirmDialog extends StatelessWidget {
   final String title;
@@ -24,19 +24,19 @@ class ConfirmDialog extends StatelessWidget {
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
       content: Text(message),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(cancelText, style: const TextStyle(color: AppColors.textLight)),
+        FButton(
+          variant: .ghost,
+          size: .sm,
+          mainAxisSize: .min,
+          onPress: () => Navigator.of(context).pop(false),
+          child: Text(cancelText),
         ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text(
-            confirmText,
-            style: TextStyle(
-              color: isDestructive ? AppColors.error : AppColors.primary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+        FButton(
+          variant: isDestructive ? .destructive : .primary,
+          size: .sm,
+          mainAxisSize: .min,
+          onPress: () => Navigator.of(context).pop(true),
+          child: Text(confirmText),
         ),
       ],
     );

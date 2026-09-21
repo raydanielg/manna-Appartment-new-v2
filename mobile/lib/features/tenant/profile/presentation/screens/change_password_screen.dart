@@ -9,6 +9,7 @@ import '../../../../../core/widgets/primary_button.dart';
 import '../../data/profile_repository.dart';
 import '../../../../auth/providers/auth_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 final _profileRepoProvider = Provider((ref) => ProfileRepository(ref.read(apiClientProvider)));
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
@@ -71,9 +72,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       ref.read(authProvider.notifier).updateMustChangePassword(false);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password changed successfully'), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
-        );
+        AppToast.success(context, 'Password changed successfully');
         context.go('/tenant/home');
       }
     } catch (e) {
@@ -86,9 +85,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   }
 
   void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
-    );
+    AppToast.error(context, msg);
   }
 
   @override

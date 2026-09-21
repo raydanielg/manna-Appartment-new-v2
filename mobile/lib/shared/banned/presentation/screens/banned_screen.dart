@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../features/auth/providers/auth_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class BannedScreen extends ConsumerWidget {
   const BannedScreen({super.key});
 
@@ -147,9 +148,7 @@ class BannedScreen extends ConsumerWidget {
       await launchUrl(uri);
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open email app. Please contact support@manna.co.tz')),
-        );
+        AppToast.info(context, 'Could not open email app. Please contact support@manna.co.tz');
       }
     }
   }

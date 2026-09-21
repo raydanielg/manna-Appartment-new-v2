@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/primary_button.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class ContractPdfViewerScreen extends StatelessWidget {
   const ContractPdfViewerScreen({super.key});
 
@@ -26,9 +27,7 @@ class ContractPdfViewerScreen extends StatelessWidget {
               text: 'Download',
               icon: const Icon(Icons.download),
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Downloading contract...'), backgroundColor: AppColors.info, behavior: SnackBarBehavior.floating),
-                );
+                AppToast.info(context, 'Downloading contract...');
               },
             ),
           ],

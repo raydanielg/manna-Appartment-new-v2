@@ -15,6 +15,7 @@ import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/contracts_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class ContractSignScreen extends ConsumerStatefulWidget {
   const ContractSignScreen({super.key});
 
@@ -40,9 +41,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
 
   Future<void> _placeSignature() async {
     if (_controller.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('please_draw_signature')), backgroundColor: AppColors.error),
-      );
+      AppToast.error(context, context.tr('please_draw_signature'));
       return;
     }
     final bytes = await _controller.toPngBytes() ?? Uint8List(0);
@@ -50,9 +49,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
       _signatureBytes = bytes;
       _isPlaced = true;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.tr('signature_placed')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
-    );
+    AppToast.success(context, context.tr('signature_placed'));
   }
 
   void _clearSignature() {
@@ -65,9 +62,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
 
   Future<void> _submit() async {
     if (_signatureBytes == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('please_place_signature')), backgroundColor: AppColors.error),
-      );
+      AppToast.error(context, context.tr('please_place_signature'));
       return;
     }
     final id = GoRouterState.of(context).pathParameters['id'] ?? '';
@@ -83,9 +78,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
       final result = await ref.read(contractsRepositoryProvider).signContract(id, path);
       final pdfUrl = result['pdf_url']?.toString();
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('contract_signed_success')), backgroundColor: AppColors.success),
-        );
+        AppToast.success(context, context.tr('contract_signed_success'));
       }
       if (pdfUrl != null && pdfUrl.isNotEmpty) {
         await _downloadAndOpen(id);
@@ -93,9 +86,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
       if (context.mounted && context.canPop()) context.pop();
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('signing_failed').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, context.tr('signing_failed').replaceAll('{0}', AppError.getMessage(e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -108,9 +99,7 @@ class _ContractSignScreenState extends ConsumerState<ContractSignScreen> {
       await OpenFilex.open(path);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('could_not_open_pdf').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, context.tr('could_not_open_pdf').replaceAll('{0}', AppError.getMessage(e)));
       }
     }
   }

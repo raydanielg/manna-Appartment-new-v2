@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
-import '../../../../../core/widgets/status_badge.dart';
 import '../../providers/tenants_provider.dart';
 import '../../../contracts/providers/contracts_provider.dart';
+
+import 'package:manna_apartment/core/utils/app_toast.dart';
 
 class TenantDetailScreen extends ConsumerWidget {
   const TenantDetailScreen({super.key});
@@ -20,22 +21,39 @@ class TenantDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final id = GoRouterState.of(context).pathParameters['id'] ?? '';
     final tenantAsync = ref.watch(tenantDetailProvider(id));
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(context.tr('tenant_details_label'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          context.tr('tenant_details_label'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () {
             if (context.canPop()) context.pop();
           },
+          child: context.theme.icons.arrowLeft(context),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: AppColors.error),
-            onPressed: () => _confirmDelete(context, ref, id),
+          FButton.icon(
+            variant: .ghost,
+            size: .sm,
+            onPress: () => _confirmDelete(context, ref, id),
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedDelete02,
+              size: 20,
+              color: colors.error,
+            ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: tenantAsync.when(
@@ -50,50 +68,82 @@ class TenantDetailScreen extends ConsumerWidget {
             actionLabel: context.tr('complete_setup'),
           );
         },
-        data: (tenant) => SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Column(
+        data: (tenant) {
+          final isActive = (tenant['status'] ?? 'active') == 'active';
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header — name + phone + status, no avatar
+                Row(
                   children: [
-                    Container(
-                      width: 88,
-                      height: 88,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: [AppColors.info, AppColors.primary]),
-                        shape: BoxShape.circle,
-                        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6))],
-                      ),
-                      child: Center(
-                        child: Text(
-                          _getTenantName(tenant)[0].toUpperCase(),
-                          style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white),
-                        ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _getTenantName(tenant),
+                            style: typography.display.lg
+                                .copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _getTenantPhone(tenant),
+                            style: typography.body.xs
+                                .copyWith(color: colors.mutedForeground),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    Text(
-                      _getTenantName(tenant),
-                      style: GoogleFonts.nunito(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.textDark),
+                    FBadge(
+                      variant: isActive ? .primary : .destructive,
+                      child: Text(isActive
+                          ? context.tr('active').toUpperCase()
+                          : context.tr('moved_out').toUpperCase()),
                     ),
-                    const SizedBox(height: 4),
-                    Text(_getTenantPhone(tenant), style: GoogleFonts.nunito(fontSize: 14, color: AppColors.textLight)),
-                    const SizedBox(height: 10),
-                    StatusBadge(status: tenant['status'] ?? 'active'),
                   ],
                 ),
-              ),
-              const SizedBox(height: 24),
-              _buildInfoCard(context, tenant),
-              const SizedBox(height: 24),
-              _buildContractsSection(context, tenant, id, ref),
-              const SizedBox(height: 24),
-              _buildPaymentsSection(context, tenant, id, ref),
-            ],
-          ),
-        ),
+                const SizedBox(height: 20),
+
+                _buildInfoCard(context, tenant, colors, typography),
+                const SizedBox(height: 24),
+                _buildContractsSection(context, tenant, ref, colors, typography),
+                const SizedBox(height: 24),
+                _buildPaymentsSection(context, tenant, ref, colors, typography),
+                const SizedBox(height: 24),
+
+                // Actions — stacked full-width, no overflow
+                FButton(
+                  variant: .outline,
+                  size: .sm,
+                  prefix: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedEdit02, size: null),
+                  onPress: () => _showEditDialog(context, ref, id, tenant),
+                  child: Text(context.tr('edit')),
+                ),
+                const SizedBox(height: 10),
+                FButton(
+                  variant: .secondary,
+                  size: .sm,
+                  prefix: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedSent, size: null),
+                  onPress: () => _sendCredentials(context, ref, id),
+                  child: Text(context.tr('send_credentials')),
+                ),
+                const SizedBox(height: 10),
+                FButton(
+                  variant: .destructive,
+                  size: .sm,
+                  prefix: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedUserRemove01, size: null),
+                  onPress: () => _confirmMoveOut(context, id, ref),
+                  child: Text(context.tr('move_out')),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -119,38 +169,110 @@ class TenantDetailScreen extends ConsumerWidget {
     return NumberFormat('#,###').format(_parseAmount(value));
   }
 
-  Widget _buildInfoCard(BuildContext context, Map<String, dynamic> tenant) {
+  String _formatDate(dynamic date) {
+    if (date == null) return 'N/A';
+    final dt = DateTime.tryParse(date.toString());
+    if (dt == null) return date.toString();
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+  }
+
+  Widget _buildInfoCard(
+    BuildContext context,
+    Map<String, dynamic> tenant,
+    FColors colors,
+    FTypography typography,
+  ) {
     final balance = _parseAmount(tenant['balance_due']);
     final unit = tenant['unit'] ?? {};
     final property = unit['property'] ?? {};
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+    return FCard(
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Column(
+          children: [
+          _row(colors, typography, HugeIcons.strokeRoundedBuilding03,
+              context.tr('property'), property['name'] ?? 'N/A'),
+          _divider(colors),
+          _row(colors, typography, HugeIcons.strokeRoundedLocation01,
+              context.tr('address'), property['address'] ?? 'N/A'),
+          _divider(colors),
+          _row(colors, typography, HugeIcons.strokeRoundedDoor01,
+              context.tr('unit'), unit['name'] ?? context.tr('no_unit')),
+          _divider(colors),
+          _row(colors, typography, HugeIcons.strokeRoundedMoney01,
+              context.tr('rent'), 'TZS ${_formatAmount(tenant['rent_amount'])}'),
+          _divider(colors),
+          _row(colors, typography, HugeIcons.strokeRoundedWallet01,
+              context.tr('total_paid'), 'TZS ${_formatAmount(tenant['total_paid'])}'),
+          _divider(colors),
+          _row(
+            colors,
+            typography,
+            HugeIcons.strokeRoundedAlert02,
+            context.tr('balance_due'),
+            'TZS ${_formatAmount(balance)}',
+            valueColor: balance > 0 ? colors.error : const Color(0xFF16A34A),
+          ),
+          _divider(colors),
+          _row(colors, typography, HugeIcons.strokeRoundedCalendar01,
+              context.tr('move_in'), _formatDate(tenant['moved_in_date'])),
+          ],
+        ),
       ),
-      child: Column(
+    );
+  }
+
+  Widget _divider(FColors colors) =>
+      Divider(height: 1, indent: 14, color: colors.border.withValues(alpha: 0.6));
+
+  Widget _row(
+    FColors colors,
+    FTypography typography,
+    List<List<dynamic>> icon,
+    String label,
+    String value, {
+    Color? valueColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
         children: [
-          _row(Icons.apartment_outlined, context.tr('property'), property['name'] ?? 'N/A'),
-          const Divider(height: 1, indent: 56),
-          _row(Icons.location_on_outlined, context.tr('address'), property['address'] ?? 'N/A'),
-          const Divider(height: 1, indent: 56),
-          _row(Icons.meeting_room_outlined, context.tr('unit'), unit['name'] ?? context.tr('no_unit')),
-          const Divider(height: 1, indent: 56),
-          _row(Icons.payments_outlined, context.tr('rent'), 'TZS ${_formatAmount(tenant['rent_amount'])}'),
-          const Divider(height: 1, indent: 56),
-          _row(Icons.account_balance_wallet_outlined, context.tr('total_paid'), 'TZS ${_formatAmount(tenant['total_paid'])}'),
-          const Divider(height: 1, indent: 56),
-          _row(Icons.warning_amber_rounded, context.tr('balance_due'), 'TZS ${_formatAmount(balance)}', color: balance > 0 ? AppColors.error : AppColors.success),
-          const Divider(height: 1, indent: 56),
-          _row(Icons.calendar_today_outlined, context.tr('move_in'), tenant['moved_in_date'] ?? 'N/A'),
+          HugeIcon(icon: icon, size: 16, color: colors.mutedForeground),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: typography.body.xs2.copyWith(color: colors.mutedForeground),
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: typography.body.xs2.copyWith(
+                fontWeight: FontWeight.w700,
+                color: valueColor ?? colors.foreground,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildContractsSection(BuildContext context, Map<String, dynamic> tenant, String id, WidgetRef ref) {
+  Widget _buildContractsSection(
+    BuildContext context,
+    Map<String, dynamic> tenant,
+    WidgetRef ref,
+    FColors colors,
+    FTypography typography,
+  ) {
     final contracts = (tenant['contracts'] ?? []) as List<dynamic>;
 
     return Column(
@@ -159,112 +281,195 @@ class TenantDetailScreen extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(context.tr('contracts'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-            TextButton.icon(
-              onPressed: () => context.push('/landlord/contracts/create'),
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(context.tr('new_contract'), style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700)),
+            Text(
+              context.tr('contracts'),
+              style: typography.display.sm.copyWith(fontWeight: FontWeight.w700),
+            ),
+            FButton(
+              variant: .ghost,
+              size: .sm,
+              mainAxisSize: MainAxisSize.min,
+              prefix:
+                  const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: null),
+              onPress: () => context.push('/landlord/contracts/create'),
+              child: Text(context.tr('new_contract')),
             ),
           ],
         ),
         const SizedBox(height: 10),
         if (contracts.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+          FCard(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  context.tr('no_contracts_yet'),
+                  style:
+                      typography.body.xs2.copyWith(color: colors.mutedForeground),
+                ),
+              ),
             ),
-            child: Center(child: Text(context.tr('no_contracts_yet'), style: GoogleFonts.nunito(color: AppColors.textLight))),
           )
         else
           ...contracts.map((c) {
             final contract = c is Map<String, dynamic> ? c : <String, dynamic>{};
-            return _buildContractCard(context, contract, ref);
+            return _buildContractCard(context, contract, ref, colors, typography);
           }),
       ],
     );
   }
 
-  Widget _buildContractCard(BuildContext context, Map<String, dynamic> contract, WidgetRef ref) {
-    final unitName = contract['unit']?['name'] ?? contract['unit']?['unit_number'] ?? 'N/A';
+  Widget _buildContractCard(
+    BuildContext context,
+    Map<String, dynamic> contract,
+    WidgetRef ref,
+    FColors colors,
+    FTypography typography,
+  ) {
+    final unitName =
+        contract['unit']?['name'] ?? contract['unit']?['unit_number'] ?? 'N/A';
     final startDate = _formatDate(contract['start_date']);
     final endDate = _formatDate(contract['end_date']);
-    final status = contract['status'] ?? 'active';
+    final status = (contract['status'] ?? 'active').toString();
     final contractId = contract['id']?.toString() ?? '';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/landlord/contracts/$contractId'),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: FTappable(
+        onPress: () => context.push('/landlord/contracts/$contractId'),
+        child: FCard(
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               Row(
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
-                      color: AppColors.info.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      color: colors.primary.withValues(alpha: 0.1),
+                      borderRadius: context.theme.style.borderRadius.md,
                     ),
-                    child: const Icon(Icons.description_outlined, color: AppColors.info, size: 20),
+                    child: Center(
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedFile01,
+                        size: 18,
+                        color: colors.primary,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('${context.tr('unit')}: $unitName', style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark)),
+                        Text(
+                          '${context.tr('unit')}: $unitName',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: typography.body.sm
+                              .copyWith(fontWeight: FontWeight.w700),
+                        ),
                         const SizedBox(height: 2),
-                        Text('$startDate - $endDate', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
+                        Text(
+                          '$startDate - $endDate',
+                          style: typography.body.xs3
+                              .copyWith(color: colors.mutedForeground),
+                        ),
                       ],
                     ),
                   ),
-                  StatusBadge(status: status),
+                  FBadge(
+                    variant: status == 'active' ? .primary : .secondary,
+                    child: Text(status.toUpperCase()),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () async {
-                        try {
-                          final path = await ref.read(contractsRepositoryProvider).downloadPdf(contractId);
-                          await OpenFilex.open(path);
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('${context.tr('download_failed')}: $e'), backgroundColor: AppColors.error),
-                            );
-                          }
-                        }
-                      },
-                      icon: const Icon(Icons.download, size: 16),
-                      label: Text(context.tr('download_pdf'), style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700)),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
-                        minimumSize: const Size(double.infinity, 36),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
+              FButton(
+                variant: .outline,
+                size: .sm,
+                prefix: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedDownload04, size: null),
+                onPress: () async {
+                  try {
+                    final path = await ref
+                        .read(contractsRepositoryProvider)
+                        .downloadPdf(contractId);
+                    await OpenFilex.open(path);
+                  } catch (e) {
+                    if (context.mounted) {
+                      AppToast.error(
+                          context, '${context.tr('download_failed')}: $e');
+                    }
+                  }
+                },
+                child: Text(context.tr('download_pdf')),
+              ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentsSection(
+    BuildContext context,
+    Map<String, dynamic> tenant,
+    WidgetRef ref,
+    FColors colors,
+    FTypography typography,
+  ) {
+    final payments = (tenant['payments'] ?? []) as List<dynamic>;
+    final id = GoRouterState.of(context).pathParameters['id'] ?? '';
+
+    return FTappable(
+      onPress: () => context.push('/landlord/tenants/$id/payments'),
+      child: FCard(
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.1),
+                  borderRadius: context.theme.style.borderRadius.md,
+                ),
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedMoney01,
+                    size: 18,
+                    color: colors.primary,
                   ),
-                ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.tr('payment_history'),
+                      style: typography.body.sm.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${payments.length} ${context.tr('payments')}',
+                      style: typography.body.xs3
+                          .copyWith(color: colors.mutedForeground),
+                    ),
+                  ],
+                ),
+              ),
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                size: 18,
+                color: colors.mutedForeground.withValues(alpha: 0.6),
               ),
             ],
           ),
@@ -273,299 +478,213 @@ class TenantDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPaymentsSection(BuildContext context, Map<String, dynamic> tenant, String id, WidgetRef ref) {
-    final payments = (tenant['payments'] ?? []) as List<dynamic>;
+  Future<void> _confirmMoveOut(
+      BuildContext context, String id, WidgetRef ref) async {
+    final confirmed = await _confirmDialog(
+      context,
+      title: context.tr('move_out_tenant'),
+      body: context.tr('confirm_move_out'),
+      confirmLabel: context.tr('move_out'),
+      destructive: true,
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(tenantsRepositoryProvider).moveOut(id);
+      ref.invalidate(tenantDetailProvider(id));
+      if (context.mounted) {
+        AppToast.success(context, context.tr('tenant_moved_out'));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppToast.error(
+            context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
+      }
+    }
+  }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Future<void> _sendCredentials(
+      BuildContext context, WidgetRef ref, String id) async {
+    final confirmed = await _confirmDialog(
+      context,
+      title: context.tr('send_credentials'),
+      body: context.tr('send_credentials_confirm'),
+      confirmLabel: context.tr('send'),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(tenantsRepositoryProvider).sendCredentials(id);
+      if (context.mounted) {
+        AppToast.success(context, context.tr('credentials_sent_success'));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppToast.error(
+            context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
+      }
+    }
+  }
+
+  Future<void> _confirmDelete(
+      BuildContext context, WidgetRef ref, String id) async {
+    final confirmed = await _confirmDialog(
+      context,
+      title: context.tr('delete_tenant'),
+      body: context.tr('confirm_delete_tenant'),
+      confirmLabel: context.tr('delete'),
+      destructive: true,
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(tenantsRepositoryProvider).deleteTenant(id);
+      ref.invalidate(tenantsListProvider);
+      if (context.mounted) {
+        AppToast.success(context, context.tr('tenant_deleted'));
+        if (context.canPop()) context.pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppToast.error(
+            context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
+      }
+    }
+  }
+
+  Future<bool?> _confirmDialog(
+    BuildContext context, {
+    required String title,
+    required String body,
+    required String confirmLabel,
+    bool destructive = false,
+  }) {
+    return showFDialog<bool>(
+      context: context,
+      builder: (context, style, animation) => FDialog(
+        animation: animation,
+        builder: (context, style) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(context.tr('payment_history'), style: GoogleFonts.nunito(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-            TextButton.icon(
-              onPressed: () => context.push('/landlord/payments/record'),
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(context.tr('record'), style: GoogleFonts.nunito(fontSize: 12, fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        if (payments.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Center(child: Text(context.tr('no_payments_recorded'), style: GoogleFonts.nunito(color: AppColors.textLight))),
-          )
-        else
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              children: payments.asMap().entries.map((entry) {
-                final payment = entry.value is Map<String, dynamic> ? entry.value as Map<String, dynamic> : <String, dynamic>{};
-                final index = entry.key;
-                return Column(
-                  children: [
-                    ListTile(
-                      leading: CircleAvatar(
-                        radius: 16,
-                        backgroundColor: AppColors.success.withValues(alpha: 0.1),
-                        child: const Icon(Icons.check, size: 14, color: AppColors.success),
-                      ),
-                      title: Text(
-                        'TZS ${_formatAmount(payment['amount'])}',
-                        style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark),
-                      ),
-                      subtitle: Text(
-                        payment['payment_date'] != null ? DateFormat('dd MMM yyyy').format(DateTime.tryParse(payment['payment_date'].toString()) ?? DateTime.now()) : '-',
-                        style: GoogleFonts.nunito(fontSize: 11, color: AppColors.textLight),
-                      ),
-                      trailing: Text(
-                        (payment['status'] ?? 'paid').toString().toUpperCase(),
-                        style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.success),
-                      ),
-                    ),
-                    if (index < payments.length - 1) const Divider(height: 1, indent: 72),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => _showEditDialog(context, ref, id, tenant),
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                label: Text(context.tr('edit')),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => _sendCredentials(context, ref, id),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.info,
-                  foregroundColor: Colors.white,
-                ),
-                icon: const Icon(Icons.send_outlined, size: 18),
-                label: Text(context.tr('send_credentials'), style: GoogleFonts.nunito(fontSize: 13)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => _confirmMoveOut(context, id, ref),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: AppColors.error,
-                  side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
-                ),
-                icon: const Icon(Icons.person_remove_outlined, size: 18),
-                label: Text(context.tr('move_out')),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  String _formatDate(dynamic date) {
-    if (date == null) return 'N/A';
-    final dt = DateTime.tryParse(date.toString());
-    if (dt == null) return date.toString();
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
-  }
-
-  void _confirmMoveOut(BuildContext context, String id, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(context.tr('move_out_tenant'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        content: Text(context.tr('confirm_move_out'), style: GoogleFonts.nunito(fontSize: 14)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('cancel'))),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await ref.read(tenantsRepositoryProvider).moveOut(id);
-                ref.invalidate(tenantDetailProvider(id));
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('tenant_moved_out')), backgroundColor: AppColors.success),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-                  );
-                }
-              }
-            },
-            child: Text(context.tr('move_out'), style: const TextStyle(color: AppColors.error)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _sendCredentials(BuildContext context, WidgetRef ref, String id) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(context.tr('send_credentials'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        content: Text(context.tr('send_credentials_confirm'), style: GoogleFonts.nunito(fontSize: 14)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(context.tr('cancel'))),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              try {
-                await ref.read(tenantsRepositoryProvider).sendCredentials(id);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(context.tr('credentials_sent_success')),
-                      backgroundColor: AppColors.success,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))),
-                      backgroundColor: AppColors.error,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              }
-            },
-            child: Text(context.tr('send'), style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEditDialog(BuildContext context, WidgetRef ref, String id, Map<String, dynamic> tenant) {
-    final nameController = TextEditingController(text: _getTenantName(tenant));
-    final phoneController = TextEditingController(text: _getTenantPhone(tenant));
-    final emailController = TextEditingController(text: (tenant['email'] ?? tenant['user']?['email'] ?? '').toString());
-    final emergencyController = TextEditingController(text: tenant['emergency_contact'] ?? '');
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(context.tr('edit_tenant'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            Text(title, style: style.titleTextStyle),
+            const SizedBox(height: 8),
+            Text(body, style: style.bodyTextStyle),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextField(controller: nameController, decoration: InputDecoration(labelText: context.tr('full_name'))),
-                TextField(controller: phoneController, keyboardType: TextInputType.phone, decoration: InputDecoration(labelText: context.tr('phone'))),
-                TextField(controller: emailController, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: context.tr('email'))),
-                TextField(controller: emergencyController, decoration: InputDecoration(labelText: context.tr('emergency_contact'))),
+                FButton(
+                  variant: .outline,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => Navigator.pop(context, false),
+                  child: Text(context.tr('cancel')),
+                ),
+                const SizedBox(width: 8),
+                FButton(
+                  variant: destructive ? .destructive : .primary,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => Navigator.pop(context, true),
+                  child: Text(confirmLabel),
+                ),
               ],
             ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('cancel'))),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await ref.read(tenantsRepositoryProvider).updateTenant(id, {
-                    'full_name': nameController.text.trim(),
-                    'phone': phoneController.text.trim(),
-                    'email': emailController.text.trim(),
-                    'emergency_contact': emergencyController.text.trim(),
-                  });
-                  ref.invalidate(tenantDetailProvider(id));
-                  ref.invalidate(tenantsListProvider);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(context.tr('tenant_updated')), backgroundColor: AppColors.success),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-                    );
-                  }
-                }
-              },
-              child: Text(context.tr('save')),
-            ),
           ],
-        );
-      },
-    );
-  }
-
-  void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(context.tr('delete_tenant'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        content: Text(context.tr('confirm_delete_tenant'), style: GoogleFonts.nunito(fontSize: 14)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.tr('cancel'))),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await ref.read(tenantsRepositoryProvider).deleteTenant(id);
-                ref.invalidate(tenantsListProvider);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('tenant_deleted')), backgroundColor: AppColors.success),
-                  );
-                  if (context.canPop()) context.pop();
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-                  );
-                }
-              }
-            },
-            child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _row(IconData icon, String label, String value, {Color? color}) {
-    return ListTile(
-      leading: Icon(icon, color: color ?? AppColors.primary),
-      title: Text(label, style: GoogleFonts.nunito(fontSize: 13, color: AppColors.textLight)),
-      trailing: Text(
-        value,
-        style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: color ?? AppColors.textDark),
+  void _showEditDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String id,
+    Map<String, dynamic> tenant,
+  ) {
+    final nameController = TextEditingController(text: _getTenantName(tenant));
+    final phoneController = TextEditingController(text: _getTenantPhone(tenant));
+    final emailController = TextEditingController(
+        text: (tenant['email'] ?? tenant['user']?['email'] ?? '').toString());
+    final emergencyController =
+        TextEditingController(text: tenant['emergency_contact'] ?? '');
+
+    showFDialog<void>(
+      context: context,
+      builder: (context, style, animation) => FDialog(
+        animation: animation,
+        builder: (context, style) => SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.tr('edit_tenant'), style: style.titleTextStyle),
+              const SizedBox(height: 16),
+              FTextField(
+                control: .managed(controller: nameController),
+                label: Text(context.tr('full_name')),
+              ),
+              const SizedBox(height: 12),
+              FTextField(
+                control: .managed(controller: phoneController),
+                label: Text(context.tr('phone')),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 12),
+              FTextField(
+                control: .managed(controller: emailController),
+                label: Text(context.tr('email')),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+              FTextField(
+                control: .managed(controller: emergencyController),
+                label: Text(context.tr('emergency_contact')),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  FButton(
+                    variant: .outline,
+                    size: .sm,
+                    mainAxisSize: MainAxisSize.min,
+                    onPress: () => Navigator.pop(context),
+                    child: Text(context.tr('cancel')),
+                  ),
+                  const SizedBox(width: 8),
+                  FButton(
+                    variant: .primary,
+                    size: .sm,
+                    mainAxisSize: MainAxisSize.min,
+                    onPress: () async {
+                      Navigator.pop(context);
+                      try {
+                        await ref.read(tenantsRepositoryProvider).updateTenant(id, {
+                          'full_name': nameController.text.trim(),
+                          'phone': phoneController.text.trim(),
+                          'email': emailController.text.trim(),
+                          'emergency_contact': emergencyController.text.trim(),
+                        });
+                        ref.invalidate(tenantDetailProvider(id));
+                        ref.invalidate(tenantsListProvider);
+                        if (context.mounted) {
+                          AppToast.success(context, context.tr('tenant_updated'));
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          AppToast.error(
+                            context,
+                            context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)),
+                          );
+                        }
+                      }
+                    },
+                    child: Text(context.tr('save')),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

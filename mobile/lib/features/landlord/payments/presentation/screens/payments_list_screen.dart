@@ -11,6 +11,7 @@ import '../../../../../core/widgets/error_state.dart';
 import '../../../../../core/widgets/loading_indicator.dart';
 import '../../providers/payments_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class PaymentsListScreen extends ConsumerStatefulWidget {
   const PaymentsListScreen({super.key});
 
@@ -143,15 +144,11 @@ class _PaymentsListScreenState extends ConsumerState<PaymentsListScreen> {
                             await ref.read(paymentsRepositoryProvider).deletePayment(payment['id'].toString());
                             ref.invalidate(landlordPaymentsProvider);
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(context.tr('payment_deleted')), backgroundColor: AppColors.success),
-                              );
+                              AppToast.success(context, context.tr('payment_deleted'));
                             }
                           } catch (e) {
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-                              );
+                              AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
                               ref.invalidate(landlordPaymentsProvider);
                             }
                           }

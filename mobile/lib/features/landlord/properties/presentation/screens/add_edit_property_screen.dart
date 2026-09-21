@@ -2,14 +2,15 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
-import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/properties_provider.dart';
+
+import 'package:manna_apartment/core/utils/app_toast.dart';
 
 class AddEditPropertyScreen extends ConsumerStatefulWidget {
   final String? propertyId;
@@ -30,7 +31,6 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
   bool _isEditMode = false;
   bool _isDataLoaded = false;
   List<String> _imagePaths = [];
-  final Map<String, String> _fieldErrors = {};
 
   @override
   void initState() {
@@ -50,16 +50,16 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
       _addressController.text = property.address ?? '';
       _locationController.text = '';
       _type = property.type ?? 'apartment';
-      if (mounted) setState(() {
-        _isDataLoaded = true;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isDataLoaded = true;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${context.tr('failed_load_property')}: $e'), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, '${context.tr('failed_load_property')}: $e');
       }
     }
   }
@@ -73,26 +73,17 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
   }
 
   Future<void> _pickImages() async {
-    final picked = await _picker.pickMultiImage(maxWidth: 1200, maxHeight: 1200, imageQuality: 80);
+    final picked = await _picker.pickMultiImage(
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 80,
+    );
     if (picked.isEmpty) return;
-    setState(() {
-      _imagePaths = [..._imagePaths, ...picked.map((e) => e.path)];
-      _fieldErrors.remove('images');
-    });
+    setState(() => _imagePaths = [..._imagePaths, ...picked.map((e) => e.path)]);
   }
 
   void _removeImage(int index) {
     setState(() => _imagePaths.removeAt(index));
-  }
-
-  void _setFieldError(String field, String message) {
-    setState(() => _fieldErrors[field] = message);
-  }
-
-  void _clearFieldError(String field) {
-    if (_fieldErrors.containsKey(field)) {
-      setState(() => _fieldErrors.remove(field));
-    }
   }
 
   String _extractErrorMessage(dynamic error) {
@@ -125,10 +116,7 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() {
-      _isLoading = true;
-      _fieldErrors.clear();
-    });
+    setState(() => _isLoading = true);
     try {
       final repo = ref.read(propertiesRepositoryProvider);
       if (_isEditMode) {
@@ -136,18 +124,13 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
           'name': _nameController.text.trim(),
           'address': _addressController.text.trim(),
           'type': _type,
-          if (_locationController.text.trim().isNotEmpty) 'location': _locationController.text.trim(),
+          if (_locationController.text.trim().isNotEmpty)
+            'location': _locationController.text.trim(),
         });
         ref.invalidate(propertiesListProvider);
         ref.invalidate(propertyDetailProvider(widget.propertyId!));
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.tr('property_updated')),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          AppToast.success(context, context.tr('property_updated'));
           context.pop();
         }
       } else {
@@ -160,47 +143,60 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
         );
         ref.invalidate(propertiesListProvider);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.tr('property_created')),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          AppToast.success(context, context.tr('property_created'));
           context.pop();
         }
       }
     } catch (e) {
       if (mounted) {
         final message = _extractErrorMessage(e);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppToast.error(context, message);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  Widget _icon(
+    BuildContext context,
+    FTextFieldStyle style,
+    Set<FTextFieldVariant> variants,
+    List<List<dynamic>> icon,
+  ) =>
+      FTextField.prefixIconBuilder(
+        context,
+        style,
+        variants,
+        HugeIcon(icon: icon, size: null),
+      );
+
   @override
   Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final radii = context.theme.style.borderRadius;
+
     return Scaffold(
-      backgroundColor: AppColors.lightBackground,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        title: Text(_isEditMode ? context.tr('edit_property') : context.tr('add_property'), style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          _isEditMode ? context.tr('edit_property') : context.tr('add_property'),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
+        ),
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () {
             if (context.canPop()) context.pop();
           },
+          child: context.theme.icons.arrowLeft(context),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
           child: Column(
@@ -208,59 +204,78 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
             children: [
               if (_isLoading && _isEditMode && !_isDataLoaded) ...[
                 const SizedBox(height: 16),
-                const Center(child: CircularProgressIndicator()),
+                const Center(child: FCircularProgress()),
               ],
-              AppTextField(
-                label: context.tr('property_name'),
+              FTextFormField(
+                control: .managed(controller: _nameController),
+                label: Text(context.tr('property_name')),
                 hint: context.tr('property_name_hint'),
-                controller: _nameController,
-                prefix: const Icon(Icons.apartment, size: 20),
-                validator: (v) => v == null || v.isEmpty ? context.tr('name_required') : null,
+                textInputAction: TextInputAction.next,
+                prefixBuilder: (context, style, variants) =>
+                    _icon(context, style, variants, HugeIcons.strokeRoundedBuilding03),
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? context.tr('name_required') : null,
               ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: context.tr('address'),
+              const SizedBox(height: 18),
+              FTextFormField(
+                control: .managed(controller: _addressController),
+                label: Text(context.tr('address')),
                 hint: context.tr('address_hint'),
-                controller: _addressController,
-                prefix: const Icon(Icons.location_on, size: 20),
-                validator: (v) => v == null || v.isEmpty ? context.tr('address_required') : null,
+                textInputAction: TextInputAction.next,
+                prefixBuilder: (context, style, variants) =>
+                    _icon(context, style, variants, HugeIcons.strokeRoundedLocation01),
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? context.tr('address_required') : null,
               ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: context.tr('location_optional'),
+              const SizedBox(height: 18),
+              FTextFormField(
+                control: .managed(controller: _locationController),
+                label: Text(context.tr('location_optional')),
                 hint: context.tr('location_hint'),
-                controller: _locationController,
-                prefix: const Icon(Icons.map, size: 20),
+                textInputAction: TextInputAction.done,
+                prefixBuilder: (context, style, variants) =>
+                    _icon(context, style, variants, HugeIcons.strokeRoundedMapsLocation01),
               ),
-              const SizedBox(height: 16),
-              Text(context.tr('property_type'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _type,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                ),
-                dropdownColor: Colors.white,
-                items: [
-                  DropdownMenuItem(value: 'apartment', child: Text(context.tr('apartment'))),
-                  DropdownMenuItem(value: 'house', child: Text(context.tr('house'))),
-                  DropdownMenuItem(value: 'commercial', child: Text(context.tr('commercial'))),
-                  DropdownMenuItem(value: 'mixed', child: Text(context.tr('mixed_use'))),
+              const SizedBox(height: 20),
+
+              // Property type — segmented choice buttons
+              Text(
+                context.tr('property_type'),
+                style: typography.body.sm.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final type in ['apartment', 'house', 'commercial', 'mixed'])
+                    FButton(
+                      variant: _type == type ? .primary : .outline,
+                      size: .sm,
+                      mainAxisSize: MainAxisSize.min,
+                      onPress: () => setState(() => _type = type),
+                      child: Text(context.tr(
+                        type == 'mixed' ? 'mixed_use' : type,
+                      )),
+                    ),
                 ],
-                onChanged: (v) => setState(() => _type = v ?? 'apartment'),
               ),
+
               if (!_isEditMode) ...[
                 const SizedBox(height: 24),
-                Text(context.tr('property_photos'), style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textDark)),
+                Text(
+                  context.tr('property_photos'),
+                  style: typography.body.sm.copyWith(fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 10),
-                _buildImagePicker(context),
+                _buildImagePicker(context, colors, typography, radii),
               ],
-              const SizedBox(height: 24),
+
+              const SizedBox(height: 28),
               PrimaryButton(
-                text: _isEditMode ? context.tr('update_property') : context.tr('save_property'),
+                text: _isEditMode
+                    ? context.tr('update_property')
+                    : context.tr('save_property'),
                 isLoading: _isLoading,
                 onPressed: _submit,
               ),
@@ -272,7 +287,12 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
     );
   }
 
-  Widget _buildImagePicker(BuildContext context) {
+  Widget _buildImagePicker(
+    BuildContext context,
+    FColors colors,
+    FTypography typography,
+    FBorderRadius radii,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -284,47 +304,63 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
               final index = entry.key;
               final path = entry.value;
               return Stack(
+                clipBehavior: Clip.none,
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: radii.md,
                     child: Image.file(
                       File(path),
-                      width: 96,
-                      height: 96,
+                      width: 92,
+                      height: 92,
                       fit: BoxFit.cover,
                     ),
                   ),
                   Positioned(
-                    top: 4,
-                    right: 4,
-                    child: GestureDetector(
-                      onTap: () => _removeImage(index),
+                    top: -6,
+                    right: -6,
+                    child: FTappable(
+                      onPress: () => _removeImage(index),
                       child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                        child: const Icon(Icons.close, size: 14, color: Colors.white),
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: colors.error,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: colors.background, width: 1.5),
+                        ),
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedCancel01,
+                          size: 12,
+                          color: colors.errorForeground,
+                        ),
                       ),
                     ),
                   ),
                 ],
               );
             }),
-            GestureDetector(
-              onTap: _pickImages,
+            FTappable(
+              onPress: _pickImages,
               child: Container(
-                width: 96,
-                height: 96,
+                width: 92,
+                height: 92,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
+                  color: colors.secondary.withValues(alpha: 0.4),
+                  borderRadius: radii.md,
+                  border: Border.all(color: colors.border),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.add_photo_alternate, color: AppColors.primary),
-                    const SizedBox(height: 4),
-                    Text(context.tr('add_photos'), style: GoogleFonts.nunito(fontSize: 11, color: AppColors.textLight)),
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedImageAdd01,
+                      size: 24,
+                      color: colors.primary,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      context.tr('add_photos'),
+                      style: typography.body.xs3.copyWith(color: colors.mutedForeground),
+                    ),
                   ],
                 ),
               ),
@@ -334,7 +370,10 @@ class _AddEditPropertyScreenState extends ConsumerState<AddEditPropertyScreen> {
         if (_imagePaths.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 10),
-            child: Text('${_imagePaths.length} ${context.tr('photos_selected')}', style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight)),
+            child: Text(
+              '${_imagePaths.length} ${context.tr('photos_selected')}',
+              style: typography.body.xs2.copyWith(color: colors.mutedForeground),
+            ),
           ),
       ],
     );

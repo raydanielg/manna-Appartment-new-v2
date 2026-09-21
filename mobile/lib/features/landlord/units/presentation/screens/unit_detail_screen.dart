@@ -10,6 +10,7 @@ import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/status_badge.dart';
 import '../../providers/units_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class UnitDetailScreen extends ConsumerWidget {
   const UnitDetailScreen({super.key});
 
@@ -130,16 +131,12 @@ class UnitDetailScreen extends ConsumerWidget {
                 await ref.read(unitsRepositoryProvider).deleteUnit(id);
                 ref.invalidate(unitsListProvider(null));
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('unit_deleted')), backgroundColor: AppColors.success),
-                  );
+                  AppToast.success(context, context.tr('unit_deleted'));
                   if (context.canPop()) context.pop();
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-                  );
+                  AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
                 }
               }
             },

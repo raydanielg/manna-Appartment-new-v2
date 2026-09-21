@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../providers/kyc_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class KycUploadDocumentsScreen extends ConsumerStatefulWidget {
   const KycUploadDocumentsScreen({super.key});
 
@@ -71,13 +72,7 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
 
   Future<void> _submit() async {
     if (_idController.text.trim().isEmpty || _idFront == null || _idBack == null || _selfie == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('fill_id_and_photos')),
-          backgroundColor: const Color(0xFFEF4444),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppToast.error(context, context.tr('fill_id_and_photos'));
       return;
     }
 
@@ -90,13 +85,7 @@ class _KycUploadDocumentsScreenState extends ConsumerState<KycUploadDocumentsScr
     );
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('documents_received')),
-          backgroundColor: const Color(0xFF2563EB),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppToast.info(context, context.tr('documents_received'));
       context.go('/landlord/kyc/under-review');
     }
   }

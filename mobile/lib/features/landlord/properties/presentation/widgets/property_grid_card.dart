@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../data/models/property_model.dart';
 
 class PropertyGridCard extends StatelessWidget {
@@ -10,24 +10,15 @@ class PropertyGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/landlord/properties/${property.id}'),
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final radii = context.theme.style.borderRadius;
+
+    return FTappable(
+      onPress: () => context.push('/landlord/properties/${property.id}'),
+      child: FCard(
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -35,29 +26,39 @@ class PropertyGridCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  color: colors.primary.withValues(alpha: 0.1),
+                  borderRadius: radii.md,
                 ),
-                child: const Icon(Icons.apartment_outlined, color: AppColors.primary, size: 20),
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedBuilding03,
+                    size: 20,
+                    color: colors.primary,
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
               Text(
                 property.name,
-                style: GoogleFonts.nunito(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textDark),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                style: typography.body.sm.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.location_on_outlined, size: 12, color: AppColors.textLight),
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedLocation01,
+                    size: 12,
+                    color: colors.mutedForeground,
+                  ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       property.address ?? 'No location',
-                      style: GoogleFonts.nunito(fontSize: 11, color: AppColors.textLight),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      style: typography.body.xs3.copyWith(color: colors.mutedForeground),
                     ),
                   ),
                 ],
@@ -66,12 +67,15 @@ class PropertyGridCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(6),
+                  color: colors.secondary,
+                  borderRadius: radii.sm,
                 ),
                 child: Text(
                   _capitalize(property.type ?? 'N/A'),
-                  style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary),
+                  style: typography.body.xs3.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: colors.secondaryForeground,
+                  ),
                 ),
               ),
             ],

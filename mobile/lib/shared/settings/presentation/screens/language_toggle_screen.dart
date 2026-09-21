@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/localization/locale_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class LanguageToggleScreen extends ConsumerWidget {
   const LanguageToggleScreen({super.key});
 
@@ -69,9 +70,7 @@ class LanguageToggleScreen extends ConsumerWidget {
                   onTap: () async {
                     await ref.read(localeProvider.notifier).setLocale(lang['code']!);
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${context.tr('language_changed')} ${lang['name']}'), backgroundColor: AppColors.success),
-                      );
+                      AppToast.success(context, '${context.tr('language_changed')} ${lang['name']}');
                     }
                   },
                 ),

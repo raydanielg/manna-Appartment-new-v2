@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'core/constants/app_colors.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/localization/locale_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_mode_provider.dart';
+import 'theme/theme.dart' hide AppColors;
 
 class MannaApartmentApp extends ConsumerWidget {
   const MannaApartmentApp({super.key});
@@ -14,6 +17,7 @@ class MannaApartmentApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     final locale = ref.watch(localeProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     ErrorWidget.builder = (FlutterErrorDetails details) {
       return Material(
@@ -47,10 +51,19 @@ class MannaApartmentApp extends ConsumerWidget {
       title: 'Manna Apartment',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      themeMode: ThemeMode.light,
+      themeMode: themeMode,
       locale: locale,
       theme: AppTheme.light(),
-      darkTheme: AppTheme.light().copyWith(
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: darkColors.background,
+        colorScheme: ColorScheme.dark(
+          primary: darkColors.primary,
+          surface: darkColors.card,
+          error: darkColors.error,
+          onSurface: darkColors.foreground,
+        ),
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: AppColors.darkSurface,
           selectedItemColor: AppColors.primary,
@@ -61,8 +74,18 @@ class MannaApartmentApp extends ConsumerWidget {
           unselectedLabelStyle: const TextStyle(fontSize: 11),
         ),
       ),
+      builder: (context, child) {
+        final fTheme = Theme.of(context).brightness == .dark ? darkTheme : lightTheme;
+        return FTheme(
+          data: fTheme,
+          child: FToaster(
+            child: FTooltipGroup(child: child!),
+          ),
+        );
+      },
       localizationsDelegates: const [
         AppLocalizations.delegate,
+        FLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
@@ -72,17 +95,5 @@ class MannaApartmentApp extends ConsumerWidget {
         Locale('sw'),
       ],
     );
-  }
-}
-
-final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
-  return ThemeModeNotifier();
-});
-
-class ThemeModeNotifier extends StateNotifier<ThemeMode> {
-  ThemeModeNotifier() : super(ThemeMode.light);
-
-  Future<void> setThemeMode(ThemeMode mode) async {
-    state = ThemeMode.light;
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/storage/local_cache_service.dart';
 import '../../../../core/localization/app_localizations.dart';
 
@@ -126,16 +128,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             Positioned(
               top: 12,
               right: 20,
-              child: TextButton(
-                onPressed: _skip,
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white70,
-                ),
+              child: FButton(
+                variant: .ghost,
+                size: .sm,
+                mainAxisSize: MainAxisSize.min,
+                onPress: _skip,
                 child: Text(
                   context.tr('skip'),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -183,37 +186,28 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     ),
 
                     // Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: _nextPage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF2563EB),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              isLastPage ? context.tr('get_started') : context.tr('continue'),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              isLastPage
-                                  ? Icons.check_circle_rounded
-                                  : Icons.arrow_forward_rounded,
-                              size: 22,
-                            ),
-                          ],
+                    FButton(
+                      size: .lg,
+                      onPress: _nextPage,
+                      style: .delta(
+                        decoration: .delta([
+                          .all(.shapeDelta(color: Colors.white)),
+                          .match({.hovered, .pressed}, .shapeDelta(color: Colors.white70)),
+                        ]),
+                      ),
+                      suffix: HugeIcon(
+                        icon: isLastPage
+                            ? HugeIcons.strokeRoundedTick02
+                            : HugeIcons.strokeRoundedArrowRight01,
+                        size: null,
+                        color: context.theme.colors.primary,
+                      ),
+                      child: Text(
+                        isLastPage ? context.tr('get_started') : context.tr('continue'),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: context.theme.colors.primary,
                         ),
                       ),
                     ),

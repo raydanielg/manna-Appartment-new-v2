@@ -12,6 +12,7 @@ import '../../providers/tenants_provider.dart';
 import '../../../properties/providers/properties_provider.dart';
 import '../../../units/providers/units_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class AddTenantScreen extends ConsumerStatefulWidget {
   final String? tenantId;
   const AddTenantScreen({super.key, this.tenantId});
@@ -63,9 +64,7 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${context.tr('failed_load_tenant')}: $e'), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, '${context.tr('failed_load_tenant')}: $e');
       }
     }
   }
@@ -92,15 +91,11 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedPropertyId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('please_select_property'), style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
-      );
+      AppToast.error(context, context.tr('please_select_property'));
       return;
     }
     if (_selectedUnitId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('please_select_unit'), style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
-      );
+      AppToast.error(context, context.tr('please_select_unit'));
       return;
     }
     setState(() => _isLoading = true);
@@ -119,26 +114,20 @@ class _AddTenantScreenState extends ConsumerState<AddTenantScreen> {
         ref.invalidate(tenantsListProvider);
         ref.invalidate(tenantDetailProvider(widget.tenantId!));
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.tr('tenant_updated_success')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
-          );
+          AppToast.success(context, context.tr('tenant_updated_success'));
           context.pop();
         }
       } else {
         await repo.createTenant(data);
         ref.invalidate(tenantsListProvider);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.tr('tenant_added_sms')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
-          );
+          AppToast.success(context, context.tr('tenant_added_sms'));
           context.pop();
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
-        );
+        AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -6,6 +6,7 @@ import '../../../../../features/auth/providers/auth_provider.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../providers/kyc_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class KycStatusScreen extends ConsumerStatefulWidget {
   const KycStatusScreen({super.key});
 
@@ -43,13 +44,7 @@ class _KycStatusScreenState extends ConsumerState<KycStatusScreen>
       await ref.read(authProvider.notifier).refreshUserFromServer();
       if (mounted) context.go('/landlord/kyc/verified');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.tr('verification_in_progress')),
-          backgroundColor: const Color(0xFF2563EB),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppToast.info(context, context.tr('verification_in_progress'));
     }
   }
 

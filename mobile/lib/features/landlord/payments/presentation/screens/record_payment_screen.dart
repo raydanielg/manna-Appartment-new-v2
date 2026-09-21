@@ -13,6 +13,7 @@ import '../../providers/payments_provider.dart';
 import '../../../contracts/providers/contracts_provider.dart';
 import '../../../tenants/providers/tenants_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class RecordPaymentScreen extends ConsumerStatefulWidget {
   const RecordPaymentScreen({super.key});
 
@@ -100,9 +101,7 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
   Future<void> _submit() async {
     final amount = double.tryParse(_amountController.text) ?? 0;
     if (_selectedTenantId == null || _selectedContractId == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('please_select_tenant_amount'), style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.error),
-      );
+      AppToast.error(context, context.tr('please_select_tenant_amount'));
       return;
     }
     setState(() => _isLoading = true);
@@ -127,16 +126,12 @@ class _RecordPaymentScreenState extends ConsumerState<RecordPaymentScreen> {
         final msg = isOverpayment && monthsCount != null
             ? context.tr('payment_recorded_months').replaceAll('{0}', monthsCount.toString())
             : context.tr('payment_recorded');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: AppColors.success),
-        );
+        AppToast.success(context, msg);
         if (context.canPop()) context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

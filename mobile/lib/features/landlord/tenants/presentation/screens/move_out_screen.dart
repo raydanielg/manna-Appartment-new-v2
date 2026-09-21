@@ -4,6 +4,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/widgets/primary_button.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class MoveOutScreen extends StatelessWidget {
   const MoveOutScreen({super.key});
 
@@ -26,9 +27,7 @@ class MoveOutScreen extends StatelessWidget {
               text: context.tr('confirm_move_out_btn'),
               color: AppColors.error,
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(context.tr('tenant_moved_out')), backgroundColor: AppColors.warning, behavior: SnackBarBehavior.floating),
-                );
+                AppToast.warning(context, context.tr('tenant_moved_out'));
                 context.pop();
               },
             ),

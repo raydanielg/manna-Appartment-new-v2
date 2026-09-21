@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../data/models/property_model.dart';
 
 class PropertyCard extends StatelessWidget {
@@ -10,108 +10,91 @@ class PropertyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.apartment_outlined, color: AppColors.primary, size: 24),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    property.name,
-                    style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textDark),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final radii = context.theme.style.borderRadius;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: FTappable(
+        onPress: () => context.push('/landlord/properties/${property.id}'),
+        child: FCard(
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Row(
+              children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.1),
+                  borderRadius: radii.md,
+                ),
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedBuilding03,
+                    size: 22,
+                    color: colors.primary,
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_outlined, size: 14, color: AppColors.textLight),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          property.address ?? 'No location',
-                          style: GoogleFonts.nunito(fontSize: 12, color: AppColors.textLight),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      property.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.sm.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedLocation01,
+                          size: 13,
+                          color: colors.mutedForeground,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            property.address ?? 'No location',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: typography.body.xs2.copyWith(color: colors.mutedForeground),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 7),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: colors.secondary,
+                        borderRadius: radii.sm,
+                      ),
+                      child: Text(
+                        _capitalize(property.type ?? 'N/A'),
+                        style: typography.body.xs3.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colors.secondaryForeground,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Text(
-                      _capitalize(property.type ?? 'N/A'),
-                      style: GoogleFonts.nunito(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              children: [
-                _iconButton(
-                  icon: Icons.visibility_outlined,
-                  color: AppColors.info,
-                  onTap: () => context.push('/landlord/properties/${property.id}'),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                _iconButton(
-                  icon: Icons.edit_outlined,
-                  color: AppColors.primary,
-                  onTap: () => context.push('/landlord/properties/add?id=${property.id}'),
+              ),
+              const SizedBox(width: 8),
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowRight01,
+                  size: 18,
+                  color: colors.mutedForeground.withValues(alpha: 0.6),
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _iconButton({required IconData icon, required Color color, required VoidCallback onTap}) {
-    return Material(
-      color: color.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: Container(
-          width: 36,
-          height: 36,
-          alignment: Alignment.center,
-          child: Icon(icon, size: 18, color: color),
+          ),
         ),
       ),
     );

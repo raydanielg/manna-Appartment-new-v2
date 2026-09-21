@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/widgets/auth_background.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/primary_button.dart';
+import '../../../../core/widgets/theme_mode_button.dart';
 import '../../providers/auth_provider.dart';
 
 class RegisterLandlordScreen extends ConsumerStatefulWidget {
@@ -22,8 +24,6 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
   final _businessController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-  bool _obscure = true;
-  bool _obscureConfirm = true;
 
   @override
   void dispose() {
@@ -55,12 +55,17 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
     }
   }
 
+  Widget _icon(BuildContext context, FTextFieldStyle style, Set<FTextFieldVariant> variants, List<List<dynamic>> icon) =>
+      FTextField.prefixIconBuilder(context, style, variants, HugeIcon(icon: icon, size: null));
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -71,58 +76,44 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
               children: [
                 const SizedBox(height: 20),
 
-                // Back button
-                IconButton(
-                  onPressed: () {
-                    ref.read(authProvider.notifier).clearError();
-                    context.go('/auth/login');
-                  },
-                  icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827), size: 22),
-                  padding: EdgeInsets.zero,
-                  alignment: Alignment.centerLeft,
-                  constraints: const BoxConstraints(),
+                // Back button + theme toggle
+                Row(
+                  children: [
+                    FButton.icon(
+                      variant: .outline,
+                      size: .sm,
+                      onPress: () {
+                        ref.read(authProvider.notifier).clearError();
+                        context.go('/auth/login');
+                      },
+                      child: context.theme.icons.arrowLeft(context),
+                    ),
+                    const Spacer(),
+                    const ThemeModeButton(),
+                  ],
                 ),
 
                 const SizedBox(height: 32),
                 Text(
                   context.tr('create_account_title'),
-                  style: GoogleFonts.nunito(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF111827),
-                  ),
+                  style: typography.display.xl2.copyWith(fontWeight: FontWeight.w700),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   context.tr('join_as_landlord'),
-                  style: GoogleFonts.nunito(
-                    fontSize: 14,
-                    color: const Color(0xFF6B7280),
-                  ),
+                  style: typography.body.sm.copyWith(color: colors.mutedForeground),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
 
                 if (authState.error != null) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF2F2),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFFECACA)),
-                    ),
-                    child: Row(
+                  FAlert(
+                    variant: .destructive,
+                    title: Row(
                       children: [
-                        const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 18),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            authState.error!,
-                            style: GoogleFonts.nunito(color: const Color(0xFFB91C1C), fontSize: 13, fontWeight: FontWeight.w600),
-                          ),
-                        ),
+                        Expanded(child: Text(authState.error!)),
                         GestureDetector(
                           onTap: () => ref.read(authProvider.notifier).clearError(),
-                          child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 16),
+                          child: context.theme.icons.x(context),
                         ),
                       ],
                     ),
@@ -130,34 +121,66 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                   const SizedBox(height: 20),
                 ],
 
-                _buildLabel(context.tr('full_name')),
-                _buildField(
-                  controller: _nameController,
+                FTextFormField(
+                  control: .managed(controller: _nameController),
+                  label: Text(context.tr('full_name')),
                   hint: context.tr('enter_full_name'),
-                  icon: Icons.person_outline_rounded,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.name],
+                  prefixBuilder: (context, style, variants) =>
+                      _icon(context, style, variants, HugeIcons.strokeRoundedUser),
                   validator: (v) => v == null || v.trim().isEmpty ? context.tr('name_required') : null,
                 ),
-                
-                const SizedBox(height: 16),
-                _buildLabel(context.tr('phone_number')),
-                _buildPhoneField(),
 
                 const SizedBox(height: 16),
-                _buildLabel(context.tr('business_name')),
-                _buildField(
-                  controller: _businessController,
+                FTextFormField(
+                  control: .managed(controller: _phoneController),
+                  label: Text(context.tr('phone_number')),
+                  hint: '7XX XXX XXX',
+                  keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.telephoneNumber],
+                  prefixBuilder: (context, style, variants) => FTextField.prefixIconBuilder(
+                    context,
+                    style,
+                    variants,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const HugeIcon(icon: HugeIcons.strokeRoundedSmartPhone01, size: null),
+                        const SizedBox(width: 6),
+                        Text('+255', style: typography.body.sm.copyWith(fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return context.tr('phone_number_required');
+                    if (!RegExp(r'^[0-9]{9}$').hasMatch(v.trim())) return context.tr('valid_9_digit_number');
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 16),
+                FTextFormField(
+                  control: .managed(controller: _businessController),
+                  label: Text(context.tr('business_name')),
                   hint: context.tr('enter_business_name'),
-                  icon: Icons.business_center_outlined,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.organizationName],
+                  prefixBuilder: (context, style, variants) =>
+                      _icon(context, style, variants, HugeIcons.strokeRoundedBriefcase01),
                   validator: (v) => v == null || v.trim().isEmpty ? context.tr('business_name_required') : null,
                 ),
 
                 const SizedBox(height: 16),
-                _buildLabel(context.tr('password')),
-                _buildPasswordField(
-                  controller: _passwordController,
-                  obscure: _obscure,
+                FTextFormField.password(
+                  control: .managed(controller: _passwordController),
+                  label: Text(context.tr('password')),
                   hint: context.tr('enter_password'),
-                  toggle: () => setState(() => _obscure = !_obscure),
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.newPassword],
+                  prefixBuilder: (context, style, obscure, variants) =>
+                      _icon(context, style, variants, HugeIcons.strokeRoundedLockPassword),
                   validator: (v) {
                     if (v == null || v.isEmpty) return context.tr('password_required');
                     if (v.length < 6) return context.tr('min_6_chars');
@@ -166,12 +189,15 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                 ),
 
                 const SizedBox(height: 16),
-                _buildLabel(context.tr('confirm_password')),
-                _buildPasswordField(
-                  controller: _confirmController,
-                  obscure: _obscureConfirm,
+                FTextFormField.password(
+                  control: .managed(controller: _confirmController),
+                  label: Text(context.tr('confirm_password')),
                   hint: context.tr('confirm_your_password'),
-                  toggle: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                  textInputAction: TextInputAction.done,
+                  autofillHints: const [AutofillHints.newPassword],
+                  onSubmit: (_) => _register(),
+                  prefixBuilder: (context, style, obscure, variants) =>
+                      _icon(context, style, variants, HugeIcons.strokeRoundedLockPassword),
                   validator: (v) {
                     if (v == null || v.isEmpty) return context.tr('required_field');
                     if (v != _passwordController.text) return context.tr('passwords_not_match');
@@ -179,182 +205,39 @@ class _RegisterLandlordScreenState extends ConsumerState<RegisterLandlordScreen>
                   },
                 ),
 
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: authState.isLoading ? () {} : _register,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AuthColors.primary,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: AuthColors.primary,
-                      disabledForegroundColor: Colors.white,
-                      elevation: 4,
-                      shadowColor: AuthColors.primary.withValues(alpha: 0.35),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: authState.isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : Text(
-                            context.tr('create_account'),
-                            style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold),
-                          ),
-                  ),
+                const SizedBox(height: 28),
+                PrimaryButton(
+                  text: context.tr('create_account'),
+                  isLoading: authState.isLoading,
+                  onPressed: _register,
+                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedUser, size: null),
                 ),
 
-                const SizedBox(height: 24),
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        context.tr('already_have_account') + ' ',
-                        style: GoogleFonts.nunito(color: const Color(0xFF6B7280), fontSize: 14),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          ref.read(authProvider.notifier).clearError();
-                          context.go('/auth/login');
-                        },
-                        child: Text(
-                          context.tr('sign_in'),
-                          style: GoogleFonts.nunito(
-                            color: AuthColors.primary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${context.tr('already_have_account')} ',
+                      style: typography.body.xs.copyWith(color: colors.mutedForeground),
+                    ),
+                    FButton(
+                      variant: .ghost,
+                      size: .sm,
+                      mainAxisSize: MainAxisSize.min,
+                      onPress: () {
+                        ref.read(authProvider.notifier).clearError();
+                        context.go('/auth/login');
+                      },
+                      child: Text(context.tr('sign_in')),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 40),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text,
-        style: GoogleFonts.nunito(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF374151),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      validator: validator,
-      style: GoogleFonts.nunito(fontSize: 15, color: const Color(0xFF111827), fontWeight: FontWeight.w600),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.nunito(color: const Color(0xFF9CA3AF), fontSize: 14),
-        prefixIcon: Icon(icon, color: const Color(0xFF6B7280), size: 18),
-        filled: true,
-        fillColor: const Color(0xFFF9FAFB),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: AuthColors.primary, width: 1.5)),
-      ),
-    );
-  }
-
-  Widget _buildPhoneField() {
-    return TextFormField(
-      controller: _phoneController,
-      keyboardType: TextInputType.phone,
-      validator: (v) {
-        if (v == null || v.trim().isEmpty) return context.tr('phone_number_required');
-        if (!RegExp(r'^[0-9]{9}$').hasMatch(v.trim())) return context.tr('valid_9_digit_number');
-        return null;
-      },
-      style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-      decoration: InputDecoration(
-        hintText: '7XX XXX XXX',
-        hintStyle: GoogleFonts.nunito(color: const Color(0xFF9CA3AF), fontSize: 14),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.only(left: 12, right: 8),
-          child: Text(
-            '+255',
-            style: GoogleFonts.nunito(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF374151),
-            ),
-          ),
-        ),
-        prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-        filled: true,
-        fillColor: const Color(0xFFF9FAFB),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: AuthColors.primary, width: 1.5)),
-      ),
-    );
-  }
-
-  Widget _buildPasswordField({
-    required TextEditingController controller,
-    required bool obscure,
-    required String hint,
-    required VoidCallback toggle,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscure,
-      validator: validator,
-      style: GoogleFonts.nunito(fontSize: 15, color: const Color(0xFF111827), fontWeight: FontWeight.w600),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.nunito(color: const Color(0xFF9CA3AF), fontSize: 14),
-        prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF6B7280), size: 18),
-        suffixIcon: TextButton(
-          onPressed: toggle,
-          child: Text(
-            obscure ? context.tr('show') : context.tr('hide'),
-            style: GoogleFonts.nunito(
-              color: AuthColors.primary,
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
-          ),
-        ),
-        filled: true,
-        fillColor: const Color(0xFFF9FAFB),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: AuthColors.primary, width: 1.5)),
       ),
     );
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
+import 'package:forui/forui.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
@@ -23,40 +23,40 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: isLoading ? null : onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor ?? color ?? AppColors.primary,
-        foregroundColor: foregroundColor ?? Colors.white,
-        disabledBackgroundColor: (backgroundColor ?? color)?.withValues(alpha: 0.6) ?? AppColors.primary.withValues(alpha: 0.6),
-        minimumSize: const Size(double.infinity, 54),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        elevation: 4,
-        shadowColor: (backgroundColor ?? color ?? AppColors.primary).withValues(alpha: 0.4),
-      ),
-      child: isLoading
-          ? const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
-              ),
-            )
-          : Row(
+    final colors = context.theme.colors;
+    final bg = backgroundColor ?? color;
+
+    return FButton(
+      // No-op while loading so the button keeps its full color instead of dimming.
+      onPress: isLoading ? () {} : onPressed,
+      size: .lg,
+      style: bg == null
+          ? const .context()
+          : .delta(
+              decoration: .delta([
+                .all(.shapeDelta(color: bg)),
+                .match({.hovered, .pressed}, .shapeDelta(color: colors.hover(bg))),
+                .match({.selected}, .shapeDelta(color: colors.hover(bg))),
+                .match({.disabled}, .shapeDelta(color: colors.disable(bg))),
+                .exact({.selected.and(.disabled)}, .shapeDelta(color: colors.disable(colors.hover(bg)))),
+              ]),
+            ),
+      prefix: isLoading ? null : icon,
+      builder: isLoading
+          ? (_, _, _, _, progressStyle, child) => Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (icon != null) ...[
-                  icon!,
-                  const SizedBox(width: 8),
-                ],
-                Text(
-                  text,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.3),
-                ),
+                FCircularProgress(style: progressStyle),
+                const SizedBox(width: 10),
+                child!,
               ],
-            ),
+            )
+          : FButton.defaultContentBuilder,
+      child: Text(
+        text,
+        style: foregroundColor != null ? TextStyle(color: foregroundColor) : null,
+      ),
     );
   }
 }

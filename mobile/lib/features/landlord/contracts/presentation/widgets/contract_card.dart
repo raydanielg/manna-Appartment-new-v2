@@ -9,6 +9,7 @@ import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/status_badge.dart';
 import '../../providers/contracts_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class ContractCard extends ConsumerWidget {
   final Map<String, dynamic> contract;
   const ContractCard({super.key, required this.contract});
@@ -89,9 +90,7 @@ class ContractCard extends ConsumerWidget {
                     await OpenFilex.open(path);
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(context.tr('download_failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-                      );
+                      AppToast.error(context, context.tr('download_failed_msg').replaceAll('{0}', AppError.getMessage(e)));
                     }
                   }
                 },

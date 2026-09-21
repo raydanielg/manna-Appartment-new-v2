@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/error_state.dart';
 import '../../providers/subscription_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class CurrentPlanScreen extends ConsumerWidget {
   const CurrentPlanScreen({super.key});
 
@@ -175,9 +175,7 @@ class CurrentPlanScreen extends ConsumerWidget {
                             onPressed: isTrialLoading ? null : () async {
                               final success = await ref.read(freeTrialNotifierProvider.notifier).activate();
                               if (success && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(context.tr('free_trial_activated_dashboard')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
-                                );
+                                AppToast.success(context, context.tr('free_trial_activated_dashboard'));
                                 context.go('/landlord/home');
                               } else if (context.mounted) {
                                 final errState = ref.read(freeTrialNotifierProvider);
@@ -186,14 +184,7 @@ class CurrentPlanScreen extends ConsumerWidget {
                                   orElse: () => 'Failed to activate free trial. You may already have an active subscription.',
                                 );
                                 ref.read(freeTrialNotifierProvider.notifier).clearError();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(errMsg),
-                                    backgroundColor: AppColors.error,
-                                    behavior: SnackBarBehavior.floating,
-                                    duration: const Duration(seconds: 4),
-                                  ),
-                                );
+                                AppToast.error(context, errMsg);
                               }
                             },
                             style: ElevatedButton.styleFrom(

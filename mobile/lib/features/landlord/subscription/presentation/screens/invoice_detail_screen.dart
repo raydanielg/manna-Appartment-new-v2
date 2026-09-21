@@ -11,6 +11,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class InvoiceDetailScreen extends StatelessWidget {
   final Map<String, dynamic> invoice;
   const InvoiceDetailScreen({super.key, required this.invoice});
@@ -331,9 +332,7 @@ class InvoiceDetailScreen extends StatelessWidget {
       await Printing.layoutPdf(onLayout: (format) async => doc.save());
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_generate_pdf').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, context.tr('failed_generate_pdf').replaceAll('{0}', AppError.getMessage(e)));
       }
     }
   }
@@ -352,9 +351,7 @@ class InvoiceDetailScreen extends StatelessWidget {
       await Share.shareXFiles([XFile(file.path)], text: 'EFD Receipt - $planName');
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_share_pdf').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, context.tr('failed_share_pdf').replaceAll('{0}', AppError.getMessage(e)));
       }
     }
   }

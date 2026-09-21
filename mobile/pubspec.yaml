@@ -87,6 +87,9 @@ dependencies:
 
   # Updates
   in_app_update: ^4.2.3
+  forui: ^0.27.0
+  hugeicons: ^1.2.0
+  material_ui: ^1.2.0
 
 dev_dependencies:
   flutter_test:
@@ -141,6 +144,12 @@ flutter:
     - assets/icons/
     - assets/lang/en.json
     - assets/lang/sw.json
+  fonts:
+    - family: DM Sans
+      fonts:
+        - asset: assets/fonts/DM_Sans/DMSans.ttf
+        - asset: assets/fonts/DM_Sans/DMSans-Italic.ttf
+          style: italic
 
   # To add assets to your application, add an assets section, like this:
   # assets:

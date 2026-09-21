@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../../core/localization/app_localizations.dart';
 import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/empty_state.dart';
@@ -11,6 +11,8 @@ import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../properties/providers/properties_provider.dart';
 import '../../providers/tenants_provider.dart';
 import '../widgets/tenant_card.dart';
+
+import 'package:manna_apartment/core/utils/app_toast.dart';
 
 class TenantsListScreen extends ConsumerStatefulWidget {
   const TenantsListScreen({super.key});
@@ -27,70 +29,72 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
   @override
   Widget build(BuildContext context) {
     final tenantsAsync = ref.watch(tenantsListProvider(_selectedPropertyId));
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        centerTitle: false,
         title: Text(
           context.tr('tenants'),
-          style: GoogleFonts.nunito(fontWeight: FontWeight.w800, color: const Color(0xFF111827), fontSize: 20),
+          style: typography.display.md.copyWith(fontWeight: FontWeight.w700),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827)),
-          onPressed: () {
+        leading: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          onPress: () {
             if (context.canPop()) context.pop();
           },
+          child: context.theme.icons.arrowLeft(context),
         ),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-            child: TextField(
-              onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
-              style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600),
-              decoration: InputDecoration(
-                hintText: context.tr('search_name_phone'),
-                hintStyle: GoogleFonts.nunito(fontSize: 14, color: const Color(0xFF9CA3AF)),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF6B7280), size: 20),
-                filled: true,
-                fillColor: const Color(0xFFF3F4F6),
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.5)),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: FTextField(
+              control: .managed(
+                onChange: (v) => setState(() => _searchQuery = v.text.toLowerCase()),
               ),
+              hint: context.tr('search_name_phone'),
+              prefixBuilder: (context, style, variants) =>
+                  FTextField.prefixIconBuilder(
+                    context,
+                    style,
+                    variants,
+                    const HugeIcon(icon: HugeIcons.strokeRoundedSearch01, size: null),
+                  ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildFilterChip(context.tr('all_tenants'), 'all'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(context.tr('active'), 'active'),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(context.tr('moved_out'), 'moved_out'),
-                ],
-              ),
+
+          // Status filters
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                _filterButton(context.tr('all_tenants'), 'all'),
+                const SizedBox(width: 8),
+                _filterButton(context.tr('active'), 'active'),
+                const SizedBox(width: 8),
+                _filterButton(context.tr('moved_out'), 'moved_out'),
+              ],
             ),
           ),
+          const SizedBox(height: 10),
+
+          // Property filter
+          _buildPropertyFilter(colors, typography),
           const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: _buildPropertyFilter(),
-          ),
-          const SizedBox(height: 16),
+
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async => ref.invalidate(tenantsListProvider),
-              color: const Color(0xFF2563EB),
+              color: colors.primary,
               child: tenantsAsync.when(
                 loading: () => const LoadingIndicator(),
                 error: (e, _) {
@@ -106,19 +110,27 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
                 data: (tenants) {
                   final filtered = tenants.where((t) {
                     final userData = t['user'] as Map<String, dynamic>?;
-                    final name = (userData?['full_name'] ?? userData?['name'] ?? t['full_name'] ?? t['name'] ?? '').toString().toLowerCase();
-                    final phone = (userData?['phone'] ?? t['phone'] ?? '').toString().toLowerCase();
-                    final matchesSearch = name.contains(_searchQuery) || phone.contains(_searchQuery);
+                    final name = (userData?['full_name'] ??
+                            userData?['name'] ??
+                            t['full_name'] ??
+                            t['name'] ??
+                            '')
+                        .toString()
+                        .toLowerCase();
+                    final phone =
+                        (userData?['phone'] ?? t['phone'] ?? '').toString().toLowerCase();
+                    final matchesSearch =
+                        name.contains(_searchQuery) || phone.contains(_searchQuery);
                     final status = (t['status'] ?? 'active').toString();
                     final matchesStatus = _filterStatus == 'all' || status == _filterStatus;
                     return matchesSearch && matchesStatus;
                   }).toList();
 
                   if (filtered.isEmpty) {
-                    return EmptyState(message: context.tr('no_tenants_found'), icon: Icons.people_outline);
+                    return EmptyState(message: context.tr('no_tenants_found'));
                   }
                   return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final tenant = filtered[index];
@@ -129,42 +141,32 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
                         background: Container(
                           alignment: Alignment.centerRight,
                           padding: const EdgeInsets.only(right: 24),
-                          margin: const EdgeInsets.only(bottom: 16),
+                          margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: AppColors.error,
-                            borderRadius: BorderRadius.circular(20),
+                            color: colors.error,
+                            borderRadius: context.theme.style.borderRadius.lg,
                           ),
-                          child: const Icon(Icons.delete, color: Colors.white),
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedDelete02,
+                            size: 22,
+                            color: colors.errorForeground,
+                          ),
                         ),
-                        confirmDismiss: (direction) async {
-                          return await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text(context.tr('delete_tenant')),
-                              content: Text(context.tr('confirm_delete_tenant')),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.tr('cancel'))),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: Text(context.tr('delete'), style: const TextStyle(color: AppColors.error)),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                        confirmDismiss: (direction) => _confirmDelete(context),
                         onDismissed: (direction) async {
                           try {
-                            await ref.read(tenantsRepositoryProvider).deleteTenant(tenantId);
+                            await ref
+                                .read(tenantsRepositoryProvider)
+                                .deleteTenant(tenantId);
                             ref.invalidate(tenantsListProvider);
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(context.tr('tenant_deleted')), backgroundColor: AppColors.success),
-                              );
+                              AppToast.success(context, context.tr('tenant_deleted'));
                             }
                           } catch (e) {
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
+                              AppToast.error(
+                                context,
+                                context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)),
                               );
                               ref.invalidate(tenantsListProvider);
                             }
@@ -182,73 +184,102 @@ class _TenantsListScreenState extends ConsumerState<TenantsListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/landlord/tenants/add'),
-        backgroundColor: const Color(0xFF2563EB),
-        foregroundColor: Colors.white,
-        elevation: 4,
-        icon: const Icon(Icons.person_add_rounded),
-        label: Text(context.tr('add_tenant'), style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+        backgroundColor: colors.primary,
+        foregroundColor: colors.primaryForeground,
+        icon: const HugeIcon(icon: HugeIcons.strokeRoundedUserAdd01, size: 20),
+        label: Text(context.tr('add_tenant')),
       ),
     );
   }
 
-  Widget _buildPropertyFilter() {
+  Widget _filterButton(String label, String value) {
+    final isSelected = _filterStatus == value;
+    return FButton(
+      variant: isSelected ? .primary : .outline,
+      size: .sm,
+      mainAxisSize: MainAxisSize.min,
+      onPress: () => setState(() => _filterStatus = value),
+      child: Text(label),
+    );
+  }
+
+  Widget _buildPropertyFilter(FColors colors, FTypography typography) {
     final propertiesAsync = ref.watch(propertiesListProvider);
     return propertiesAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (properties) {
         if (properties.isEmpty) return const SizedBox.shrink();
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF3F4F6),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String?>(
-              value: _selectedPropertyId,
-              isExpanded: true,
-              icon: const Icon(Icons.expand_more_rounded, size: 20, color: Color(0xFF6B7280)),
-              hint: Row(
-                children: [
-                  const Icon(Icons.apartment_rounded, size: 16, color: Color(0xFF6B7280)),
-                  const SizedBox(width: 8),
-                  Text(context.tr('select_property_all'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))),
-                ],
-              ),
-              items: [
-                DropdownMenuItem<String?>(
-                  value: null,
-                  child: Text(context.tr('select_property_all'), style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600)),
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              FButton(
+                variant: _selectedPropertyId == null ? .secondary : .ghost,
+                size: .sm,
+                mainAxisSize: MainAxisSize.min,
+                prefix: HugeIcon(
+                  icon: HugeIcons.strokeRoundedBuilding03,
+                  size: null,
+                  color: null,
                 ),
-                ...properties.map((p) => DropdownMenuItem<String?>(
-                      value: p.id,
-                      child: Text(p.name, style: GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w600)),
-                    )),
+                onPress: () => setState(() => _selectedPropertyId = null),
+                child: Text(context.tr('select_property_all')),
+              ),
+              for (final p in properties) ...[
+                const SizedBox(width: 8),
+                FButton(
+                  variant: _selectedPropertyId == p.id ? .secondary : .ghost,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => setState(() => _selectedPropertyId = p.id),
+                  child: Text(p.name),
+                ),
               ],
-              onChanged: (v) => setState(() => _selectedPropertyId = v),
-            ),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildFilterChip(String label, String value) {
-    final isSelected = _filterStatus == value;
-    return ChoiceChip(
-      label: Text(label),
-      labelStyle: GoogleFonts.nunito(
-        fontSize: 13, 
-        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600, 
-        color: isSelected ? Colors.white : const Color(0xFF6B7280)
+  Future<bool?> _confirmDelete(BuildContext context) {
+    return showFDialog<bool>(
+      context: context,
+      builder: (context, style, animation) => FDialog(
+        animation: animation,
+        builder: (context, style) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(context.tr('delete_tenant'), style: style.titleTextStyle),
+            const SizedBox(height: 8),
+            Text(context.tr('confirm_delete_tenant'), style: style.bodyTextStyle),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FButton(
+                  variant: .outline,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => Navigator.pop(context, false),
+                  child: Text(context.tr('cancel')),
+                ),
+                const SizedBox(width: 8),
+                FButton(
+                  variant: .destructive,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => Navigator.pop(context, true),
+                  child: Text(context.tr('delete')),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-      selected: isSelected,
-      selectedColor: const Color(0xFF2563EB),
-      backgroundColor: const Color(0xFFF3F4F6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide.none),
-      showCheckmark: false,
-      onSelected: (_) => setState(() => _filterStatus = value),
     );
   }
 }

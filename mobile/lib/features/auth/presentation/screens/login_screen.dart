@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/auth_background.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/primary_button.dart';
+import '../../../../core/widgets/theme_mode_button.dart';
 import '../../providers/auth_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -17,7 +19,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -44,18 +45,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    AppToast.error(context, msg);
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
+    final radii = context.theme.style.borderRadius;
 
     ref.listen(authProvider, (previous, next) {
       if (next.isAuthenticated) {
@@ -73,26 +71,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 60),
-              
+              const SizedBox(height: 20),
+
+              const Align(
+                alignment: Alignment.centerRight,
+                child: ThemeModeButton(),
+              ),
+              const SizedBox(height: 24),
+
               // Logo
               Center(
                 child: Container(
-                  width: 60,
-                  height: 60,
+                  width: 76,
+                  height: 76,
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: AuthColors.primary.withValues(alpha: 0.1),
+                    color: colors.secondary,
+                    borderRadius: radii.xl,
+                    border: Border.all(color: colors.border),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: radii.lg,
                     child: Image.asset(
                       'assets/images/app_logo.png',
                       fit: BoxFit.cover,
@@ -100,47 +106,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
-              
+              const SizedBox(height: 28),
+
               Text(
                 context.tr('sign_in_title'),
-                style: GoogleFonts.nunito(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF111827),
-                ),
+                style: typography.display.xl2.copyWith(fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 context.tr('sign_in_subtitle'),
-                style: GoogleFonts.nunito(
-                  fontSize: 14,
-                  color: const Color(0xFF6B7280),
-                ),
+                style: typography.body.sm.copyWith(color: colors.mutedForeground),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
 
               if (authState.error != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFFECACA)),
-                  ),
-                  child: Row(
+                FAlert(
+                  variant: .destructive,
+                  title: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          authState.error!,
-                          style: GoogleFonts.nunito(color: const Color(0xFFB91C1C), fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
-                      ),
+                      Expanded(child: Text(authState.error!)),
                       GestureDetector(
                         onTap: () => ref.read(authProvider.notifier).clearError(),
-                        child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 16),
+                        child: context.theme.icons.x(context),
                       ),
                     ],
                   ),
@@ -148,164 +135,97 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 20),
               ],
 
-              // Phone Field
-              _buildLabel(context.tr('phone_number')),
-              TextField(
-                controller: _phoneController,
+              // Phone field
+              FTextField(
+                control: .managed(controller: _phoneController),
+                label: Text(context.tr('phone_number')),
+                hint: '7XX XXX XXX',
                 keyboardType: TextInputType.phone,
-                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-                decoration: _buildInputDecoration(
-                  hint: '7XX XXX XXX',
-                  prefix: Padding(
-                    padding: const EdgeInsets.only(left: 12, right: 8),
-                    child: Text('+255', style: GoogleFonts.nunito(fontWeight: FontWeight.bold, color: const Color(0xFF374151))),
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.telephoneNumber],
+                prefixBuilder: (context, style, variants) => FTextField.prefixIconBuilder(
+                  context,
+                  style,
+                  variants,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const HugeIcon(icon: HugeIcons.strokeRoundedSmartPhone01, size: null),
+                      const SizedBox(width: 6),
+                      Text(
+                        '+255',
+                        style: typography.body.sm.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
-              // Password Field
-              _buildLabel(context.tr('password')),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-                decoration: _buildInputDecoration(
-                  hint: context.tr('enter_password'),
-                  suffix: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                      size: 20,
-                      color: const Color(0xFF9CA3AF),
-                    ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                  ),
+              // Password field — Forui provides the show/hide eye toggle via theme icons.
+              FTextField.password(
+                control: .managed(controller: _passwordController),
+                label: Text(context.tr('password')),
+                hint: context.tr('enter_password'),
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                onSubmit: (_) => _login(),
+                prefixBuilder: (context, style, obscure, variants) => FTextField.prefixIconBuilder(
+                  context,
+                  style,
+                  variants,
+                  const HugeIcon(icon: HugeIcons.strokeRoundedLockPassword, size: null),
                 ),
               ),
-              
-              const SizedBox(height: 12),
+
               Align(
                 alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: () {
+                child: FButton(
+                  variant: .ghost,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () {
                     ref.read(authProvider.notifier).clearError();
                     context.go('/auth/forgot-password');
                   },
-                  child: Text(
-                    context.tr('forgot_password'),
-                    style: GoogleFonts.nunito(
-                      color: AuthColors.primary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: Text(context.tr('forgot_password')),
                 ),
               ),
 
-              const SizedBox(height: 32),
-              
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: authState.isLoading ? () {} : _login,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AuthColors.primary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AuthColors.primary,
-                    disabledForegroundColor: Colors.white,
-                    elevation: 4,
-                    shadowColor: AuthColors.primary.withValues(alpha: 0.35),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: authState.isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          context.tr('sign_in'),
-                          style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold),
-                        ),
-                ),
+              const SizedBox(height: 16),
+
+              PrimaryButton(
+                text: context.tr('sign_in'),
+                isLoading: authState.isLoading,
+                onPressed: _login,
+                icon: const HugeIcon(icon: HugeIcons.strokeRoundedLogin03, size: null),
               ),
 
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${context.tr('dont_have_account')} ',
+                    style: typography.body.xs.copyWith(color: colors.mutedForeground),
+                  ),
+                  FButton(
+                    variant: .ghost,
+                    size: .sm,
+                    mainAxisSize: MainAxisSize.min,
+                    onPress: () {
+                      ref.read(authProvider.notifier).clearError();
+                      context.go('/auth/register-landlord');
+                    },
+                    child: Text(context.tr('create_account')),
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      context.tr('dont_have_account') + ' ',
-                      style: GoogleFonts.nunito(color: const Color(0xFF6B7280), fontSize: 14),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        ref.read(authProvider.notifier).clearError();
-                        context.go('/auth/register-landlord');
-                      },
-                      child: Text(
-                        context.tr('create_account'),
-                        style: GoogleFonts.nunito(
-                          color: AuthColors.primary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
       ),
     );
   }
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text,
-        style: GoogleFonts.nunito(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF374151),
-        ),
-      ),
-    );
-  }
-
-  InputDecoration _buildInputDecoration({required String hint, Widget? prefix, Widget? suffix}) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: GoogleFonts.nunito(color: const Color(0xFF9CA3AF), fontSize: 14),
-      filled: true,
-      fillColor: const Color(0xFFF9FAFB),
-      prefixIcon: prefix,
-      prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-      suffixIcon: suffix,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: AuthColors.primary, width: 1.5),
-      ),
-    );
-  }
 }
-

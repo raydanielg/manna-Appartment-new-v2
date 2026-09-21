@@ -5,6 +5,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../../../../core/widgets/status_badge.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class PaymentReceiptScreen extends StatelessWidget {
   const PaymentReceiptScreen({super.key});
 
@@ -68,9 +69,7 @@ class PaymentReceiptScreen extends StatelessWidget {
                     text: 'Download',
                     icon: const Icon(Icons.download),
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Downloading receipt...'), backgroundColor: AppColors.info, behavior: SnackBarBehavior.floating),
-                      );
+                      AppToast.info(context, 'Downloading receipt...');
                     },
                   ),
                 ),
@@ -80,9 +79,7 @@ class PaymentReceiptScreen extends StatelessWidget {
                     text: 'Share',
                     icon: const Icon(Icons.share),
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Sharing receipt...'), backgroundColor: AppColors.info, behavior: SnackBarBehavior.floating),
-                      );
+                      AppToast.info(context, 'Sharing receipt...');
                     },
                   ),
                 ),

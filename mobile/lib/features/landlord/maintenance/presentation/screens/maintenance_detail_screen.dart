@@ -13,6 +13,7 @@ import '../../../../../core/widgets/primary_button.dart';
 import '../../../../../core/widgets/status_badge.dart';
 import '../../providers/maintenance_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class MaintenanceDetailScreen extends ConsumerStatefulWidget {
   const MaintenanceDetailScreen({super.key});
 
@@ -51,15 +52,11 @@ class _MaintenanceDetailScreenState extends ConsumerState<MaintenanceDetailScree
       ref.invalidate(maintenanceDetailProvider(id));
       ref.invalidate(maintenanceRequestsProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('status_updated_to').replaceAll('{0}', status.replaceAll('_', ' '))), backgroundColor: AppColors.success),
-        );
+        AppToast.success(context, context.tr('status_updated_to').replaceAll('{0}', status.replaceAll('_', ' ')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

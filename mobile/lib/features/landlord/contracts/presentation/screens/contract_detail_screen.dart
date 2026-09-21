@@ -13,6 +13,7 @@ import '../../../../../core/widgets/primary_button.dart';
 import '../../../../../core/widgets/status_badge.dart';
 import '../../providers/contracts_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class ContractDetailScreen extends ConsumerStatefulWidget {
   const ContractDetailScreen({super.key});
 
@@ -106,9 +107,7 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
                         onPressed: () async {
                           await ref.read(contractsRepositoryProvider).terminateContract(id);
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(context.tr('contract_terminated')), backgroundColor: AppColors.warning, behavior: SnackBarBehavior.floating),
-                            );
+                            AppToast.warning(context, context.tr('contract_terminated'));
                             context.pop();
                           }
                         },
@@ -175,16 +174,12 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
                 await ref.read(contractsRepositoryProvider).deleteContract(id);
                 ref.invalidate(contractsListProvider);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('contract_deleted')), backgroundColor: AppColors.success),
-                  );
+                  AppToast.success(context, context.tr('contract_deleted'));
                   if (context.canPop()) context.pop();
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-                  );
+                  AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
                 }
               }
             },
@@ -238,9 +233,7 @@ class _ContractDetailScreenState extends ConsumerState<ContractDetailScreen> {
       await OpenFilex.open(path);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('could_not_open_pdf').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
-        );
+        AppToast.error(context, context.tr('could_not_open_pdf').replaceAll('{0}', AppError.getMessage(e)));
       }
     } finally {
       if (mounted) setState(() => _isPdfLoading = false);

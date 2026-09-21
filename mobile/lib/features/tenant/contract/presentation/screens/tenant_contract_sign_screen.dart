@@ -13,6 +13,7 @@ import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/contract_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class TenantContractSignScreen extends ConsumerStatefulWidget {
   const TenantContractSignScreen({super.key});
 
@@ -36,9 +37,7 @@ class _TenantContractSignScreenState extends ConsumerState<TenantContractSignScr
 
   Future<void> _submit() async {
     if (_controller.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('please_draw_signature')), backgroundColor: AppColors.error),
-      );
+      AppToast.error(context, context.tr('please_draw_signature'));
       return;
     }
 
@@ -51,17 +50,13 @@ class _TenantContractSignScreenState extends ConsumerState<TenantContractSignScr
 
       await ref.read(contractRepositoryProvider).signMyContract(path);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('contract_signed_success')), backgroundColor: AppColors.success),
-        );
+        AppToast.success(context, context.tr('contract_signed_success'));
       }
       ref.invalidate(myContractProvider);
       if (context.mounted && context.canPop()) context.pop();
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('signing_failed').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, context.tr('signing_failed').replaceAll('{0}', AppError.getMessage(e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

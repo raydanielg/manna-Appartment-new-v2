@@ -11,6 +11,7 @@ import '../../../../../core/widgets/primary_button.dart';
 import '../../../../../features/auth/data/models/login_response_model.dart';
 import '../../../../../features/auth/providers/auth_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class LandlordProfileScreen extends ConsumerStatefulWidget {
   const LandlordProfileScreen({super.key});
 
@@ -80,14 +81,10 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
     final success = await ref.read(authProvider.notifier).updateAvatar(picked.path);
     setState(() => _isLoading = false);
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('avatar_updated')), backgroundColor: AppColors.primary),
-      );
+      AppToast.info(context, context.tr('avatar_updated'));
     } else if (mounted) {
       final error = ref.read(authProvider).error ?? context.tr('failed_update_avatar');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: Colors.red),
-      );
+      AppToast.error(context, error);
     }
   }
 
@@ -103,14 +100,10 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
       _isEditing = false;
     });
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('profile_updated')), backgroundColor: AppColors.primary),
-      );
+      AppToast.info(context, context.tr('profile_updated'));
     } else if (mounted) {
       final error = ref.read(authProvider).error ?? context.tr('failed_update_profile');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error), backgroundColor: Colors.red),
-      );
+      AppToast.error(context, error);
     }
   }
 
@@ -385,7 +378,7 @@ class _LandlordProfileScreenState extends ConsumerState<LandlordProfileScreen> {
   String _avatarUrl(String avatar) {
     if (avatar.isEmpty) return avatar;
     if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar;
-    final base = AppConfig.apiBaseUrl.replaceAll(RegExp(r'/api/?$'), '');
+    final base = AppConfig.apiBaseUrl.replaceAll(RegExp(r'/api(/v1)?/?$'), '');
     final separator = avatar.startsWith('/') ? '' : '/';
     return '$base$separator$avatar';
   }

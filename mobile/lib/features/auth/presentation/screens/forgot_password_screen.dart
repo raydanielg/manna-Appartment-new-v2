@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/widgets/auth_background.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/primary_button.dart';
+import '../../../../core/widgets/theme_mode_button.dart';
 import '../../providers/auth_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -38,21 +41,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   }
 
   void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: const Color(0xFFEF4444),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    AppToast.error(context, msg);
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -61,58 +60,44 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             children: [
               const SizedBox(height: 20),
 
-              // Back button
-              IconButton(
-                onPressed: () {
-                  ref.read(authProvider.notifier).clearError();
-                  context.go('/auth/login');
-                },
-                icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827), size: 22),
-                padding: EdgeInsets.zero,
-                alignment: Alignment.centerLeft,
-                constraints: const BoxConstraints(),
+              // Back button + theme toggle
+              Row(
+                children: [
+                  FButton.icon(
+                    variant: .outline,
+                    size: .sm,
+                    onPress: () {
+                      ref.read(authProvider.notifier).clearError();
+                      context.go('/auth/login');
+                    },
+                    child: context.theme.icons.arrowLeft(context),
+                  ),
+                  const Spacer(),
+                  const ThemeModeButton(),
+                ],
               ),
 
               const SizedBox(height: 32),
               Text(
                 context.tr('forgot_password_title'),
-                style: GoogleFonts.nunito(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF111827),
-                ),
+                style: typography.display.xl2.copyWith(fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 context.tr('forgot_password_subtitle'),
-                style: GoogleFonts.nunito(
-                  fontSize: 14,
-                  color: const Color(0xFF6B7280),
-                ),
+                style: typography.body.sm.copyWith(color: colors.mutedForeground),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
 
               if (authState.error != null) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFFECACA)),
-                  ),
-                  child: Row(
+                FAlert(
+                  variant: .destructive,
+                  title: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          authState.error!,
-                          style: GoogleFonts.nunito(color: const Color(0xFFB91C1C), fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
-                      ),
+                      Expanded(child: Text(authState.error!)),
                       GestureDetector(
                         onTap: () => ref.read(authProvider.notifier).clearError(),
-                        child: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 16),
+                        child: context.theme.icons.x(context),
                       ),
                     ],
                   ),
@@ -120,103 +105,56 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 const SizedBox(height: 20),
               ],
 
-              _buildLabel(context.tr('phone_number')),
-              TextField(
-                controller: _phoneController,
+              FTextField(
+                control: .managed(controller: _phoneController),
+                label: Text(context.tr('phone_number')),
+                hint: '7XX XXX XXX',
                 keyboardType: TextInputType.phone,
-                style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-                onSubmitted: (_) => _sendOtp(),
-                decoration: InputDecoration(
-                  hintText: '7XX XXX XXX',
-                  hintStyle: GoogleFonts.nunito(color: const Color(0xFF9CA3AF), fontSize: 14),
-                  prefixIcon: Padding(
-                    padding: const EdgeInsets.only(left: 12, right: 8),
-                    child: Text(
-                      '+255',
-                      style: GoogleFonts.nunito(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF374151),
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.telephoneNumber],
+                onSubmit: (_) => _sendOtp(),
+                prefixBuilder: (context, style, variants) => FTextField.prefixIconBuilder(
+                  context,
+                  style,
+                  variants,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const HugeIcon(icon: HugeIcons.strokeRoundedSmartPhone01, size: null),
+                      const SizedBox(width: 6),
+                      Text(
+                        '+255',
+                        style: typography.body.sm.copyWith(fontWeight: FontWeight.w700),
                       ),
-                    ),
+                    ],
                   ),
-                  prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-                  filled: true,
-                  fillColor: const Color(0xFFF9FAFB),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: AuthColors.primary, width: 1.5)),
                 ),
               ),
 
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: authState.isLoading ? () {} : _sendOtp,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AuthColors.primary,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: AuthColors.primary,
-                    disabledForegroundColor: Colors.white,
-                    elevation: 4,
-                    shadowColor: AuthColors.primary.withValues(alpha: 0.35),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: authState.isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          context.tr('send_code'),
-                          style: GoogleFonts.nunito(fontSize: 15, fontWeight: FontWeight.bold),
-                        ),
-                ),
+              const SizedBox(height: 28),
+              PrimaryButton(
+                text: context.tr('send_code'),
+                isLoading: authState.isLoading,
+                onPressed: _sendOtp,
+                icon: const HugeIcon(icon: HugeIcons.strokeRoundedMailSend01, size: null),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               Center(
-                child: GestureDetector(
-                  onTap: () {
+                child: FButton(
+                  variant: .ghost,
+                  size: .sm,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () {
                     ref.read(authProvider.notifier).clearError();
                     context.go('/auth/login');
                   },
-                  child: Text(
-                    context.tr('back_to_sign_in'),
-                    style: GoogleFonts.nunito(
-                      color: AuthColors.primary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: Text(context.tr('back_to_sign_in')),
                 ),
               ),
               const SizedBox(height: 40),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text,
-        style: GoogleFonts.nunito(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF374151),
         ),
       ),
     );

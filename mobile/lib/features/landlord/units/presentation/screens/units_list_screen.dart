@@ -11,6 +11,7 @@ import '../../../../../core/widgets/loading_indicator.dart';
 import '../../providers/units_provider.dart';
 import '../widgets/unit_card.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class UnitsListScreen extends ConsumerWidget {
   final String? propertyId;
   const UnitsListScreen({super.key, this.propertyId});
@@ -83,15 +84,11 @@ class UnitsListScreen extends ConsumerWidget {
                       await ref.read(unitsRepositoryProvider).deleteUnit(unit['id'].toString());
                       ref.invalidate(unitsListProvider(propertyId));
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.tr('unit_deleted')), backgroundColor: AppColors.success),
-                        );
+                        AppToast.success(context, context.tr('unit_deleted'));
                       }
                     } catch (e) {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-                        );
+                        AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
                         ref.invalidate(unitsListProvider(propertyId));
                       }
                     }

@@ -10,6 +10,7 @@ import '../../../../../core/widgets/loading_indicator.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/admin_landlords_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class AdminLandlordDetailScreen extends ConsumerStatefulWidget {
   const AdminLandlordDetailScreen({super.key});
 
@@ -66,15 +67,11 @@ class _AdminLandlordDetailScreenState extends ConsumerState<AdminLandlordDetailS
       ref.invalidate(adminLandlordDetailProvider(id));
       ref.invalidate(adminLandlordsProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Details updated successfully'), backgroundColor: AppColors.success),
-        );
+        AppToast.success(context, 'Details updated successfully');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save: $e'), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, 'Failed to save: $e');
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -89,15 +86,11 @@ class _AdminLandlordDetailScreenState extends ConsumerState<AdminLandlordDetailS
       ref.invalidate(adminLandlordDetailProvider(id));
       ref.invalidate(adminLandlordsProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Status updated to $status'), backgroundColor: AppColors.success),
-        );
+        AppToast.success(context, 'Status updated to $status');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, 'Failed: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -110,15 +103,11 @@ class _AdminLandlordDetailScreenState extends ConsumerState<AdminLandlordDetailS
       await repo.updateKycStatus(id, status);
       ref.invalidate(adminLandlordDetailProvider(id));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('KYC status updated'), backgroundColor: AppColors.success),
-        );
+        AppToast.success(context, 'KYC status updated');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, 'Failed: $e');
       }
     }
   }
@@ -147,16 +136,12 @@ class _AdminLandlordDetailScreenState extends ConsumerState<AdminLandlordDetailS
       await repo.deleteLandlord(id);
       ref.invalidate(adminLandlordsProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Landlord deleted successfully'), backgroundColor: AppColors.success),
-        );
+        AppToast.success(context, 'Landlord deleted successfully');
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, 'Failed: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

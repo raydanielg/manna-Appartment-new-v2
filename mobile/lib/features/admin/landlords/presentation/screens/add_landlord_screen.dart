@@ -7,6 +7,7 @@ import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/admin_landlords_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class AddLandlordScreen extends ConsumerStatefulWidget {
   const AddLandlordScreen({super.key});
 
@@ -34,9 +35,7 @@ class _AddLandlordScreenState extends ConsumerState<AddLandlordScreen> {
 
   Future<void> _submit() async {
     if (_nameController.text.isEmpty || _phoneController.text.isEmpty || _passwordController.text.isEmpty || _businessController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields'), backgroundColor: AppColors.error),
-      );
+      AppToast.error(context, 'Please fill all required fields');
       return;
     }
     setState(() => _isLoading = true);
@@ -51,16 +50,12 @@ class _AddLandlordScreenState extends ConsumerState<AddLandlordScreen> {
       });
       ref.invalidate(adminLandlordsProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Landlord created'), backgroundColor: AppColors.success),
-        );
+        AppToast.success(context, 'Landlord created');
         if (context.canPop()) context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e'), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, 'Failed: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

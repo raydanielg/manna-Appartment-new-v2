@@ -9,6 +9,7 @@ import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/sms_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class SmsBroadcastScreen extends ConsumerStatefulWidget {
   const SmsBroadcastScreen({super.key});
 
@@ -89,9 +90,7 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
   Future<void> _send() async {
     final message = _messageController.text.trim();
     if (message.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.tr('please_write_message')), backgroundColor: AppColors.error),
-      );
+      AppToast.error(context, context.tr('please_write_message'));
       return;
     }
     final data = <String, dynamic>{
@@ -101,9 +100,7 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
     if (_recipientType == 'custom_numbers') {
       final numbers = _customNumbersController.text.split(',').map((n) => n.trim()).where((n) => n.isNotEmpty).toList();
       if (numbers.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('please_enter_phone')), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, context.tr('please_enter_phone'));
         return;
       }
       data['custom_numbers'] = numbers;
@@ -114,16 +111,12 @@ class _SmsBroadcastScreenState extends ConsumerState<SmsBroadcastScreen> {
       final result = await repo.sendBroadcast(data);
       ref.invalidate(smsBalanceProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('message_sent_to').replaceAll('{0}', '${result['sent_count'] ?? 0}')), backgroundColor: AppColors.success),
-        );
+        AppToast.success(context, context.tr('message_sent_to').replaceAll('{0}', '${result['sent_count'] ?? 0}'));
         _messageController.clear();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('send_failed').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error),
-        );
+        AppToast.error(context, context.tr('send_failed').replaceAll('{0}', AppError.getMessage(e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

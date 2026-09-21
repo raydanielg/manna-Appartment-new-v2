@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_landlord_screen.dart';
@@ -53,6 +53,7 @@ import '../../features/landlord/subscription/presentation/screens/subscription_p
 import '../../features/landlord/tenants/presentation/screens/add_tenant_screen.dart';
 import '../../features/landlord/tenants/presentation/screens/move_out_screen.dart';
 import '../../features/landlord/tenants/presentation/screens/tenant_detail_screen.dart';
+import '../../features/landlord/tenants/presentation/screens/tenant_payments_screen.dart';
 import '../../features/landlord/tenants/presentation/screens/tenants_list_screen.dart';
 import '../../features/landlord/units/presentation/screens/add_edit_unit_screen.dart';
 import '../../features/landlord/units/presentation/screens/unit_detail_screen.dart';
@@ -118,6 +119,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/landlord/tenants', builder: (context, state) => const TenantsListScreen()),
           GoRoute(path: '/landlord/tenants/add', builder: (context, state) => AddTenantScreen(tenantId: state.uri.queryParameters['id'])),
           GoRoute(path: '/landlord/tenants/:id', builder: (context, state) => const TenantDetailScreen()),
+          GoRoute(path: '/landlord/tenants/:id/payments', builder: (context, state) => const TenantPaymentsScreen()),
           GoRoute(path: '/landlord/tenants/:id/move-out', builder: (context, state) => const MoveOutScreen()),
           GoRoute(path: '/landlord/units', builder: (context, state) => UnitsListScreen(propertyId: state.uri.queryParameters['propertyId'])),
           GoRoute(path: '/landlord/units/add', builder: (context, state) => AddEditUnitScreen(propertyId: state.uri.queryParameters['propertyId'], unitId: state.uri.queryParameters['id'])),
@@ -177,89 +179,35 @@ class LandlordScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final currentIndex = _getIndex(context);
-    final items = [
-      _NavItem(context.tr('home'), Icons.home_rounded, Icons.home_rounded, customIcon: 'assets/icons/homeicons.png'),
-      _NavItem(context.tr('properties'), Icons.apartment_rounded, Icons.apartment_rounded, customIcon: 'assets/icons/propertiesicon.png'),
-      _NavItem(context.tr('tenants'), Icons.people_rounded, Icons.people_rounded, customIcon: 'assets/icons/tenantsicon.png'),
-      _NavItem(context.tr('payments'), Icons.account_balance_wallet_rounded, Icons.account_balance_wallet_rounded, customIcon: 'assets/icons/incomeicon.png'),
-      _NavItem(context.tr('more'), Icons.grid_view_rounded, Icons.grid_view_rounded, customIcon: 'assets/icons/moreicon.png'),
-    ];
     final routes = ['/landlord/home', '/landlord/properties', '/landlord/tenants', '/landlord/payments', '/landlord/more'];
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
-            boxShadow: [
-              BoxShadow(
-                color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
+      bottomNavigationBar: FBottomNavigationBar(
+        index: _getIndex(context),
+        onChange: (i) => context.go(routes[i]),
+        children: [
+          FBottomNavigationBarItem(
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedHome01, size: null),
+            label: Text(context.tr('home')),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: items.asMap().entries.map((entry) {
-              final i = entry.key;
-              final item = entry.value;
-              final isActive = i == currentIndex;
-              return Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => context.go(routes[i]),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isActive ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        item.customIcon != null
-                            ? Image.asset(
-                                item.customIcon!,
-                                width: isActive ? 22 : 20,
-                                height: isActive ? 22 : 20,
-                                errorBuilder: (_, __, ___) => Icon(
-                                  isActive ? item.activeIcon : item.icon,
-                                  size: isActive ? 22 : 20,
-                                  color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500),
-                                ),
-                              )
-                            : Icon(
-                                isActive ? item.activeIcon : item.icon,
-                                size: isActive ? 22 : 20,
-                                color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500),
-                              ),
-                        const SizedBox(height: 3),
-                        Text(
-                          item.label,
-                          style: GoogleFonts.nunito(
-                            fontSize: 10,
-                            fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-                            color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+          FBottomNavigationBarItem(
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedBuilding03, size: null),
+            label: Text(context.tr('properties')),
           ),
-        ),
+          FBottomNavigationBarItem(
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedUserGroup, size: null),
+            label: Text(context.tr('tenants')),
+          ),
+          FBottomNavigationBarItem(
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedMoney01, size: null),
+            label: Text(context.tr('payments')),
+          ),
+          FBottomNavigationBarItem(
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedDashboardSquare01, size: null),
+            label: Text(context.tr('more')),
+          ),
+        ],
       ),
     );
   }
@@ -275,91 +223,37 @@ class LandlordScaffold extends StatelessWidget {
   }
 }
 
-class _NavItem {
-  final String label;
-  final IconData icon;
-  final IconData activeIcon;
-  final String? customIcon;
-  _NavItem(this.label, this.icon, this.activeIcon, {this.customIcon});
-}
-
 class TenantScaffold extends StatelessWidget {
   final Widget child;
   const TenantScaffold({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final currentIndex = _getIndex(context);
-    final items = [
-      _NavItem(context.tr('home'), Icons.home_rounded, Icons.home_rounded),
-      _NavItem(context.tr('my_unit'), Icons.door_front_door_rounded, Icons.door_front_door_rounded),
-      _NavItem(context.tr('payments'), Icons.account_balance_wallet_rounded, Icons.account_balance_wallet_rounded),
-      _NavItem(context.tr('more'), Icons.grid_view_rounded, Icons.grid_view_rounded),
-    ];
     final routes = ['/tenant/home', '/tenant/my-unit', '/tenant/payments', '/tenant/more'];
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: isDark ? Colors.white12 : const Color(0xFFE5E7EB)),
-            boxShadow: [
-              BoxShadow(
-                color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
+      bottomNavigationBar: FBottomNavigationBar(
+        index: _getIndex(context),
+        onChange: (i) => context.go(routes[i]),
+        children: [
+          FBottomNavigationBarItem(
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedHome01, size: null),
+            label: Text(context.tr('home')),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: items.asMap().entries.map((entry) {
-              final i = entry.key;
-              final item = entry.value;
-              final isActive = i == currentIndex;
-              return Expanded(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => context.go(routes[i]),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isActive ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isActive ? item.activeIcon : item.icon,
-                          size: isActive ? 22 : 20,
-                          color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          item.label,
-                          style: GoogleFonts.nunito(
-                            fontSize: 10,
-                            fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
-                            color: isActive ? AppColors.primary : (isDark ? Colors.white54 : Colors.grey.shade500),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+          FBottomNavigationBarItem(
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedDoor01, size: null),
+            label: Text(context.tr('my_unit')),
           ),
-        ),
+          FBottomNavigationBarItem(
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedMoney01, size: null),
+            label: Text(context.tr('payments')),
+          ),
+          FBottomNavigationBarItem(
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedDashboardSquare01, size: null),
+            label: Text(context.tr('more')),
+          ),
+        ],
       ),
     );
   }

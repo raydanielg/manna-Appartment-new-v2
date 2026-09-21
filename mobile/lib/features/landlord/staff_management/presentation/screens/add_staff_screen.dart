@@ -8,6 +8,7 @@ import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
 import '../../providers/staff_provider.dart';
 
+import 'package:manna_apartment/core/utils/app_toast.dart';
 class AddStaffScreen extends ConsumerStatefulWidget {
   const AddStaffScreen({super.key});
   @override
@@ -39,16 +40,12 @@ class _AddStaffScreenState extends ConsumerState<AddStaffScreen> {
         'role': _role,
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('staff_added')), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating),
-        );
+        AppToast.success(context, context.tr('staff_added'));
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e))), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
-        );
+        AppToast.error(context, context.tr('failed_msg').replaceAll('{0}', AppError.getMessage(e)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
