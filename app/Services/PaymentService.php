@@ -153,9 +153,14 @@ class PaymentService
         if ($monthInput && strpos($monthInput, ' - ') !== false) {
             $monthInput = explode(' - ', $monthInput)[0];
         }
-        $startMonth = $monthInput
-            ? Carbon::parse('first day of ' . $monthInput)
-            : $paymentDate->copy()->startOfMonth();
+        $startMonth = $paymentDate->copy()->startOfMonth();
+        if ($monthInput) {
+            try {
+                $startMonth = Carbon::parse('first day of ' . $monthInput);
+            } catch (\Throwable) {
+                // Unparseable month label (e.g. localized names) — fall back to payment month
+            }
+        }
 
         // Build month_covered label
         if ($monthsCount <= 1) {
