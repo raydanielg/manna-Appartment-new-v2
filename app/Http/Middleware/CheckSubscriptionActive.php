@@ -25,9 +25,16 @@ class CheckSubscriptionActive
             ], 403);
         }
 
-        $subscription = $organization->subscription;
+        // Prefer the latest active subscription for this organization —
+        // organization.subscription_id may still point at an expired one.
+        $subscription = $organization->subscriptions()
+            ->where('status', 'active')
+            ->where('end_date', '>=', now()->toDateString())
+            ->orderByDesc('end_date')
+            ->first()
+            ?? $organization->subscription;
 
-        if (!$subscription || $subscription->status !== 'active' || $subscription->end_date < now()) {
+        if (!$subscription || $subscription->status !== 'active' || $subscription->end_date->startOfDay()->lt(now()->startOfDay())) {
             return response()->json([
                 'success' => false,
                 'message' => 'Subscription is inactive or expired. Please renew to continue.',

@@ -44,6 +44,11 @@ class Organization extends Model
         return $this->belongsTo(Subscription::class, 'subscription_id');
     }
 
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class, 'organization_id');
+    }
+
     public function kycDocuments()
     {
         return $this->hasMany(KycDocument::class, 'organization_id');

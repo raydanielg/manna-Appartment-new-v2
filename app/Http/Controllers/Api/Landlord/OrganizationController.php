@@ -71,7 +71,13 @@ class OrganizationController extends Controller
         if (!$organization) {
             return $this->error('No organization found for this account.', null, 400);
         }
-        $plan = optional($organization->subscription)->plan;
+        $plan = optional(
+            $organization->subscriptions()
+                ->where('status', 'active')
+                ->where('end_date', '>=', now()->toDateString())
+                ->orderByDesc('end_date')
+                ->first() ?? $organization->subscription
+        )->plan;
 
         return $this->success('Usage retrieved.', [
             'properties_count' => $organization->properties()->count(),

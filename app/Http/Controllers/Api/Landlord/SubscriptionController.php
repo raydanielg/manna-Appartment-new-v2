@@ -21,7 +21,16 @@ class SubscriptionController extends Controller
     public function current()
     {
         $organization = Auth::user()->organization;
-        $subscription = Subscription::with('plan')->where('organization_id', $organization->id)->latest()->first();
+        $subscription = Subscription::with('plan')
+            ->where('organization_id', $organization->id)
+            ->where('status', 'active')
+            ->where('end_date', '>=', now()->toDateString())
+            ->orderByDesc('end_date')
+            ->first()
+            ?? Subscription::with('plan')
+                ->where('organization_id', $organization->id)
+                ->latest()
+                ->first();
         return $this->success('Current subscription retrieved.', $subscription);
     }
 
