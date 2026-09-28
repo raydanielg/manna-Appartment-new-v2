@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/app_localizations.dart';
+import '../../../../../core/localization/locale_provider.dart';
 import '../../../../../core/utils/app_error.dart';
 import '../../../../../core/widgets/app_text_field.dart';
 import '../../../../../core/widgets/primary_button.dart';
@@ -185,6 +186,7 @@ class _CreateContractScreenState extends ConsumerState<CreateContractScreen> {
         'rent_amount': double.tryParse(_rentController.text) ?? 0,
         'deposit_amount': double.tryParse(_depositController.text) ?? 0,
         'contract_type': _contractType,
+        'language': ref.read(localeProvider).languageCode,
         if (_contractType == 'manual') 'template_content': _termsController.text.trim(),
       });
       ref.invalidate(contractsListProvider);

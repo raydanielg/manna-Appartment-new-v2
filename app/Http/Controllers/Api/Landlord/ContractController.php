@@ -34,6 +34,7 @@ class ContractController extends Controller
             'deposit_amount' => 'nullable|numeric|min:0',
             'contract_type' => 'nullable|in:digital,manual',
             'template_content' => 'nullable|string',
+            'language' => 'nullable|in:en,sw',
         ]);
 
         $tenant = Tenant::findOrFail($request->tenant_id);
@@ -42,7 +43,7 @@ class ContractController extends Controller
 
         $contract = Contract::create(array_merge(
             $request->only([
-                'tenant_id', 'unit_id', 'duration_type', 'start_date', 'end_date', 'rent_amount', 'deposit_amount', 'contract_type', 'template_content',
+                'tenant_id', 'unit_id', 'duration_type', 'start_date', 'end_date', 'rent_amount', 'deposit_amount', 'contract_type', 'template_content', 'language',
             ]),
             [
                 'duration_type' => $request->duration_type ?? 'custom',
@@ -138,10 +139,64 @@ class ContractController extends Controller
 
         $pdfUrl = app(ContractPdfService::class)->generate($contract);
 
+        // Notify tenant that the contract is fully signed + send the document
+        try {
+            $this->sendSignedContractToTenant($contract->fresh(['tenant.user']), $pdfUrl);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Signed contract delivery error: ' . $e->getMessage());
+        }
+
         return $this->success('Contract signed.', [
             'contract' => $contract,
             'pdf_url' => $pdfUrl,
         ]);
+    }
+
+    /**
+     * After landlord countersigns, deliver the signed contract to the tenant
+     * via in-app notification, SMS, and email (when available).
+     */
+    private function sendSignedContractToTenant(Contract $contract, string $pdfUrl): void
+    {
+        $tenantUser = $contract->tenant?->user;
+        if (!$tenantUser) return;
+
+        $contractNo = $contract->contract_number ?? 'N/A';
+        $propertyName = $contract->unit?->property?->name ?? 'property';
+
+        \App\Models\AppNotification::create([
+            'user_id' => $tenantUser->id,
+            'type' => 'contract_signed',
+            'title' => 'Contract fully signed',
+            'body' => "Your tenancy agreement {$contractNo} for {$propertyName} has been signed by both parties.",
+            'data' => [
+                'contract_id' => $contract->id,
+                'pdf_url' => $pdfUrl,
+            ],
+            'sent_at' => now(),
+        ]);
+
+        if ($tenantUser->phone) {
+            app(SmsService::class)->send(
+                $tenantUser->phone,
+                "Manna Apartment: Mkataba wako {$contractNo} umekamilika kusainiwa. Pakua hapa: {$pdfUrl}",
+                'contract_signed',
+                $contract->organization_id,
+            );
+        }
+
+        if ($tenantUser->email) {
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Habari {$tenantUser->full_name},\n\nMkataba wako wa kodi {$contractNo} umekamilika kusainiwa na pande zote. Pakua hapa: {$pdfUrl}\n\nAsante,\nManna Apartment",
+                    function ($message) use ($tenantUser) {
+                        $message->to($tenantUser->email)->subject('Mkataba Wako Umekamilika - Manna Apartment');
+                    }
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Contract email failed: ' . $e->getMessage());
+            }
+        }
     }
 
     public function downloadPdf($id)

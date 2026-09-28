@@ -40,6 +40,16 @@ class PaymentService
             'overdue_date' => $calc['overdue_date'],
         ]));
 
+        // Sync the contract with the latest payment info (next due date)
+        try {
+            $contract->update([
+                'next_due_date' => $calc['overdue_date'],
+                'last_payment_date' => $paymentDate->toDateString(),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Contract payment sync error: ' . $e->getMessage());
+        }
+
         if (($data['payment_type'] ?? '') === 'rent') {
             try {
                 $this->notifyLandlordRentPaid($payment, $contract, $calc);

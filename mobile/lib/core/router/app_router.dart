@@ -188,23 +188,23 @@ class LandlordScaffold extends StatelessWidget {
         onChange: (i) => context.go(routes[i]),
         children: [
           FBottomNavigationBarItem(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedHome01, size: null),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedHome01, size: null, color: Color(0xFF2563EB)),
             label: Text(context.tr('home')),
           ),
           FBottomNavigationBarItem(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedBuilding03, size: null),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedBuilding03, size: null, color: Color(0xFF0D9488)),
             label: Text(context.tr('properties')),
           ),
           FBottomNavigationBarItem(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedUserGroup, size: null),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedUserGroup, size: null, color: Color(0xFF7C3AED)),
             label: Text(context.tr('tenants')),
           ),
           FBottomNavigationBarItem(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedMoney01, size: null),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedMoney01, size: null, color: Color(0xFF16A34A)),
             label: Text(context.tr('payments')),
           ),
           FBottomNavigationBarItem(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedDashboardSquare01, size: null),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedDashboardSquare01, size: null, color: Color(0xFFD97706)),
             label: Text(context.tr('more')),
           ),
         ],
@@ -238,19 +238,19 @@ class TenantScaffold extends StatelessWidget {
         onChange: (i) => context.go(routes[i]),
         children: [
           FBottomNavigationBarItem(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedHome01, size: null),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedHome01, size: null, color: Color(0xFF2563EB)),
             label: Text(context.tr('home')),
           ),
           FBottomNavigationBarItem(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedDoor01, size: null),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedDoor01, size: null, color: Color(0xFF0D9488)),
             label: Text(context.tr('my_unit')),
           ),
           FBottomNavigationBarItem(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedMoney01, size: null),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedMoney01, size: null, color: Color(0xFF16A34A)),
             label: Text(context.tr('payments')),
           ),
           FBottomNavigationBarItem(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedDashboardSquare01, size: null),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedDashboardSquare01, size: null, color: Color(0xFFD97706)),
             label: Text(context.tr('more')),
           ),
         ],

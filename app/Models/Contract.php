@@ -33,6 +33,9 @@ class Contract extends Model
         'tenant_signed_at',
         'landlord_signature_path',
         'landlord_signed_at',
+        'next_due_date',
+        'last_payment_date',
+        'language',
         'pdf_url',
     ];
 
@@ -42,6 +45,8 @@ class Contract extends Model
         'signed_at' => 'datetime',
         'tenant_signed_at' => 'datetime',
         'landlord_signed_at' => 'datetime',
+        'next_due_date' => 'date',
+        'last_payment_date' => 'date',
     ];
 
     protected static function boot()

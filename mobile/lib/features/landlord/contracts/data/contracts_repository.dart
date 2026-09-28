@@ -8,7 +8,7 @@ class ContractsRepository {
   ContractsRepository(this._client);
 
   Future<List<dynamic>> getContracts() async {
-    final response = await _client.get('/landlord/contracts');
+    final response = await _client.get('/landlord/contracts', queryParameters: {'per_page': 200});
     final data = response.data['data'];
     if (data is Map && data['data'] is List) return data['data'];
     if (data is List) return data;

@@ -9,6 +9,7 @@ class TenantsRepository {
     final response = await _client.get(
       ApiEndpoints.tenants,
       queryParameters: {
+        'per_page': 200,
         if (propertyId != null) 'property_id': propertyId,
       },
     );
